@@ -10,7 +10,7 @@ on:
 
 env:
   SOURCE_BRANCH: main
-  SOURCE_REPOSITORY: xdsl/xdsl-template
+  SOURCE_REPOSITORY: xdslproject/xdsl-template
 
 jobs:
   repo-sync:
