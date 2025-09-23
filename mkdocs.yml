@@ -1,19 +1,19 @@
 # https://www.mkdocs.org/user-guide/configuration/
 
 # Project information
-site_name: xdsl-template                                                        # TODO: Change this
-site_author: xDSL Developers                                                    # TODO: Change this
-copyright: Copyright &copy xDSL Developers                                      # TODO: Change this
+site_name: xdsl-jax
+site_author: Sasha Lopoukhine
+copyright: Copyright Sasha Lopoukhine
 
 # Repository
-repo_name: xdsl/xdsl-template                                                   # TODO: Change this
-repo_url: https://github.com/xdsl/xdsl-template                                 # TODO: Change this
+repo_name: xdsl/xdsl-jax
+repo_url: https://github.com/xdsl/xdsl-jax
 
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/xdsl                                             # TODO: Change this
-      name: xDSL on Github                                                      # TODO: Change this
+      link: https://github.com/xdslproject/xdsl-jax
+      name: xdsl-jax
 
 
 # Configuration

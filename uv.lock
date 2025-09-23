@@ -934,7 +934,7 @@ wheels = [
 ]
 
 [[package]]
-name = "xdsltemplate"
+name = "xdsl-jax"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
