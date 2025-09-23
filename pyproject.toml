@@ -15,6 +15,9 @@ classifiers = [
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
 authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
 
+[project.entry-points.'xdsl.universe']
+xdsl = 'xdsl_jax.universe:UNIVERSE'
+
 [project.urls]
 Homepage = "https://xdsl.dev/xdsl-jax"
 "Source Code" = "https://github.com/xdslproject/xdsl-jax"
