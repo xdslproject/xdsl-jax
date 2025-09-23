@@ -31,3 +31,4 @@ jobs:
           upstream_branch: ${{ env.SOURCE_BRANCH }}
           pr_title: "misc: Update template"
           pr_commit_msg: "misc: Update template"
+          target_gh_token: ${{ secrets.UPDATE_TEMPLATE_TOKEN }}
