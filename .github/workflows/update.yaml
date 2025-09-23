@@ -25,6 +25,8 @@ jobs:
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v5
         if: github.repository != env.SOURCE_REPOSITORY
+        with:
+          persist-credentials: false # needed in case workflows are updated
 
       # Doc: https://github.com/marketplace/actions/actions-template-sync
       - name: actions-template-sync
