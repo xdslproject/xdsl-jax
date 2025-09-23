@@ -19,7 +19,7 @@ jobs:
     steps:
       # Doc: https://github.com/marketplace/actions/checkout
       - name: Checkout ${{ github.repository }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         if: github.repository != env.SOURCE_REPOSITORY
 
       # Doc: https://github.com/marketplace/actions/actions-template-sync
