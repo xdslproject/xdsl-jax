@@ -10,23 +10,17 @@ on:
 
 env:
   SOURCE_BRANCH: main
-  SOURCE_REPOSITORY: xdslproject/xdsl-template
+  SOURCE_REPOSITORY: dotdc/template-terraform-module
 
 jobs:
   repo-sync:
     runs-on: ubuntu-latest
-    # https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
-    permissions:
-      contents: write
-      pull-requests: write
 
     steps:
       # Doc: https://github.com/marketplace/actions/checkout
       - name: Checkout ${{ github.repository }}
         uses: actions/checkout@v5
         if: github.repository != env.SOURCE_REPOSITORY
-        with:
-          persist-credentials: false # needed in case workflows are updated
 
       # Doc: https://github.com/marketplace/actions/actions-template-sync
       - name: actions-template-sync
@@ -37,4 +31,3 @@ jobs:
           upstream_branch: ${{ env.SOURCE_BRANCH }}
           pr_title: "misc: Update template"
           pr_commit_msg: "misc: Update template"
-          target_gh_token: ${{ secrets.UPDATE_TEMPLATE_TOKEN }}

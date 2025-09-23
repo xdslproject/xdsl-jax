@@ -1,3 +1,3 @@
 # Reference
 
-::: xdsl_jax.compiler
+::: xdsltemplate.compiler

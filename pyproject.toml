@@ -1,11 +1,10 @@
 [project]
-name = "xdsl-jax"
+name = "xdsltemplate"                                                           # TODO: Change this
 version = "0.1.0"
-description = "Extend JAX with xDSL."
+description = "A template project using xDSL."                                  # TODO: Change this
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "jax>=0.6.2",
     "xdsl>=0.40.0",
 ]
 classifiers = [
@@ -13,12 +12,12 @@ classifiers = [
     "Typing :: Typed"
 ]
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
-authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
+authors = []                                                                    # TODO: Change this
 
 [project.urls]
-Homepage = "https://xdsl.dev/xdsl-jax"
-"Source Code" = "https://github.com/xdslproject/xdsl-jax"
-"Issue Tracker" = "https://github.com/xdslproject/xdsl-jax/issues"
+Homepage = "https://xdsl.dev/xdsl-template"                                     # TODO: Change this
+"Source Code" = "https://github.com/xdslproject/xdsl-template"                  # TODO: Change this
+"Issue Tracker" = "https://github.com/xdslproject/xdsl-template/issues"         # TODO: Change this
 
 
 [build-system]
