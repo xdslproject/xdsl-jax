@@ -15,6 +15,8 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.10', '3.11', '3.12', '3.13']
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - uses: actions/checkout@v5
@@ -27,7 +29,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install the project
-        run: uv sync --all-groups --all-extras -p ${{ matrix.python-version }}
+        run: make install
       - name: Run the unit tests
         run: make test
 
@@ -36,6 +38,8 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.13']
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
       - uses: actions/checkout@v5
@@ -48,6 +52,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install the project
-        run: uv sync --all-groups --all-extras -p ${{ matrix.python-version }}
+        run: make install
       - name: Run the pre-commit static checks
         run: make check
