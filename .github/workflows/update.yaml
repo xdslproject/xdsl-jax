@@ -10,11 +10,15 @@ on:
 
 env:
   SOURCE_BRANCH: main
-  SOURCE_REPOSITORY: dotdc/template-terraform-module
+  SOURCE_REPOSITORY: xdsl/xdsl-template
 
 jobs:
   repo-sync:
     runs-on: ubuntu-latest
+    # https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
       # Doc: https://github.com/marketplace/actions/checkout
