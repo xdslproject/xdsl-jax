@@ -1,0 +1,33 @@
+name: repo-sync
+
+# Doc: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+
+on:
+  schedule:
+    - cron:  "0 1 * * MON"
+  # Allow this workflow to be manually triggered
+  workflow_dispatch:
+
+env:
+  SOURCE_BRANCH: main
+  SOURCE_REPOSITORY: dotdc/template-terraform-module
+
+jobs:
+  repo-sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Doc: https://github.com/marketplace/actions/checkout
+      - name: Checkout ${{ github.repository }}
+        uses: actions/checkout@v4
+        if: github.repository != env.SOURCE_REPOSITORY
+
+      # Doc: https://github.com/marketplace/actions/actions-template-sync
+      - name: actions-template-sync
+        uses: AndreasAugustin/actions-template-sync@v2.5.2
+        if: github.repository != env.SOURCE_REPOSITORY
+        with:
+          source_repo_path: ${{ env.SOURCE_REPOSITORY }}
+          upstream_branch: ${{ env.SOURCE_BRANCH }}
+          pr_title: "misc: Update template"
+          pr_commit_msg: "misc: Update template"
