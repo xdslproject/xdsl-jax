@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "jax>=0.6.2",
-    "xdsl==0.52.0",
+    "xdsl==0.53.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3 :: Only",
