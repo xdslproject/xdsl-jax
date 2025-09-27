@@ -4,7 +4,8 @@ from typing import cast
 from jax import make_jaxpr  # pyright: ignore[reportUnknownVariableType]
 from jax import numpy as jnp
 from jax._src.core import ClosedJaxpr
-from xdsl.frontend.jaxpr import IRGen
+
+from xdsl_jax.frontend.jaxpr import IRGen
 
 five_ones = jnp.ones(5, dtype=jnp.float32)  # pyright: ignore[reportUnknownMemberType]
 
