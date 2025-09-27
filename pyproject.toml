@@ -4,19 +4,13 @@ version = "0.1.0"
 description = "Extend JAX with xDSL."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = [
-    "jax>=0.6.2",
-    "xdsl==0.53.0",
-]
-classifiers = [
-    "Programming Language :: Python :: 3 :: Only",
-    "Typing :: Typed"
-]
+dependencies = ["jax>=0.6.2", "xdsl==0.53.0"]
+classifiers = ["Programming Language :: Python :: 3 :: Only", "Typing :: Typed"]
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
 authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
 
 [project.entry-points.'xdsl.universe']
-xdsl = 'xdsl_jax.universe:UNIVERSE'
+xdsl_jax = 'xdsl_jax.universe:XDSL_JAX_UNIVERSE'
 
 [project.urls]
 Homepage = "https://xdsl.dev/xdsl-jax"
@@ -38,10 +32,7 @@ dev = [
     "pytest-cov",
     "pyright==1.1.405",
 ]
-docs = [
-    "mkdocs-material>=9.5.48",
-    "mkdocstrings[python]>=0.26.1",
-]
+docs = ["mkdocs-material>=9.5.48", "mkdocstrings[python]>=0.26.1"]
 
 
 [tool.pyright]
@@ -102,6 +93,6 @@ exclude_lines = [
     "raise RuntimeError",
     "assert_never",
     'if TYPE_CHECKING:',
-    'pragma: no cover'
+    'pragma: no cover',
 ]
 format = "markdown"

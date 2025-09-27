@@ -214,7 +214,7 @@ class ComparisonDirectionAttr(
     See external [documentation](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#compare).
     """
 
-    name = "stablehlo.comparison_direction"
+    name = "stablehlo2.comparison_direction"
 
 
 class ComparisonType(StrEnum):
@@ -239,7 +239,7 @@ class ComparisonTypeAttr(EnumAttribute[ComparisonType], SpacedOpaqueSyntaxAttrib
     See external [documentation](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#compare).
     """
 
-    name = "stablehlo.comparison_type"
+    name = "stablehlo2.comparison_type"
 
 
 class Precision(StrEnum):
@@ -260,7 +260,7 @@ class PrecisionAttr(EnumAttribute[Precision], SpacedOpaqueSyntaxAttribute):
     See external [documentation](https://github.com/openxla/stablehlo/blob/b075e948092d8a27ed0be48f4f8dbaa6df7e2e3e/stablehlo/dialect/StablehloEnums.td#L46).
     """
 
-    name = "stablehlo.precision"
+    name = "stablehlo2.precision"
 
 
 @irdl_attr_definition
@@ -276,12 +276,12 @@ class TokenType(TypeAttribute, ParametrizedAttribute):
     ```mlir
       // %input0: !stablehlo.token
       // %input1: !stablehlo.token
-      %result = "stablehlo.after_all"(%input0, %input1)
+      %result = "stablehlo2.after_all"(%input0, %input1)
               : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
     ```
     """
 
-    name = "stablehlo.token"
+    name = "stablehlo2.token"
 
 
 @irdl_attr_definition
@@ -292,7 +292,7 @@ class DotAttr(ParametrizedAttribute):
     See external [documentation](https://github.com/openxla/stablehlo/blob/b075e948092d8a27ed0be48f4f8dbaa6df7e2e3e/stablehlo/dialect/StablehloAttrs.td#L82).
     """
 
-    name = "stablehlo.dot"
+    name = "stablehlo2.dot"
 
     lhs_batching_dimensions: ArrayAttr[IntegerAttr[I64]]
     rhs_batching_dimensions: ArrayAttr[IntegerAttr[I64]]
@@ -403,7 +403,7 @@ class AbsOp(IRDLOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#abs)
     """
 
-    name = "stablehlo.abs"
+    name = "stablehlo2.abs"
 
     # TODO: Remove this constraint for complex types.
     T: ClassVar = VarConstraint("T", base(AnyTensorType))
@@ -433,7 +433,7 @@ class AddOp(ElementwiseBinaryOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#add)
     """
 
-    name = "stablehlo.add"
+    name = "stablehlo2.add"
 
 
 @irdl_op_definition
@@ -447,7 +447,7 @@ class AfterAllOp(IRDLOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#after_all)
     """
 
-    name = "stablehlo.after_all"
+    name = "stablehlo2.after_all"
     inputs = var_operand_def(TokenType)
     result = result_def(TokenType)
 
@@ -467,7 +467,7 @@ class AndOp(IntegerTensorLikeElementwiseBinaryOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#and)
     """
 
-    name = "stablehlo.and"
+    name = "stablehlo2.and"
 
 
 @irdl_op_definition
@@ -483,7 +483,7 @@ class Atan2Op(FloatOrComplexTensorLikeElementwiseBinaryOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#atan2)
     """
 
-    name = "stablehlo.atan2"
+    name = "stablehlo2.atan2"
 
 
 @irdl_op_definition
@@ -508,7 +508,7 @@ class BitcastConvertOp(IRDLOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#bitcast_convert)
     """  # noqa: E501
 
-    name = "stablehlo.bitcast_convert"
+    name = "stablehlo2.bitcast_convert"
     input = operand_def(AnyTensorType)
     result = result_def(AnyTensorType)
 
@@ -529,7 +529,7 @@ class CaseOp(IRDLOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#case)
     """
 
-    name = "stablehlo.case"
+    name = "stablehlo2.case"
     index = operand_def(SI32TensorType)
     branches = var_region_def("single_block")
     _results = var_result_def(AnyTensorTypeConstr | BaseAttr(TokenType))
@@ -558,7 +558,7 @@ class CbrtOp(FloatOrComplexTensorLikeElementwiseUnaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#cbrt)
     """
 
-    name = "stablehlo.cbrt"
+    name = "stablehlo2.cbrt"
 
 
 @irdl_op_definition
@@ -572,7 +572,7 @@ class CeilOp(FloatTensorLikeElementwiseUnaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#ceil)
     """
 
-    name = "stablehlo.ceil"
+    name = "stablehlo2.ceil"
 
 
 @irdl_op_definition
@@ -586,7 +586,7 @@ class CountLeadingZerosOp(IntegerTensorLikeElementwiseUnaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#count_leading_zeros)
     """
 
-    name = "stablehlo.count_leading_zeros"
+    name = "stablehlo2.count_leading_zeros"
 
 
 @irdl_op_definition
@@ -597,7 +597,7 @@ class ConstantOp(IRDLOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#constant)
     """
 
-    name = "stablehlo.constant"
+    name = "stablehlo2.constant"
 
     value = attr_def(DenseIntOrFPElementsAttr)
     output = result_def(AnyTensorType)
@@ -622,7 +622,7 @@ class MultiplyOp(ElementwiseBinaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#multiply)
     """
 
-    name = "stablehlo.multiply"
+    name = "stablehlo2.multiply"
 
 
 @irdl_op_definition
@@ -637,7 +637,7 @@ class NotOp(IntegerTensorLikeElementwiseUnaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#not)
     """
 
-    name = "stablehlo.not"
+    name = "stablehlo2.not"
 
 
 @irdl_op_definition
@@ -652,7 +652,7 @@ class OrOp(IntegerTensorLikeElementwiseBinaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#or)
     """
 
-    name = "stablehlo.or"
+    name = "stablehlo2.or"
 
 
 @irdl_op_definition
@@ -664,7 +664,7 @@ class PopcntOp(IntegerTensorLikeElementwiseUnaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#popcnt)
     """
 
-    name = "stablehlo.popcnt"
+    name = "stablehlo2.popcnt"
 
 
 @irdl_op_definition
@@ -678,7 +678,7 @@ class ReturnOp(IRDLOperation):
     https://discord.com/channels/999073994483433573/1259494021269688360/1259992088565645312
     """
 
-    name = "stablehlo.return"
+    name = "stablehlo2.return"
 
     input = var_operand_def(AnyTensorType)
     traits = traits_def(IsTerminator())
@@ -696,7 +696,7 @@ class ShiftLeftOp(IntegerTensorLikeElementwiseBinaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#shift_left)
     """
 
-    name = "stablehlo.shift_left"
+    name = "stablehlo2.shift_left"
 
 
 @irdl_op_definition
@@ -708,7 +708,7 @@ class ShiftRightArithmeticOp(IntegerTensorLikeElementwiseBinaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#shift_right_arithmetic)
     """
 
-    name = "stablehlo.shift_right_arithmetic"
+    name = "stablehlo2.shift_right_arithmetic"
 
 
 @irdl_op_definition
@@ -720,7 +720,7 @@ class ShiftRightLogicalOp(IntegerTensorLikeElementwiseBinaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#shift_right_logical)
     """
 
-    name = "stablehlo.shift_right_logical"
+    name = "stablehlo2.shift_right_logical"
 
 
 @irdl_op_definition
@@ -738,7 +738,7 @@ class SubtractOp(ElementwiseBinaryOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#subtract)
     """
 
-    name = "stablehlo.subtract"
+    name = "stablehlo2.subtract"
 
 
 @irdl_op_definition
@@ -751,7 +751,7 @@ class TransposeOp(IRDLOperation):
     See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#transpose)
     """
 
-    name = "stablehlo.transpose"
+    name = "stablehlo2.transpose"
 
     ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
 
@@ -808,11 +808,11 @@ class XorOp(IntegerTensorLikeElementwiseBinaryOperation):
     [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#xor)
     """
 
-    name = "stablehlo.xor"
+    name = "stablehlo2.xor"
 
 
 StableHLO = Dialect(
-    "stablehlo",
+    "stablehlo2",
     [
         AbsOp,
         AddOp,
