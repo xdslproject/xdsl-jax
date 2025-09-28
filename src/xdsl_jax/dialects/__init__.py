@@ -12,5 +12,5 @@ def get_all_dialects() -> dict[str, Callable[[], Dialect]]:
         return StableHLO
 
     return {
-        "stablehlo2": get_stablehlo,
+        "stablehlo": get_stablehlo,
     }
