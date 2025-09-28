@@ -12,6 +12,9 @@ authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
 [project.entry-points.'xdsl.universe']
 xdsl_jax = 'xdsl_jax.universe:XDSL_JAX_UNIVERSE'
 
+[tool.uv.sources]
+xdsl = { git = "https://github.com/xdslproject/xdsl.git", rev = "44e68054841b9937b6da9cf77f5369f18f336bae" }
+
 [project.urls]
 Homepage = "https://xdsl.dev/xdsl-jax"
 "Source Code" = "https://github.com/xdslproject/xdsl-jax"

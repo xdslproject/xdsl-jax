@@ -1376,16 +1376,12 @@ wheels = [
 
 [[package]]
 name = "xdsl"
-version = "0.53.0"
-source = { registry = "https://pypi.org/simple" }
+version = "0.53.1.dev2+g44e680548"
+source = { git = "https://github.com/xdslproject/xdsl.git?rev=44e68054841b9937b6da9cf77f5369f18f336bae#44e68054841b9937b6da9cf77f5369f18f336bae" }
 dependencies = [
     { name = "immutabledict" },
     { name = "ordered-set" },
     { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/98/4f/03d0824e4c28b7bcdcdee08a0c428c238562e1bc5a6c2d94d6b22d67e808/xdsl-0.53.0.tar.gz", hash = "sha256:bef539b5cfb8eb528059770f9f26c5615627300673becbf660335d1968ba046d", size = 3808059, upload-time = "2025-09-27T07:50:07.87Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/aa/3152d91dea593f8e9003ffae53a2886f73683b68a97d3873afb7fcf7e9c3/xdsl-0.53.0-py3-none-any.whl", hash = "sha256:6d319cb319ef6a15d15eee91566f9665573327505119b5d415b5910636e2cad7", size = 4026957, upload-time = "2025-09-27T07:50:05.926Z" },
 ]
 
 [[package]]
@@ -1416,7 +1412,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "jax", specifier = ">=0.6.2" },
-    { name = "xdsl", specifier = "==0.53.0" },
+    { name = "xdsl", git = "https://github.com/xdslproject/xdsl.git?rev=44e68054841b9937b6da9cf77f5369f18f336bae" },
 ]
 
 [package.metadata.requires-dev]
