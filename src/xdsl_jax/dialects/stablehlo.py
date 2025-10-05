@@ -871,7 +871,7 @@ class PadOp(IRDLOperation):
         pad_val_shape = pad_val_type.get_shape()
         r_shape = r_type.get_shape()
 
-        if len(pad_val_shape) != 0:
+        if pad_val_shape:
             raise VerifyException(
                 f"Expect padding_value is an 0-dimensional tensor,"
                 f" found {pad_val_shape}"
