@@ -43,6 +43,27 @@
 //           [[2,8], [4,10], [6,12]]
 //          ]
 
+%pad_operand = "test.op"() : () -> tensor<2x3xi32>
+%padding_value = "test.op"() : () -> tensor<i32>
+// %operand: [
+//            [1, 2, 3],
+//            [4, 5, 6]
+//           ]
+// %padding_value: 0
+%pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {
+  edge_padding_low = array<i64: 0, 1>,
+  edge_padding_high = array<i64: 2, 1>,
+  interior_padding = array<i64: 1, 2>
+} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// CHECK: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {edge_padding_low = array<i64: 0, 1>, edge_padding_high = array<i64: 2, 1>, interior_padding = array<i64: 1, 2>} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// %result: [
+//           [0, 1, 0, 0, 2, 0, 0, 3, 0],
+//           [0, 0, 0, 0, 0, 0, 0, 0, 0],
+//           [0, 4, 0, 0, 5, 0, 0, 6, 0],
+//           [0, 0, 0, 0, 0, 0, 0, 0, 0],
+//           [0, 0, 0, 0, 0, 0, 0, 0, 0]
+//          ]
+
 // CHECK: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
 %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
 
