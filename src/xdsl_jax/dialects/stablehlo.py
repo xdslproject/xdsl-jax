@@ -49,8 +49,13 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl_jax.dialects.attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
+    CustomCallApiVersionAttr,
     DotAttr,
+    GatherDimensionNumbers,
+    OutputOperandAlias,
     PrecisionAttr,
+    ResultAccuracyModeAttr,
+    ScatterDimensionNumbers,
     TokenType,
 )
 
@@ -737,8 +742,13 @@ StableHLO = Dialect(
     [
         ComparisonDirectionAttr,
         ComparisonTypeAttr,
+        CustomCallApiVersionAttr,
         DotAttr,
+        GatherDimensionNumbers,
+        OutputOperandAlias,
         PrecisionAttr,
+        ResultAccuracyModeAttr,
+        ScatterDimensionNumbers,
         TokenType,
     ],
 )
