@@ -1433,7 +1433,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "jax", specifier = ">=0.6.2" },
-    { name = "xdsl", specifier = "==0.54.3" },
+    { name = "xdsl", specifier = "~=0.54.0" },
 ]
 
 [package.metadata.requires-dev]
