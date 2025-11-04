@@ -26,8 +26,8 @@ check: .venv/
 pyright: .venv/
 	uv run pyright $(shell git diff --staged --name-only  -- '*.py')
 
-.PHONY: test
-test: pytest filecheck
+.PHONY: tests
+tests: pytest filecheck
 
 .PHONY: pytest
 pytest: .venv/
