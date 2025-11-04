@@ -6,4 +6,4 @@ Extending JAX with xDSL.
 
 1. Clone repository
 2. Run `make install`
-3. Run `make test`
+3. Run `make tests`
