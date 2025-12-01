@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Extend JAX with xDSL."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["jax>=0.6.2", "xdsl>=0.55.0,<0.56.0"]
+dependencies = ["jax>=0.6.2", "xdsl~=0.55.0"]
 classifiers = ["Programming Language :: Python :: 3 :: Only", "Typing :: Typed"]
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
 authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
