@@ -1,13 +1,13 @@
 [project]
 name = "xdsl-jax"
-version = "0.1.0"
 description = "Extend JAX with xDSL."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["jax>=0.6.2", "xdsl==0.55.0"]
+dependencies = ["jax>=0.6.2", "xdsl~=0.55.0"]
 classifiers = ["Programming Language :: Python :: 3 :: Only", "Typing :: Typed"]
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
 authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
+dynamic = ["version"]
 
 [project.entry-points.'xdsl.universe']
 xdsl_jax = 'xdsl_jax.universe:XDSL_JAX_UNIVERSE'
@@ -19,8 +19,11 @@ Homepage = "https://xdsl.dev/xdsl-jax"
 
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
 
 [dependency-groups]
 dev = [
