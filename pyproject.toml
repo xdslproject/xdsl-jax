@@ -66,6 +66,14 @@ ignore = [
     "PYI041", # https://docs.astral.sh/ruff/rules/redundant-numeric-union
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# Allow long lines in StableHLO dialect files (contain MLIR examples in docstrings)
+"src/xdsl_jax/dialects/stablehlo/**/*.py" = ["E501"] 
+# Allow long lines in xdsl_extras files (contain detailed docstrings)
+"src/xdsl_jax/xdsl_extras/**/*.py" = ["E501"]
+# Allow long lines in test files (contain MLIR test cases)
+"tests/**/*.py" = ["E501"]
+
 [tool.ruff.lint.mccabe]
 max-complexity = 10
 
