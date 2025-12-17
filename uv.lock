@@ -1392,16 +1392,16 @@ wheels = [
 
 [[package]]
 name = "xdsl"
-version = "0.55.0"
+version = "0.56.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "immutabledict" },
     { name = "ordered-set" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/63/48/1a80896cb9f903ae26fda726d784d4a65b6a00f95f45eaca7bde23e8b06b/xdsl-0.55.0.tar.gz", hash = "sha256:adf7dd59984093b737987f64156e42dbd1962fc604c205b54eb65fce3e05084a", size = 3879242, upload-time = "2025-11-05T13:25:48.143Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/bd/6d/3e31291b697c6d524acac277d41c5d9cd423ff25254615f31814310ac4d5/xdsl-0.56.0.tar.gz", hash = "sha256:b8af96b1635215434c68cd8c955ad37fad0fb45ad2f8bc9cc2a3203c33440702", size = 3908426, upload-time = "2025-12-16T17:18:54.922Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/90/ca2145d48888b7f971868ae7639ceb50c97dbcc53cc5c55e0b261da897a2/xdsl-0.55.0-py3-none-any.whl", hash = "sha256:fb877ff0d6a7cbe5930ce007a4849ff78c49ba6f89e091bd666f08e1c8913179", size = 4101208, upload-time = "2025-11-05T13:25:46.616Z" },
+    { url = "https://files.pythonhosted.org/packages/ac/8c/6de89883b70d943c730d5648fa5298008b4edc455b64e76c134238267f7a/xdsl-0.56.0-py3-none-any.whl", hash = "sha256:921e6e1d3f9393a0f31e94936d97a057d970cc71eda65ec1d6471aa4976eb7c2", size = 4138361, upload-time = "2025-12-16T17:18:52.118Z" },
 ]
 
 [[package]]
@@ -1432,7 +1432,7 @@ docs = [
 [package.metadata]
 requires-dist = [
     { name = "jax", specifier = ">=0.6.2" },
-    { name = "xdsl", specifier = "~=0.55.0" },
+    { name = "xdsl", specifier = "~=0.56.0" },
 ]
 
 [package.metadata.requires-dev]
