@@ -1,9 +1,6 @@
 """
-StableHLO attribute definitions for PennyLane's compiler infrastructure.
-
 This module provides attribute definitions based on the StableHLO specification
-(https://github.com/openxla/stablehlo/blob/main/docs/spec.md), including
-attributes for StableHLO operations.
+(https://github.com/openxla/stablehlo/blob/main/docs/spec.md).
 """
 
 from collections.abc import Sequence
