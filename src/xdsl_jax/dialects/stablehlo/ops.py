@@ -22,12 +22,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
-from xdsl.ir import (
-    Attribute,
-    Dialect,
-    Region,
-    SSAValue,
-)
+from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
     AnyAttr,
     BaseAttr,
@@ -46,18 +41,7 @@ from xdsl.irdl import (
 from xdsl.traits import IsTerminator
 from xdsl.utils.exceptions import VerifyException
 
-from xdsl_jax.dialects.attributes import (
-    ComparisonDirectionAttr,
-    ComparisonTypeAttr,
-    CustomCallApiVersionAttr,
-    DotAttr,
-    GatherDimensionNumbers,
-    OutputOperandAlias,
-    PrecisionAttr,
-    ResultAccuracyModeAttr,
-    ScatterDimensionNumbers,
-    TokenType,
-)
+from xdsl_jax.dialects.stablehlo.attributes import TokenType
 
 IntegerTensorType: TypeAlias = TensorType[IntegerType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
@@ -710,45 +694,3 @@ class XorOp(IntegerTensorLikeElementwiseBinaryOperation):
     """
 
     name = "stablehlo.xor"
-
-
-StableHLO = Dialect(
-    "stablehlo",
-    [
-        AbsOp,
-        AddOp,
-        AfterAllOp,
-        AndOp,
-        Atan2Op,
-        BitcastConvertOp,
-        CaseOp,
-        CbrtOp,
-        CeilOp,
-        ConstantOp,
-        CountLeadingZerosOp,
-        MultiplyOp,
-        NotOp,
-        OrOp,
-        PopcntOp,
-        ReturnOp,
-        ShiftLeftOp,
-        ShiftRightArithmeticOp,
-        ShiftRightLogicalOp,
-        SubtractOp,
-        TransposeOp,
-        PadOp,
-        XorOp,
-    ],
-    [
-        ComparisonDirectionAttr,
-        ComparisonTypeAttr,
-        CustomCallApiVersionAttr,
-        DotAttr,
-        GatherDimensionNumbers,
-        OutputOperandAlias,
-        PrecisionAttr,
-        ResultAccuracyModeAttr,
-        ScatterDimensionNumbers,
-        TokenType,
-    ],
-)
