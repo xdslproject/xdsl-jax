@@ -147,4 +147,21 @@
   >
 } : () -> ()
 
-// CHECK-NEXT:  }
+// CHECK-NEXT:    "test.op"() {dimension_numbers = #stablehlo.gather<
+// CHECK-NEXT:      offset_dims = [2],
+// CHECK-NEXT:      collapsed_slice_dims = [1],
+// CHECK-NEXT:      operand_batching_dims = [0],
+// CHECK-NEXT:      start_indices_batching_dims = [1],
+// CHECK-NEXT:      start_index_map = [1],
+// CHECK-NEXT:      index_vector_dim = 2
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  dimension_numbers = #stablehlo.gather<
+    collapsed_slice_dims = [1],
+    operand_batching_dims = [0],
+    start_indices_batching_dims = [1],
+    index_vector_dim = 2,
+    offset_dims = [2],
+    start_index_map = [1]
+  >
+} : () -> ()

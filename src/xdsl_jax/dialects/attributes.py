@@ -311,95 +311,78 @@ class GatherDimensionNumbers(ParametrizedAttribute):
         """Print gather dimension numbers in structured format"""
         with printer.in_angle_brackets():
             with printer.indented():
-                # Print offset_dims
-                printer.print_string("\noffset_dims = ")
-                print_dims(printer, self.offset_dims)
-                printer.print_string(",")
+                fields = [
+                    ("offset_dims", lambda: print_dims(printer, self.offset_dims)),
+                    (
+                        "collapsed_slice_dims",
+                        lambda: print_dims(printer, self.collapsed_slice_dims),
+                    ),
+                    (
+                        "operand_batching_dims",
+                        lambda: print_dims(printer, self.operand_batching_dims),
+                    ),
+                    (
+                        "start_indices_batching_dims",
+                        lambda: print_dims(printer, self.start_indices_batching_dims),
+                    ),
+                    (
+                        "start_index_map",
+                        lambda: print_dims(printer, self.start_index_map),
+                    ),
+                    (
+                        "index_vector_dim",
+                        lambda: printer.print_string(
+                            f"{self.index_vector_dim.value.data}"
+                        ),
+                    ),
+                ]
 
-                # Print collapsed_slice_dims
-                printer.print_string("\ncollapsed_slice_dims = ")
-                print_dims(printer, self.collapsed_slice_dims)
-                printer.print_string(",")
-
-                # Print operand_batching_dims
-                printer.print_string("\noperand_batching_dims = ")
-                print_dims(printer, self.operand_batching_dims)
-                printer.print_string(",")
-
-                # Print start_indices_batching_dims
-                printer.print_string("\nstart_indices_batching_dims = ")
-                print_dims(printer, self.start_indices_batching_dims)
-                printer.print_string(",")
-
-                # Print start_index_map
-                printer.print_string("\nstart_index_map = ")
-                print_dims(printer, self.start_index_map)
-                printer.print_string(",")
-
-                # Print index_vector_dim
-                printer.print_string(
-                    f"\nindex_vector_dim = {self.index_vector_dim.value.data}"
-                )
+                for i, (name, print_func) in enumerate(fields):
+                    printer.print_string(f"\n{name} = ")
+                    print_func()
+                    if i < len(fields) - 1:
+                        printer.print_string(",")
             printer.print_string("\n")
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse gather dimension numbers from structured format"""
+
         with parser.in_angle_brackets():
-            # Initialize default values for all fields
-            offset_dims = ArrayAttr([])
-            collapsed_slice_dims = ArrayAttr([])
-            operand_batching_dims = ArrayAttr([])
-            start_indices_batching_dims = ArrayAttr([])
-            start_index_map = ArrayAttr([])
-            index_vector_dim = IntegerAttr(0, i64)
+            field_specs = [
+                ("offset_dims", ArrayAttr([]), lambda: parse_dims(parser)),
+                ("collapsed_slice_dims", ArrayAttr([]), lambda: parse_dims(parser)),
+                ("operand_batching_dims", ArrayAttr([]), lambda: parse_dims(parser)),
+                (
+                    "start_indices_batching_dims",
+                    ArrayAttr([]),
+                    lambda: parse_dims(parser),
+                ),
+                ("start_index_map", ArrayAttr([]), lambda: parse_dims(parser)),
+                (
+                    "index_vector_dim",
+                    IntegerAttr(0, i64),
+                    lambda: IntegerAttr(parser.parse_integer(), i64),
+                ),
+            ]
 
-            # Try to parse offset_dims
-            if parser.parse_optional_characters("offset_dims") is not None:
-                parser.parse_punctuation("=")
-                offset_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
+            results = [default for _, default, _ in field_specs]
+            seen_fields: set[str] = set()
 
-            # Try to parse collapsed_slice_dims
-            if parser.parse_optional_characters("collapsed_slice_dims") is not None:
-                parser.parse_punctuation("=")
-                collapsed_slice_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
+            while True:
+                for idx, (name, _, parse_func) in enumerate(field_specs):
+                    if parser.parse_optional_characters(name) is not None:
+                        if name in seen_fields:
+                            parser.raise_error(f"duplicate '{name}' field")
+                        seen_fields.add(name)
+                        parser.parse_punctuation("=")
+                        results[idx] = parse_func()
+                        parser.parse_optional_punctuation(",")
+                        break
+                else:
+                    break
 
-            # Try to parse operand_batching_dims
-            if parser.parse_optional_characters("operand_batching_dims") is not None:
-                parser.parse_punctuation("=")
-                operand_batching_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
-
-            # Try to parse start_indices_batching_dims
-            if (
-                parser.parse_optional_characters("start_indices_batching_dims")
-                is not None
-            ):
-                parser.parse_punctuation("=")
-                start_indices_batching_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
-
-            # Try to parse start_index_map
-            if parser.parse_optional_characters("start_index_map") is not None:
-                parser.parse_punctuation("=")
-                start_index_map = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
-
-            # Try to parse index_vector_dim
-            if parser.parse_optional_characters("index_vector_dim") is not None:
-                parser.parse_punctuation("=")
-                index_vector_dim = IntegerAttr(parser.parse_integer(), i64)
-
-            return (
-                offset_dims,
-                collapsed_slice_dims,
-                operand_batching_dims,
-                start_indices_batching_dims,
-                start_index_map,
-                index_vector_dim,
-            )
+            return tuple(results)
 
 
 @irdl_attr_definition
@@ -424,98 +407,84 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
         """Print scatter dimension numbers in structured format"""
         with printer.in_angle_brackets():
             with printer.indented():
-                # Print update_window_dims
-                printer.print_string("\nupdate_window_dims = ")
-                print_dims(printer, self.update_window_dims)
-                printer.print_string(",")
+                fields = [
+                    (
+                        "update_window_dims",
+                        lambda: print_dims(printer, self.update_window_dims),
+                    ),
+                    (
+                        "inserted_window_dims",
+                        lambda: print_dims(printer, self.inserted_window_dims),
+                    ),
+                    (
+                        "input_batching_dims",
+                        lambda: print_dims(printer, self.input_batching_dims),
+                    ),
+                    (
+                        "scatter_indices_batching_dims",
+                        lambda: print_dims(printer, self.scatter_indices_batching_dims),
+                    ),
+                    (
+                        "scatter_dims_to_operand_dims",
+                        lambda: print_dims(printer, self.scatter_dims_to_operand_dims),
+                    ),
+                    (
+                        "index_vector_dim",
+                        lambda: printer.print_string(
+                            f"{self.index_vector_dim.value.data}"
+                        ),
+                    ),
+                ]
 
-                # Print inserted_window_dims
-                printer.print_string("\ninserted_window_dims = ")
-                print_dims(printer, self.inserted_window_dims)
-                printer.print_string(",")
-
-                # Print input_batching_dims
-                printer.print_string("\ninput_batching_dims = ")
-                print_dims(printer, self.input_batching_dims)
-                printer.print_string(",")
-
-                # Print scatter_indices_batching_dims
-                printer.print_string("\nscatter_indices_batching_dims = ")
-                print_dims(printer, self.scatter_indices_batching_dims)
-                printer.print_string(",")
-
-                # Print scatter_dims_to_operand_dims
-                printer.print_string("\nscatter_dims_to_operand_dims = ")
-                print_dims(printer, self.scatter_dims_to_operand_dims)
-                printer.print_string(",")
-
-                # Print index_vector_dim
-                printer.print_string(
-                    f"\nindex_vector_dim = {self.index_vector_dim.value.data}"
-                )
+                for i, (name, print_func) in enumerate(fields):
+                    printer.print_string(f"\n{name} = ")
+                    print_func()
+                    if i < len(fields) - 1:
+                        printer.print_string(",")
             printer.print_string("\n")
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse scatter dimension numbers from structured format"""
         with parser.in_angle_brackets():
-            # Initialize default values for all fields
-            update_window_dims = ArrayAttr([])
-            inserted_window_dims = ArrayAttr([])
-            input_batching_dims = ArrayAttr([])
-            scatter_indices_batching_dims = ArrayAttr([])
-            scatter_dims_to_operand_dims = ArrayAttr([])
-            index_vector_dim = IntegerAttr(0, i64)
+            field_specs = [
+                ("update_window_dims", ArrayAttr([]), lambda: parse_dims(parser)),
+                ("inserted_window_dims", ArrayAttr([]), lambda: parse_dims(parser)),
+                ("input_batching_dims", ArrayAttr([]), lambda: parse_dims(parser)),
+                (
+                    "scatter_indices_batching_dims",
+                    ArrayAttr([]),
+                    lambda: parse_dims(parser),
+                ),
+                (
+                    "scatter_dims_to_operand_dims",
+                    ArrayAttr([]),
+                    lambda: parse_dims(parser),
+                ),
+                (
+                    "index_vector_dim",
+                    IntegerAttr(0, i64),
+                    lambda: IntegerAttr(parser.parse_integer(), i64),
+                ),
+            ]
 
-            # Try to parse update_window_dims
-            if parser.parse_optional_characters("update_window_dims") is not None:
-                parser.parse_punctuation("=")
-                update_window_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
+            results = [default for _, default, _ in field_specs]
+            seen_fields: set[str] = set()
 
-            # Try to parse inserted_window_dims
-            if parser.parse_optional_characters("inserted_window_dims") is not None:
-                parser.parse_punctuation("=")
-                inserted_window_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
+            while True:
+                for idx, (name, _, parse_func) in enumerate(field_specs):
+                    if parser.parse_optional_characters(name) is not None:
+                        if name in seen_fields:
+                            parser.raise_error(f"duplicate '{name}' field")
+                        seen_fields.add(name)
+                        parser.parse_punctuation("=")
+                        results[idx] = parse_func()
+                        parser.parse_optional_punctuation(",")
+                        break
+                else:
+                    break
 
-            # Try to parse input_batching_dims
-            if parser.parse_optional_characters("input_batching_dims") is not None:
-                parser.parse_punctuation("=")
-                input_batching_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
-
-            # Try to parse scatter_indices_batching_dims
-            if (
-                parser.parse_optional_characters("scatter_indices_batching_dims")
-                is not None
-            ):
-                parser.parse_punctuation("=")
-                scatter_indices_batching_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
-
-            # Try to parse scatter_dims_to_operand_dims
-            if (
-                parser.parse_optional_characters("scatter_dims_to_operand_dims")
-                is not None
-            ):
-                parser.parse_punctuation("=")
-                scatter_dims_to_operand_dims = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
-
-            # Try to parse index_vector_dim
-            if parser.parse_optional_characters("index_vector_dim") is not None:
-                parser.parse_punctuation("=")
-                index_vector_dim = IntegerAttr(parser.parse_integer(), i64)
-
-            return (
-                update_window_dims,
-                inserted_window_dims,
-                input_batching_dims,
-                scatter_indices_batching_dims,
-                scatter_dims_to_operand_dims,
-                index_vector_dim,
-            )
+            return tuple(results)
 
 
 class CustomCallApiVersion(StrEnum):
@@ -594,7 +563,7 @@ class OutputOperandAlias(ParametrizedAttribute):
             printer.print_string("\n")
 
     @classmethod
-    def parse_parameters(cls, parser: AttrParser):
+    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse the OutputOperandAlias attribute."""
         with parser.in_angle_brackets():
             output_tuple_indices = ArrayAttr([])
