@@ -1,0 +1,72 @@
+from xdsl.ir import Dialect
+
+from .attributes import (
+    ComparisonDirectionAttr,
+    ComparisonTypeAttr,
+    DotAttr,
+    PrecisionAttr,
+    TokenType,
+)
+from .ops import (
+    AbsOp,
+    AddOp,
+    AfterAllOp,
+    AndOp,
+    Atan2Op,
+    BitcastConvertOp,
+    CaseOp,
+    CbrtOp,
+    CeilOp,
+    ConstantOp,
+    CountLeadingZerosOp,
+    MultiplyOp,
+    NotOp,
+    OrOp,
+    PadOp,
+    PopcntOp,
+    ReturnOp,
+    ShiftLeftOp,
+    ShiftRightArithmeticOp,
+    ShiftRightLogicalOp,
+    SubtractOp,
+    TransposeOp,
+    XorOp,
+)
+
+StableHLO = Dialect(
+    "stablehlo",
+    [
+        AbsOp,
+        AddOp,
+        AfterAllOp,
+        AndOp,
+        Atan2Op,
+        BitcastConvertOp,
+        CaseOp,
+        CbrtOp,
+        CeilOp,
+        ConstantOp,
+        CountLeadingZerosOp,
+        MultiplyOp,
+        NotOp,
+        OrOp,
+        PopcntOp,
+        ReturnOp,
+        ShiftLeftOp,
+        ShiftRightArithmeticOp,
+        ShiftRightLogicalOp,
+        SubtractOp,
+        TransposeOp,
+        PadOp,
+        XorOp,
+    ],
+    [
+        ComparisonDirectionAttr,
+        ComparisonTypeAttr,
+        DotAttr,
+        PrecisionAttr,
+        TokenType,
+    ],
+)
+
+__all__ = ["StableHLO"]
