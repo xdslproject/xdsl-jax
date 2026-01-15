@@ -15,7 +15,7 @@ from xdsl_jax.xdsl_extras import NestedTupleOfConstraint
 class TestNestedTupleOfConstraint:
     """Tests for the NestedTupleOfConstraint class."""
 
-    multiple_constraint = NestedTupleOfConstraint([TensorType, TokenType])
+    multiple_constraint = NestedTupleOfConstraint(AnyOf([TensorType, TokenType]))
     single_constraint = NestedTupleOfConstraint(TensorType)
 
     def test_nested_tuple_of_constraint(self):
@@ -71,11 +71,13 @@ class TestNestedTupleOfConstraint:
         _T = TypeVar("_T")
 
         constraint = NestedTupleOfConstraint(
-            [TypeVarConstraint(_T, BaseAttr(TensorType)), BaseAttr(TokenType)]
+            AnyOf([TypeVarConstraint(_T, BaseAttr(TensorType)), BaseAttr(TokenType)])
         )
 
         with pytest.raises(KeyError, match="Mapping value missing for type var"):
             constraint.mapping_type_vars({})
 
-        expected = NestedTupleOfConstraint([BaseAttr(MemRefType), BaseAttr(TokenType)])
+        expected = NestedTupleOfConstraint(
+            AnyOf([BaseAttr(MemRefType), BaseAttr(TokenType)])
+        )
         assert constraint.mapping_type_vars({_T: BaseAttr(MemRefType)}) == expected
