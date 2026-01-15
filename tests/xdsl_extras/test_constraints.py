@@ -2,12 +2,12 @@
 
 from typing import TypeVar
 
+import pytest
 from xdsl.dialects.builtin import MemRefType, TensorType, TupleType, i1, i32
 from xdsl.irdl import BaseAttr, TypeVarConstraint
 from xdsl.irdl.constraints import AnyOf, ConstraintContext
 from xdsl.utils.exceptions import VerifyException
 
-import pytest
 from xdsl_jax.dialects.stablehlo import TokenType
 from xdsl_jax.xdsl_extras import NestedTupleOfConstraint
 
