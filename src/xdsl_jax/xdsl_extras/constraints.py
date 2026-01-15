@@ -11,6 +11,7 @@ from xdsl.irdl import (
     AttrConstraint,
     ConstraintContext,
     IntConstraint,
+    IRDLAttrConstraint,
     irdl_to_attr_constraint,
 )
 from xdsl.utils.exceptions import VerifyException
@@ -24,8 +25,8 @@ class NestedTupleOfConstraint(AttrConstraint[TupleType]):
 
     elem_constraint: AttrConstraint
 
-    def __init__(self, elem_constraint: object):
-        constraint = irdl_to_attr_constraint(elem_constraint)  # pyright: ignore[reportArgumentType]
+    def __init__(self, elem_constraint: IRDLAttrConstraint):
+        constraint = irdl_to_attr_constraint(elem_constraint)
         object.__setattr__(self, "elem_constraint", constraint)
 
     def get_flattened(self, a: Attribute) -> Iterator[Attribute]:
