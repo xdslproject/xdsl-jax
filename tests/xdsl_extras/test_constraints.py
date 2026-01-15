@@ -4,7 +4,7 @@ from typing import TypeVar
 
 from xdsl.dialects.builtin import MemRefType, TensorType, TupleType, i1, i32
 from xdsl.irdl import BaseAttr, TypeVarConstraint
-from xdsl.irdl.constraints import ConstraintContext
+from xdsl.irdl.constraints import AnyOf, ConstraintContext
 from xdsl.utils.exceptions import VerifyException
 
 import pytest
@@ -15,21 +15,35 @@ from xdsl_jax.xdsl_extras import NestedTupleOfConstraint
 class TestNestedTupleOfConstraint:
     """Tests for the NestedTupleOfConstraint class."""
 
-    constraint = NestedTupleOfConstraint([TensorType, TokenType])
+    multiple_constraint = NestedTupleOfConstraint([TensorType, TokenType])
+    single_constraint = NestedTupleOfConstraint(TensorType)
 
     def test_nested_tuple_of_constraint(self):
         """Test that the properties of NestedTupleOfConstraint object are correct."""
-        assert self.constraint.elem_constraints == (
-            BaseAttr(TensorType),
-            BaseAttr(TokenType),
-        )
+        assert isinstance(self.multiple_constraint.elem_constraint, AnyOf)
+        assert hasattr(self.multiple_constraint.elem_constraint, "attr_constrs")
 
-    def test_nested_tuple_of_constraint_verify_valid(self):
-        """Test that verifying a valid tuple of tensor and token types passes."""
+        assert not isinstance(self.single_constraint.elem_constraint, AnyOf)
+        assert self.single_constraint.elem_constraint == BaseAttr(TensorType)
+
+    def test_single_constraint_accepts_nested(self):
+        """Test that nested tuples with only TensorType are accepted."""
+        tensor1 = TensorType(i32, [2])
+        tensor2 = TensorType(i1, [1])
+        inner = TupleType((tensor1,))
+        outer = TupleType((tensor2, inner))
+        self.single_constraint.verify(outer, ConstraintContext())
+
+    def test_single_constraint_rejects_disallowed_type(self):
+        """Test that a tuple with non-TensorType elements raises a VerifyException."""
         tensor = TensorType(i32, [2])
         token = TokenType()
-        tup = TupleType((tensor, token))
-        self.constraint.verify(tup, ConstraintContext())
+        invalid_tup = TupleType((tensor, token))
+        with pytest.raises(
+            VerifyException,
+            match="tuple leaf 1 failed constraint:",
+        ):
+            self.single_constraint.verify(invalid_tup, ConstraintContext())
 
     def test_nested_tuple_of_constraint_accepts_nested(self):
         """Test that nested tuples are accepted."""
@@ -38,7 +52,7 @@ class TestNestedTupleOfConstraint:
         token = TokenType()
         inner = TupleType((token, tensor2))
         outer = TupleType((tensor1, inner))
-        self.constraint.verify(outer, ConstraintContext())
+        self.multiple_constraint.verify(outer, ConstraintContext())
 
     def test_nested_tuple_of_constraint_rejects_disallowed_type(self):
         """Test that a tuple with a disallowed type raises a VerifyException."""
@@ -47,9 +61,9 @@ class TestNestedTupleOfConstraint:
         tup = TupleType((tensor, memref))
         with pytest.raises(
             VerifyException,
-            match="tuple leaf 1 failed all allowed constraints: memref<2xi32>",
+            match="tuple leaf 1 failed constraint: memref<2xi32>",
         ):
-            self.constraint.verify(tup, ConstraintContext())
+            self.multiple_constraint.verify(tup, ConstraintContext())
 
     def test_nested_tuple_of_constraint_mapping_type_vars(self):
         """Test that mapping_type_vars correctly replaces type variables in nested
