@@ -3,8 +3,13 @@ from xdsl.ir import Dialect
 from .attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
+    CustomCallApiVersionAttr,
     DotAttr,
+    GatherDimensionNumbers,
+    OutputOperandAlias,
     PrecisionAttr,
+    ResultAccuracyModeAttr,
+    ScatterDimensionNumbers,
     TokenType,
 )
 from .ops import (
@@ -63,8 +68,13 @@ StableHLO = Dialect(
     [
         ComparisonDirectionAttr,
         ComparisonTypeAttr,
+        CustomCallApiVersionAttr,
         DotAttr,
+        GatherDimensionNumbers,
+        OutputOperandAlias,
         PrecisionAttr,
+        ResultAccuracyModeAttr,
+        ScatterDimensionNumbers,
         TokenType,
     ],
 )
