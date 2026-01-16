@@ -15,7 +15,7 @@ from xdsl_jax.xdsl_extras import NestedTupleOfConstraint
 class TestNestedTupleOfConstraint:
     """Tests for the NestedTupleOfConstraint class."""
 
-    multiple_constraint = NestedTupleOfConstraint(AnyOf([TensorType, TokenType]))
+    multiple_constraint = NestedTupleOfConstraint(TensorType | TokenType)
     single_constraint = NestedTupleOfConstraint(TensorType)
 
     def test_nested_tuple_of_constraint(self):
