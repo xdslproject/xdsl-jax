@@ -4,6 +4,7 @@ from .attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
     DotAttr,
+    OutputOperandAlias,
     PrecisionAttr,
     TokenType,
 )
@@ -64,6 +65,7 @@ StableHLO = Dialect(
         ComparisonDirectionAttr,
         ComparisonTypeAttr,
         DotAttr,
+        OutputOperandAlias,
         PrecisionAttr,
         TokenType,
     ],

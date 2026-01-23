@@ -70,4 +70,17 @@
   unsigned = #stablehlo<comparison_type UNSIGNED>
 } : () -> ()
 
+// CHECK-NEXT:    "test.op"() {alias = #stablehlo.output_operand_alias<
+// CHECK-NEXT:      output_tuple_indices = [0],
+// CHECK-NEXT:      operand_index = 1,
+// CHECK-NEXT:      operand_tuple_indices = [2]
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  alias = #stablehlo.output_operand_alias<
+    output_tuple_indices = [0],
+    operand_index = 1,
+    operand_tuple_indices = [2]
+  >
+} : () -> ()
+
 // CHECK-NEXT:  }
