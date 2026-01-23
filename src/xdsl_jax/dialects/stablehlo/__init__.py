@@ -5,11 +5,8 @@ from .attributes import (
     ComparisonTypeAttr,
     CustomCallApiVersionAttr,
     DotAttr,
-    GatherDimensionNumbers,
-    OutputOperandAlias,
     PrecisionAttr,
     ResultAccuracyModeAttr,
-    ScatterDimensionNumbers,
     TokenType,
 )
 from .ops import (
@@ -70,11 +67,8 @@ StableHLO = Dialect(
         ComparisonTypeAttr,
         CustomCallApiVersionAttr,
         DotAttr,
-        GatherDimensionNumbers,
-        OutputOperandAlias,
         PrecisionAttr,
         ResultAccuracyModeAttr,
-        ScatterDimensionNumbers,
         TokenType,
     ],
 )
