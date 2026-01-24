@@ -84,3 +84,28 @@
 } : () -> ()
 
 // CHECK-NEXT:  }
+// CHECK-NEXT:    "test.op"() {
+// CHECK-SAME:      default = #stablehlo<result_accuracy_mode DEFAULT>,
+// CHECK-SAME:      high = #stablehlo<result_accuracy_mode HIGHEST>,
+// CHECK-SAME:      highest = #stablehlo<result_accuracy_mode TOLERANCE>
+// CHECK-SAME:    } : () -> ()
+"test.op"() {
+  default = #stablehlo<result_accuracy_mode DEFAULT>,
+  high = #stablehlo<result_accuracy_mode HIGHEST>,
+  highest = #stablehlo<result_accuracy_mode TOLERANCE>
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {
+// CHECK-SAME:      unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
+// CHECK-SAME:      original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
+// CHECK-SAME:      status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
+// CHECK-SAME:      status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
+// CHECK-SAME:      typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
+// CHECK-SAME:    } : () -> ()
+"test.op"() {
+  unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
+  original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
+  status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
+  status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
+  typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
+} : () -> ()
