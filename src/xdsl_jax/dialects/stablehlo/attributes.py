@@ -19,6 +19,29 @@ from xdsl.parser import AttrParser
 from xdsl.printer import Printer
 
 
+# region: Utility functions for dimension array parsing/printing
+def parse_dims(parser: AttrParser) -> ArrayAttr[IntegerAttr[I64]]:
+    """Parse dimension array in [1, 2, 3] format"""
+    value = parser.parse_comma_separated_list(
+        AttrParser.Delimiter.SQUARE,
+        lambda: IntegerAttr(parser.parse_integer(), i64),
+    )
+    return ArrayAttr(value)
+
+
+def print_dims(printer: Printer, dims: ArrayAttr[IntegerAttr[I64]]):
+    """Print dimension array in [1, 2, 3] format"""
+    printer.print_string("[")
+    printer.print_list(
+        dims.data,
+        lambda dim: printer.print_string(f"{dim.value.data}"),
+    )
+    printer.print_string("]")
+
+
+# endregion
+
+
 class ComparisonDirection(StrEnum):
     """
     Comparison direction for stablehlo.
@@ -241,6 +264,84 @@ class DotAttr(ParametrizedAttribute):
                 lhs_contracting_dimensions,
                 rhs_contracting_dimensions,
             )
+
+
+@irdl_attr_definition
+class OutputOperandAlias(ParametrizedAttribute):
+    """
+    This attribute captures the alias relationship of the output to one of the
+    operands for a ``CustomCall`` op, denoted by ``operand_index``. The
+    ``output_tuple_indices`` and ``operand_tuple_indices`` are used to index into
+    output and operand types. These indices lists are empty if the corresponding
+    types are not tuple types, and can be arbitrarily long in case of
+    arbitrarily nested tuple types.
+
+    See https://www.tensorflow.org/xla/aliasing.
+
+    Example when used as array with in stablehlo.custom-call:
+
+    ```mlir
+    %0 = "stablehlo.custom_call"(%arg0, %arg1) {
+      // other attributes
+      output_operand_alias = [
+        #stablehlo.output_operand_alias<output_tuple_indices = [0],
+                                   operand_index = 0,
+                                   operand_tuple_indices = [1]>
+      ]
+    } : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>)
+      -> tuple<tensor<2x3xf32>>
+
+    The output and the 0th operand are both tuples. The aliasing shows the
+    relationship between the 0th element in output tuple with the 1st element in
+    the 0th operand. And both of them are of the same type: ``tensor<2x3xf32>``.
+    ```
+    """
+
+    name = "stablehlo.output_operand_alias"
+
+    output_tuple_indices: ArrayAttr[IntegerAttr[I64]]
+    operand_index: IntegerAttr[I64]
+    operand_tuple_indices: ArrayAttr[IntegerAttr[I64]]
+
+    def print_parameters(self, printer: Printer) -> None:
+        """Print the OutputOperandAlias attribute."""
+        with printer.in_angle_brackets():
+            with printer.indented():
+                printer.print_string("\noutput_tuple_indices = ")
+                print_dims(printer, self.output_tuple_indices)
+                printer.print_string(",")
+
+                printer.print_string("\noperand_index = ")
+                printer.print_string(f"{self.operand_index.value.data}")
+                printer.print_string(",")
+
+                printer.print_string("\noperand_tuple_indices = ")
+                print_dims(printer, self.operand_tuple_indices)
+            printer.print_string("\n")
+
+    @classmethod
+    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
+        """Parse the OutputOperandAlias attribute."""
+        with parser.in_angle_brackets():
+            output_tuple_indices = ArrayAttr([])
+            operand_index = IntegerAttr(0, i64)
+            operand_tuple_indices = ArrayAttr([])
+
+            if parser.parse_optional_characters("output_tuple_indices") is not None:
+                parser.parse_punctuation("=")
+                output_tuple_indices = parse_dims(parser)
+                parser.parse_optional_punctuation(",")
+
+            if parser.parse_optional_characters("operand_index") is not None:
+                parser.parse_punctuation("=")
+                operand_index = IntegerAttr(parser.parse_integer(), i64)
+                parser.parse_optional_punctuation(",")
+
+            if parser.parse_optional_characters("operand_tuple_indices") is not None:
+                parser.parse_punctuation("=")
+                operand_tuple_indices = parse_dims(parser)
+
+            return (output_tuple_indices, operand_index, operand_tuple_indices)
 
 
 class ResultAccuracyMode(StrEnum):
