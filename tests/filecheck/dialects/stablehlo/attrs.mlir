@@ -83,7 +83,6 @@
   >
 } : () -> ()
 
-// CHECK-NEXT:  }
 // CHECK-NEXT:    "test.op"() {
 // CHECK-SAME:      default = #stablehlo<result_accuracy_mode DEFAULT>,
 // CHECK-SAME:      high = #stablehlo<result_accuracy_mode HIGHEST>,
@@ -109,3 +108,5 @@
   status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
   typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
 } : () -> ()
+
+// CHECK-NEXT:  }
