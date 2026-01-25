@@ -19,7 +19,7 @@ from xdsl.parser import AttrParser
 from xdsl.printer import Printer
 
 
-# Utility functions for dimension array parsing/printing
+# region: Utility functions for dimension array parsing/printing
 def parse_dims(parser: AttrParser) -> ArrayAttr[IntegerAttr[I64]]:
     """Parse dimension array in [1, 2, 3] format"""
     value = parser.parse_comma_separated_list(
@@ -37,6 +37,9 @@ def print_dims(printer: Printer, dims: ArrayAttr[IntegerAttr[I64]]):
         lambda dim: printer.print_string(f"{dim.value.data}"),
     )
     printer.print_string("]")
+
+
+# endregion
 
 
 class ComparisonDirection(StrEnum):
