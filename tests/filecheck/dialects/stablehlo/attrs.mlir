@@ -127,3 +127,5 @@
   status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
   typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
 } : () -> ()
+
+// CHECK-NEXT:  }
