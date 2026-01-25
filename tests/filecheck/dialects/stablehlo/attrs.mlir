@@ -113,25 +113,6 @@
   >
 } : () -> ()
 
-// CHECK-NEXT:    "test.op"() {scatter = #stablehlo.scatter<
-// CHECK-NEXT:      update_window_dims = [0, 1],
-// CHECK-NEXT:      inserted_window_dims = [2],
-// CHECK-NEXT:      input_batching_dims = [3],
-// CHECK-NEXT:      scatter_indices_batching_dims = [4],
-// CHECK-NEXT:      scatter_dims_to_operand_dims = [5],
-// CHECK-NEXT:      index_vector_dim = 6
-// CHECK-NEXT:    >} : () -> ()
-"test.op"() {
-  scatter = #stablehlo.scatter<
-    update_window_dims = [0, 1],
-    inserted_window_dims = [2],
-    input_batching_dims = [3],
-    scatter_indices_batching_dims = [4],
-    scatter_dims_to_operand_dims = [5],
-    index_vector_dim = 6
-  >
-} : () -> ()
-
 // CHECK-NEXT:    "test.op"() {
 // CHECK-SAME:      unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
 // CHECK-SAME:      original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
