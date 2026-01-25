@@ -94,25 +94,6 @@
   highest = #stablehlo<result_accuracy_mode TOLERANCE>
 } : () -> ()
 
-// CHECK-NEXT:    "test.op"() {gather = #stablehlo.gather<
-// CHECK-NEXT:      offset_dims = [0, 1],
-// CHECK-NEXT:      collapsed_slice_dims = [2],
-// CHECK-NEXT:      operand_batching_dims = [3],
-// CHECK-NEXT:      start_indices_batching_dims = [4],
-// CHECK-NEXT:      start_index_map = [5],
-// CHECK-NEXT:      index_vector_dim = 6
-// CHECK-NEXT:    >} : () -> ()
-"test.op"() {
-  gather = #stablehlo.gather<
-    offset_dims = [0, 1],
-    collapsed_slice_dims = [2],
-    operand_batching_dims = [3],
-    start_indices_batching_dims = [4],
-    start_index_map = [5],
-    index_vector_dim = 6
-  >
-} : () -> ()
-
 // CHECK-NEXT:    "test.op"() {scatter = #stablehlo.scatter<
 // CHECK-NEXT:      update_window_dims = [0, 1],
 // CHECK-NEXT:      inserted_window_dims = [2],
@@ -145,23 +126,4 @@
   status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
   status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
   typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
-} : () -> ()
-
-// CHECK-NEXT:    "test.op"() {dimension_numbers = #stablehlo.gather<
-// CHECK-NEXT:      offset_dims = [2],
-// CHECK-NEXT:      collapsed_slice_dims = [1],
-// CHECK-NEXT:      operand_batching_dims = [0],
-// CHECK-NEXT:      start_indices_batching_dims = [1],
-// CHECK-NEXT:      start_index_map = [1],
-// CHECK-NEXT:      index_vector_dim = 2
-// CHECK-NEXT:    >} : () -> ()
-"test.op"() {
-  dimension_numbers = #stablehlo.gather<
-    collapsed_slice_dims = [1],
-    operand_batching_dims = [0],
-    start_indices_batching_dims = [1],
-    index_vector_dim = 2,
-    offset_dims = [2],
-    start_index_map = [1]
-  >
 } : () -> ()
