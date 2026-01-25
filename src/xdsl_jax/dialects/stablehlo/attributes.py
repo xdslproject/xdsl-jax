@@ -266,29 +266,6 @@ class DotAttr(ParametrizedAttribute):
             )
 
 
-class ResultAccuracyMode(StrEnum):
-    """
-    XLA result accuracy mode.
-    """
-
-    DEFAULT = "DEFAULT"
-    HIGH = "HIGHEST"
-    HIGHEST = "TOLERANCE"
-
-
-@irdl_attr_definition
-class ResultAccuracyModeAttr(
-    EnumAttribute[ResultAccuracyMode], SpacedOpaqueSyntaxAttribute
-):
-    """
-    XLA result accuracy mode.
-
-    See external [documentation](https://github.com/openxla/stablehlo/blob/7c50d4efeaea30bff6aa5e46c7f71170f5aa06af/stablehlo/dialect/StablehloEnums.td#L49-L70).
-    """
-
-    name = "stablehlo.result_accuracy_mode"
-
-
 @irdl_attr_definition
 class GatherDimensionNumbers(ParametrizedAttribute):
     """
@@ -487,28 +464,6 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
             return tuple(results)
 
 
-class CustomCallApiVersion(StrEnum):
-    """StableHLO CustomCall API version."""
-
-    API_VERSION_UNSPECIFIED = "API_VERSION_UNSPECIFIED"
-    API_VERSION_ORIGINAL = "API_VERSION_ORIGINAL"
-    API_VERSION_STATUS_RETURNING = "API_VERSION_STATUS_RETURNING"
-    API_VERSION_STATUS_RETURNING_UNIFIED = "API_VERSION_STATUS_RETURNING_UNIFIED"
-    API_VERSION_TYPED_FFI = "API_VERSION_TYPED_FFI"
-
-
-@irdl_attr_definition
-class CustomCallApiVersionAttr(
-    EnumAttribute[CustomCallApiVersion], SpacedOpaqueSyntaxAttribute
-):
-    """StableHLO custom call API version attribute.
-
-    Mirrors StableHLO enum for CustomCall API versions.
-    """
-
-    name = "stablehlo.custom_call_api_version"
-
-
 @irdl_attr_definition
 class OutputOperandAlias(ParametrizedAttribute):
     """
@@ -585,3 +540,48 @@ class OutputOperandAlias(ParametrizedAttribute):
                 operand_tuple_indices = parse_dims(parser)
 
             return (output_tuple_indices, operand_index, operand_tuple_indices)
+
+
+class ResultAccuracyMode(StrEnum):
+    """
+    XLA result accuracy mode.
+    """
+
+    DEFAULT = "DEFAULT"
+    HIGH = "HIGHEST"
+    HIGHEST = "TOLERANCE"
+
+
+@irdl_attr_definition
+class ResultAccuracyModeAttr(
+    EnumAttribute[ResultAccuracyMode], SpacedOpaqueSyntaxAttribute
+):
+    """
+    XLA result accuracy mode.
+
+    See external [documentation](https://github.com/openxla/stablehlo/blob/7c50d4efeaea30bff6aa5e46c7f71170f5aa06af/stablehlo/dialect/StablehloEnums.td#L49-L70).
+    """
+
+    name = "stablehlo.result_accuracy_mode"
+
+
+class CustomCallApiVersion(StrEnum):
+    """StableHLO CustomCall API version."""
+
+    API_VERSION_UNSPECIFIED = "API_VERSION_UNSPECIFIED"
+    API_VERSION_ORIGINAL = "API_VERSION_ORIGINAL"
+    API_VERSION_STATUS_RETURNING = "API_VERSION_STATUS_RETURNING"
+    API_VERSION_STATUS_RETURNING_UNIFIED = "API_VERSION_STATUS_RETURNING_UNIFIED"
+    API_VERSION_TYPED_FFI = "API_VERSION_TYPED_FFI"
+
+
+@irdl_attr_definition
+class CustomCallApiVersionAttr(
+    EnumAttribute[CustomCallApiVersion], SpacedOpaqueSyntaxAttribute
+):
+    """StableHLO custom call API version attribute.
+
+    Mirrors StableHLO enum for CustomCall API versions.
+    """
+
+    name = "stablehlo.custom_call_api_version"

@@ -70,6 +70,19 @@
   unsigned = #stablehlo<comparison_type UNSIGNED>
 } : () -> ()
 
+// CHECK-NEXT:    "test.op"() {alias = #stablehlo.output_operand_alias<
+// CHECK-NEXT:      output_tuple_indices = [0],
+// CHECK-NEXT:      operand_index = 1,
+// CHECK-NEXT:      operand_tuple_indices = [2]
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  alias = #stablehlo.output_operand_alias<
+    output_tuple_indices = [0],
+    operand_index = 1,
+    operand_tuple_indices = [2]
+  >
+} : () -> ()
+
 // CHECK-NEXT:    "test.op"() {
 // CHECK-SAME:      default = #stablehlo<result_accuracy_mode DEFAULT>,
 // CHECK-SAME:      high = #stablehlo<result_accuracy_mode HIGHEST>,
@@ -132,19 +145,6 @@
   status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
   status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
   typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
-} : () -> ()
-
-// CHECK-NEXT:    "test.op"() {alias = #stablehlo.output_operand_alias<
-// CHECK-NEXT:      output_tuple_indices = [0],
-// CHECK-NEXT:      operand_index = 1,
-// CHECK-NEXT:      operand_tuple_indices = [2]
-// CHECK-NEXT:    >} : () -> ()
-"test.op"() {
-  alias = #stablehlo.output_operand_alias<
-    output_tuple_indices = [0],
-    operand_index = 1,
-    operand_tuple_indices = [2]
-  >
 } : () -> ()
 
 // CHECK-NEXT:    "test.op"() {dimension_numbers = #stablehlo.gather<
