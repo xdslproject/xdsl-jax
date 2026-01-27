@@ -343,37 +343,20 @@ class GatherDimensionNumbers(ParametrizedAttribute):
         """Print gather dimension numbers in structured format"""
         with printer.in_angle_brackets():
             with printer.indented():
-                fields = [
-                    ("offset_dims", lambda: print_dims(printer, self.offset_dims)),
-                    (
-                        "collapsed_slice_dims",
-                        lambda: print_dims(printer, self.collapsed_slice_dims),
-                    ),
-                    (
-                        "operand_batching_dims",
-                        lambda: print_dims(printer, self.operand_batching_dims),
-                    ),
-                    (
-                        "start_indices_batching_dims",
-                        lambda: print_dims(printer, self.start_indices_batching_dims),
-                    ),
-                    (
-                        "start_index_map",
-                        lambda: print_dims(printer, self.start_index_map),
-                    ),
-                    (
-                        "index_vector_dim",
-                        lambda: printer.print_string(
-                            f"{self.index_vector_dim.value.data}"
+                print_struct(
+                    printer,
+                    [
+                        ("offset_dims", self.offset_dims),
+                        ("collapsed_slice_dims", self.collapsed_slice_dims),
+                        ("operand_batching_dims", self.operand_batching_dims),
+                        (
+                            "start_indices_batching_dims",
+                            self.start_indices_batching_dims,
                         ),
-                    ),
-                ]
-
-                for i, (name, print_func) in enumerate(fields):
-                    printer.print_string(f"\n{name} = ")
-                    print_func()
-                    if i < len(fields) - 1:
-                        printer.print_string(",")
+                        ("start_index_map", self.start_index_map),
+                        ("index_vector_dim", self.index_vector_dim),
+                    ],
+                )
             printer.print_string("\n")
 
     @classmethod
