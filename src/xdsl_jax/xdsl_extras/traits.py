@@ -29,7 +29,7 @@ class SameOperandsAndResultShape(OpTrait):
             )
 
         # Get all types (operands and results) to check for compatible shapes
-        all_types = list(op.operand_types) + list(op.result_types)
+        all_types = tuple(op.operand_types) + tuple(op.result_types)
 
         # Check that all types have compatible shapes
         for type_to_check in all_types[1:]:
@@ -80,7 +80,7 @@ class SameOperandsAndResultElementType(OpTrait):
         # Get the element type of the first operand
         first_elem_type = get_element_type_or_self(op.operand_types[0])
 
-        all_types = list(op.operand_types) + list(op.result_types)
+        all_types = tuple(op.operand_types) + tuple(op.result_types)
 
         # Check that all other operands have the same element type
         for type_to_check in all_types[1:]:
@@ -133,12 +133,12 @@ class Elementwise(OpTrait):
         """Verify that the operation is elementwise."""
 
         # Filter mappable types from results and operands (vectors/tensors only)
-        result_mappable_types = [
+        result_mappable_types = tuple(
             t for t in op.result_types if Elementwise.is_mappable_type(t)
-        ]
-        operand_mappable_types = [
+        )
+        operand_mappable_types = tuple(
             t for t in op.operand_types if Elementwise.is_mappable_type(t)
-        ]
+        )
 
         # If the op only has scalar operand/result types, then we have nothing to check
         if not result_mappable_types and not operand_mappable_types:
