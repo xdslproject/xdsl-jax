@@ -164,8 +164,7 @@ def test_elementwise_trait_failure_no_tensor_result():
 
     with pytest.raises(
         VerifyException,
-        match="if an operand is non-scalar, then all results must be non-scalar"
-        "non-scalar result",
+        match="if an operand is non-scalar, then all results must be non-scalar",
     ):
         op.verify()
 
