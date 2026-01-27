@@ -362,42 +362,53 @@ class GatherDimensionNumbers(ParametrizedAttribute):
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse gather dimension numbers from structured format"""
-
         with parser.in_angle_brackets():
-            field_specs = [
-                ("offset_dims", ArrayAttr([]), lambda: parse_dims(parser)),
-                ("collapsed_slice_dims", ArrayAttr([]), lambda: parse_dims(parser)),
-                ("operand_batching_dims", ArrayAttr([]), lambda: parse_dims(parser)),
-                (
+            # Initialize with defaults
+            results: dict[str, Attribute] = {
+                "offset_dims": ArrayAttr(()),
+                "collapsed_slice_dims": ArrayAttr(()),
+                "operand_batching_dims": ArrayAttr(()),
+                "start_indices_batching_dims": ArrayAttr(()),
+                "start_index_map": ArrayAttr(()),
+                "index_vector_dim": IntegerAttr(0, i64),
+            }
+
+            parse_struct(
+                parser,
+                [
+                    "offset_dims",
+                    "collapsed_slice_dims",
+                    "operand_batching_dims",
                     "start_indices_batching_dims",
-                    ArrayAttr([]),
-                    lambda: parse_dims(parser),
-                ),
-                ("start_index_map", ArrayAttr([]), lambda: parse_dims(parser)),
-                (
+                    "start_index_map",
                     "index_vector_dim",
-                    IntegerAttr(0, i64),
-                    lambda: IntegerAttr(parser.parse_integer(), i64),
-                ),
-            ]
+                ],
+                [
+                    lambda: results.update({"offset_dims": parse_dims(parser)}),
+                    lambda: results.update(
+                        {"collapsed_slice_dims": parse_dims(parser)}
+                    ),
+                    lambda: results.update(
+                        {"operand_batching_dims": parse_dims(parser)}
+                    ),
+                    lambda: results.update(
+                        {"start_indices_batching_dims": parse_dims(parser)}
+                    ),
+                    lambda: results.update({"start_index_map": parse_dims(parser)}),
+                    lambda: results.update(
+                        {"index_vector_dim": IntegerAttr(parser.parse_integer(), i64)}
+                    ),
+                ],
+            )
 
-            results = [default for _, default, _ in field_specs]
-            seen_fields: set[str] = set()
-
-            while True:
-                for idx, (name, _, parse_func) in enumerate(field_specs):
-                    if parser.parse_optional_characters(name) is not None:
-                        if name in seen_fields:
-                            parser.raise_error(f"duplicate '{name}' field")
-                        seen_fields.add(name)
-                        parser.parse_punctuation("=")
-                        results[idx] = parse_func()
-                        parser.parse_optional_punctuation(",")
-                        break
-                else:
-                    break
-
-            return tuple(results)
+            return (
+                results["offset_dims"],
+                results["collapsed_slice_dims"],
+                results["operand_batching_dims"],
+                results["start_indices_batching_dims"],
+                results["start_index_map"],
+                results["index_vector_dim"],
+            )
 
 
 @irdl_attr_definition
