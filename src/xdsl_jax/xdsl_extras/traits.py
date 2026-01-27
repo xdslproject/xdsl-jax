@@ -23,7 +23,7 @@ class SameOperandsAndResultShape(OpTrait):
     def verify(self, op: Operation) -> None:
         """Verify that the operation has the same shape for all operands and results."""
 
-        if len(op.results) < 1 or len(op.operands) < 1:
+        if not op.results or not op.operands:
             raise VerifyException(
                 f"'{op.name}' requires at least one result and operand"
             )
