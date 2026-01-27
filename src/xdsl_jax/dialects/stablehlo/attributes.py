@@ -468,23 +468,19 @@ class OutputOperandAlias(ParametrizedAttribute):
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse the OutputOperandAlias attribute."""
         with parser.in_angle_brackets():
-            output_tuple_indices = ArrayAttr([])
-            operand_index = IntegerAttr(0, i64)
-            operand_tuple_indices = ArrayAttr([])
+            parser.parse_characters("output_tuple_indices")
+            parser.parse_punctuation("=")
+            output_tuple_indices = parse_dims(parser)
+            parser.parse_punctuation(",")
 
-            if parser.parse_optional_characters("output_tuple_indices") is not None:
-                parser.parse_punctuation("=")
-                output_tuple_indices = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
+            parser.parse_characters("operand_index")
+            parser.parse_punctuation("=")
+            operand_index = IntegerAttr(parser.parse_integer(), i64)
+            parser.parse_punctuation(",")
 
-            if parser.parse_optional_characters("operand_index") is not None:
-                parser.parse_punctuation("=")
-                operand_index = IntegerAttr(parser.parse_integer(), i64)
-                parser.parse_optional_punctuation(",")
-
-            if parser.parse_optional_characters("operand_tuple_indices") is not None:
-                parser.parse_punctuation("=")
-                operand_tuple_indices = parse_dims(parser)
+            parser.parse_characters("operand_tuple_indices")
+            parser.parse_punctuation("=")
+            operand_tuple_indices = parse_dims(parser)
 
             return (output_tuple_indices, operand_index, operand_tuple_indices)
 
