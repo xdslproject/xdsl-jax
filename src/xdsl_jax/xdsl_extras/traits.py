@@ -72,7 +72,7 @@ class SameOperandsAndResultElementType(OpTrait):
         results.
         """
 
-        if len(op.results) < 1 or len(op.operands) < 1:
+        if not op.results or not op.operands:
             raise VerifyException(
                 f"'{op.name}' requires at least one result and operand"
             )
