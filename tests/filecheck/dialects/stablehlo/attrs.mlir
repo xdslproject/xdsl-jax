@@ -109,6 +109,9 @@
   typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
 } : () -> ()
 
+
+////// Test gather dimension numbers //////
+
 // CHECK-NEXT:    "test.op"() {gather = #stablehlo.gather<
 // CHECK-NEXT:      offset_dims = [0, 1],
 // CHECK-NEXT:      collapsed_slice_dims = [2],
@@ -137,12 +140,51 @@
 // CHECK-NEXT:      index_vector_dim = 2
 // CHECK-NEXT:    >} : () -> ()
 "test.op"() {
-  dimension_numbers = #stablehlo.gather<
+  gather_reordered = #stablehlo.gather<
     collapsed_slice_dims = [1],
     operand_batching_dims = [0],
     start_indices_batching_dims = [1],
     index_vector_dim = 2,
     offset_dims = [2],
     start_index_map = [1]
+  >
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {gather_minimal = #stablehlo.gather<
+// CHECK-NEXT:      offset_dims = [0],
+// CHECK-NEXT:      index_vector_dim = 1
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  gather_minimal = #stablehlo.gather<
+    offset_dims = [0],
+    index_vector_dim = 1
+  >
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {gather_defaults = #stablehlo.gather<
+// CHECK-NEXT:      offset_dims = [0],
+// CHECK-NEXT:      start_index_map = [1]
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  gather_defaults = #stablehlo.gather<
+    offset_dims = [0],
+    collapsed_slice_dims = [],
+    operand_batching_dims = [],
+    start_indices_batching_dims = [],
+    start_index_map = [1],
+    index_vector_dim = 0
+  >
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {gather_trailing_comma = #stablehlo.gather<
+// CHECK-NEXT:      offset_dims = [0],
+// CHECK-NEXT:      start_index_map = [1],
+// CHECK-NEXT:      index_vector_dim = 2
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  gather_trailing_comma = #stablehlo.gather<
+    offset_dims = [0],
+    start_index_map = [1],
+    index_vector_dim = 2,
   >
 } : () -> ()
