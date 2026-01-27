@@ -3,7 +3,7 @@ This module provides attribute definitions based on the StableHLO specification
 (https://github.com/openxla/stablehlo/blob/main/docs/spec.md).
 """
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 
 from xdsl.dialects.builtin import I64, ArrayAttr, IntegerAttr, i64
 from xdsl.ir import (
@@ -31,12 +31,67 @@ def parse_dims(parser: AttrParser) -> ArrayAttr[IntegerAttr[I64]]:
 
 def print_dims(printer: Printer, dims: ArrayAttr[IntegerAttr[I64]]):
     """Print dimension array in [1, 2, 3] format"""
-    printer.print_string("[")
+    with printer.in_square_brackets():
+        printer.print_list(
+            dims.data,
+            lambda dim: printer.print_string(f"{dim.value.data}"),
+        )
+
+
+def should_print_field(field: ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]) -> bool:
+    """Return True if field is non-default."""
+    if isinstance(field, ArrayAttr):
+        return bool(field.data)
+    return field.value.data != 0
+
+
+def print_field(
+    printer: Printer,
+    name: str,
+    field: ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64],
+) -> None:
+    """Print a single field entry."""
+    printer.print_string(f"\n{name} = ")
+    if isinstance(field, ArrayAttr):
+        print_dims(printer, field)
+    else:  # IntegerAttr
+        printer.print_string(f"{field.value.data}")
+
+
+def print_struct(
+    printer: Printer,
+    fields: list[tuple[str, ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]]],
+) -> None:
+    """Print a struct-like attribute with optional fields."""
+    filtered = [(name, field) for name, field in fields if should_print_field(field)]
     printer.print_list(
-        dims.data,
-        lambda dim: printer.print_string(f"{dim.value.data}"),
+        filtered,
+        lambda item: print_field(printer, item[0], item[1]),
+        delimiter=",",
     )
-    printer.print_string("]")
+
+
+def parse_struct(
+    parser: AttrParser,
+    keywords: list[str],
+    parse_funcs: list[Callable[[], None]],
+) -> None:
+    """Parse a struct-like attribute with optional fields."""
+    seen_fields: set[str] = set()
+    while True:
+        found_one = False
+        for idx, keyword in enumerate(keywords):
+            if parser.parse_optional_characters(keyword) is not None:
+                if keyword in seen_fields:
+                    parser.raise_error(f"duplicate '{keyword}' field")
+                seen_fields.add(keyword)
+                parser.parse_punctuation("=")
+                parse_funcs[idx]()
+                parser.parse_optional_punctuation(",")
+                found_one = True
+                break
+        if not found_one:
+            break
 
 
 # endregion
