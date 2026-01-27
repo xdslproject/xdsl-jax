@@ -94,6 +94,21 @@
   highest = #stablehlo<result_accuracy_mode TOLERANCE>
 } : () -> ()
 
+// CHECK-NEXT:    "test.op"() {
+// CHECK-SAME:      unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
+// CHECK-SAME:      original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
+// CHECK-SAME:      status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
+// CHECK-SAME:      status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
+// CHECK-SAME:      typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
+// CHECK-SAME:    } : () -> ()
+"test.op"() {
+  unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
+  original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
+  status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
+  status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
+  typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
+} : () -> ()
+
 // CHECK-NEXT:    "test.op"() {gather = #stablehlo.gather<
 // CHECK-NEXT:      offset_dims = [0, 1],
 // CHECK-NEXT:      collapsed_slice_dims = [2],
@@ -111,21 +126,6 @@
     start_index_map = [5],
     index_vector_dim = 6
   >
-} : () -> ()
-
-// CHECK-NEXT:    "test.op"() {
-// CHECK-SAME:      unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
-// CHECK-SAME:      original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
-// CHECK-SAME:      status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
-// CHECK-SAME:      status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
-// CHECK-SAME:      typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
-// CHECK-SAME:    } : () -> ()
-"test.op"() {
-  unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
-  original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
-  status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
-  status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
-  typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
 } : () -> ()
 
 // CHECK-NEXT:    "test.op"() {dimension_numbers = #stablehlo.gather<
