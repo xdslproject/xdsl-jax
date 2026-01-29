@@ -34,7 +34,7 @@ def print_dims(printer: Printer, dims: ArrayAttr[IntegerAttr[I64]]):
     with printer.in_square_brackets():
         printer.print_list(
             dims.data,
-            lambda dim: printer.print_string(f"{dim.value.data}"),
+            lambda dim: printer.print_int(dim.value.data),
         )
 
 
@@ -55,7 +55,7 @@ def print_field(
     if isinstance(field, ArrayAttr):
         print_dims(printer, field)
     else:  # IntegerAttr
-        printer.print_string(f"{field.value.data}")
+        printer.print_int(field.value.data)
 
 
 def print_struct(
@@ -241,7 +241,7 @@ class DotAttr(ParametrizedAttribute):
         printer.print_string(f"\n{name} = [")
         printer.print_list(
             value.data,
-            lambda dim: printer.print_string(f"{dim.value.data}"),
+            lambda dim: printer.print_int(dim.value.data),
         )
         printer.print_string("]")
 
@@ -450,7 +450,7 @@ class OutputOperandAlias(ParametrizedAttribute):
                 printer.print_string(",")
 
                 printer.print_string("\noperand_index = ")
-                printer.print_string(f"{self.operand_index.value.data}")
+                printer.print_int(self.operand_index.value.data)
                 printer.print_string(",")
 
                 printer.print_string("\noperand_tuple_indices = ")
