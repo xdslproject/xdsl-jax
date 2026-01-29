@@ -60,7 +60,7 @@ def print_field(
 
 def print_struct(
     printer: Printer,
-    fields: list[tuple[str, ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]]],
+    fields: Sequence[tuple[str, ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]]],
 ) -> None:
     """Print a struct-like attribute with optional fields."""
     filtered = [(name, field) for name, field in fields if should_print_field(field)]
@@ -346,15 +346,8 @@ class GatherDimensionNumbers(ParametrizedAttribute):
                 print_struct(
                     printer,
                     [
-                        ("offset_dims", self.offset_dims),
-                        ("collapsed_slice_dims", self.collapsed_slice_dims),
-                        ("operand_batching_dims", self.operand_batching_dims),
-                        (
-                            "start_indices_batching_dims",
-                            self.start_indices_batching_dims,
-                        ),
-                        ("start_index_map", self.start_index_map),
-                        ("index_vector_dim", self.index_vector_dim),
+                        (field, getattr(self, field))
+                        for field, _ in self.get_irdl_definition().parameters
                     ],
                 )
             printer.print_string("\n")
