@@ -63,9 +63,8 @@ def print_struct(
     fields: Sequence[tuple[str, ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]]],
 ) -> None:
     """Print a struct-like attribute with optional fields."""
-    filtered = [(name, field) for name, field in fields if should_print_field(field)]
     printer.print_list(
-        filtered,
+        ((name, field) for name, field in fields if should_print_field(field)),
         lambda item: print_field(printer, item[0], item[1]),
         delimiter=",",
     )
