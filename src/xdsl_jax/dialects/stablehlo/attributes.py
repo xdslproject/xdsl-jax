@@ -3,7 +3,8 @@ This module provides attribute definitions based on the StableHLO specification
 (https://github.com/openxla/stablehlo/blob/main/docs/spec.md).
 """
 
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
+from typing import get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, IntegerAttr, i64
 from xdsl.ir import (
@@ -20,12 +21,17 @@ from xdsl.printer import Printer
 
 
 # region: Utility functions for dimension array parsing/printing
-def parse_dims(parser: AttrParser) -> ArrayAttr[IntegerAttr[I64]]:
-    """Parse dimension array in [1, 2, 3] format"""
+def parse_dims(parser: AttrParser, opened: bool = False) -> ArrayAttr[IntegerAttr[I64]]:
+    """Parse dimension array in [1, 2, 3] format."""
+    if not opened:
+        parser.parse_characters("[")
+    if parser.parse_optional_characters("]") is not None:
+        return ArrayAttr(())
     value = parser.parse_comma_separated_list(
-        AttrParser.Delimiter.SQUARE,
+        AttrParser.Delimiter.NONE,
         lambda: IntegerAttr(parser.parse_integer(), i64),
     )
+    parser.parse_characters("]")
     return ArrayAttr(value)
 
 
@@ -43,6 +49,15 @@ def should_print_field(field: ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]) ->
     if isinstance(field, ArrayAttr):
         return bool(field.data)
     return field.value.data != 0
+
+
+def parse_field(
+    parser: AttrParser,
+) -> ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]:
+    """Parse a field that may be an integer or a dimension list."""
+    if parser.parse_optional_characters("[") is not None:
+        return parse_dims(parser, opened=True)
+    return IntegerAttr(parser.parse_integer(), i64)
 
 
 def print_field(
@@ -72,25 +87,39 @@ def print_struct(
 
 def parse_struct(
     parser: AttrParser,
-    keywords: list[str],
-    parse_funcs: list[Callable[[], None]],
+    results: dict[str, Attribute],
 ) -> None:
     """Parse a struct-like attribute with optional fields."""
     seen_fields: set[str] = set()
     while True:
-        found_one = False
-        for idx, keyword in enumerate(keywords):
-            if parser.parse_optional_characters(keyword) is not None:
-                if keyword in seen_fields:
-                    parser.raise_error(f"duplicate '{keyword}' field")
-                seen_fields.add(keyword)
-                parser.parse_punctuation("=")
-                parse_funcs[idx]()
-                parser.parse_optional_punctuation(",")
-                found_one = True
-                break
-        if not found_one:
+        name = parser.parse_optional_identifier()
+        if name is None:
             break
+        if name not in results:
+            parser.raise_error(f"unknown field '{name}'")
+        if name in seen_fields:
+            parser.raise_error(f"duplicate '{name}' field")
+        seen_fields.add(name)
+        parser.parse_punctuation("=")
+        value = parse_field(parser)
+        results[name] = value
+        if parser.parse_optional_punctuation(",") is None:
+            break
+
+
+def init_struct_defaults(
+    attr_cls: type[ParametrizedAttribute], parser: AttrParser
+) -> dict[str, Attribute]:
+    results: dict[str, Attribute] = {}
+    for field, annotation in attr_cls.__annotations__.items():
+        origin = get_origin(annotation)
+        if origin is ArrayAttr:
+            results[field] = ArrayAttr(())
+        elif origin is IntegerAttr:
+            results[field] = IntegerAttr(0, i64)
+        else:
+            parser.raise_error(f"unsupported field type for '{field}'")
+    return results
 
 
 # endregion
@@ -355,51 +384,12 @@ class GatherDimensionNumbers(ParametrizedAttribute):
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse gather dimension numbers from structured format"""
         with parser.in_angle_brackets():
-            # Initialize with defaults
-            results: dict[str, Attribute] = {
-                "offset_dims": ArrayAttr(()),
-                "collapsed_slice_dims": ArrayAttr(()),
-                "operand_batching_dims": ArrayAttr(()),
-                "start_indices_batching_dims": ArrayAttr(()),
-                "start_index_map": ArrayAttr(()),
-                "index_vector_dim": IntegerAttr(0, i64),
-            }
+            results = init_struct_defaults(cls, parser)
 
-            parse_struct(
-                parser,
-                [
-                    "offset_dims",
-                    "collapsed_slice_dims",
-                    "operand_batching_dims",
-                    "start_indices_batching_dims",
-                    "start_index_map",
-                    "index_vector_dim",
-                ],
-                [
-                    lambda: results.update({"offset_dims": parse_dims(parser)}),
-                    lambda: results.update(
-                        {"collapsed_slice_dims": parse_dims(parser)}
-                    ),
-                    lambda: results.update(
-                        {"operand_batching_dims": parse_dims(parser)}
-                    ),
-                    lambda: results.update(
-                        {"start_indices_batching_dims": parse_dims(parser)}
-                    ),
-                    lambda: results.update({"start_index_map": parse_dims(parser)}),
-                    lambda: results.update(
-                        {"index_vector_dim": IntegerAttr(parser.parse_integer(), i64)}
-                    ),
-                ],
-            )
+            parse_struct(parser, results)
 
-            return (
-                results["offset_dims"],
-                results["collapsed_slice_dims"],
-                results["operand_batching_dims"],
-                results["start_indices_batching_dims"],
-                results["start_index_map"],
-                results["index_vector_dim"],
+            return tuple(
+                results[field] for field, _ in cls.get_irdl_definition().parameters
             )
 
 
