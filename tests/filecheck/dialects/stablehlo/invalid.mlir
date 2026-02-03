@@ -1,4 +1,4 @@
-// RUN: xdsl-opt %s --verify-diagnostics --split-input-file | filecheck %s
+// RUN: xdsl-opt %s --parsing-diagnostics --verify-diagnostics --split-input-file | filecheck %s
 
 %operand = "test.op"() : () -> tensor<2x3x2xi32>
 
@@ -39,3 +39,19 @@
 // CHECK: Operation does not verify: operand 'operand' at position 0 does not verify:
 // CHECK: Unexpected attribute i32
 %result = "stablehlo.ceil"(%operand) : (tensor<i32>) -> tensor<i32>
+
+// -----
+
+// CHECK: unknown field 'unknown_field'
+"test.op"() {gather = #stablehlo.gather<
+  offset_dims = [0],
+  unknown_field = [1]
+>} : () -> ()
+
+// -----
+
+// CHECK: duplicate 'offset_dims' field
+"test.op"() {gather = #stablehlo.gather<
+  offset_dims = [0],
+  offset_dims = [1]
+>} : () -> ()
