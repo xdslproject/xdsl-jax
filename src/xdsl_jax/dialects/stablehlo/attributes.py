@@ -75,36 +75,48 @@ def print_field(
 
 def print_struct(
     printer: Printer,
-    fields: Sequence[tuple[str, ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]]],
+    attr: ParametrizedAttribute,
 ) -> None:
     """Print a struct-like attribute with optional fields."""
-    printer.print_list(
-        ((name, field) for name, field in fields if should_print_field(field)),
-        lambda item: print_field(printer, item[0], item[1]),
-        delimiter=",",
-    )
+    with printer.in_angle_brackets():
+        with printer.indented():
+            printer.print_list(
+                (
+                    (name, getattr(attr, name))
+                    for name, _ in attr.get_irdl_definition().parameters
+                    if should_print_field(getattr(attr, name))
+                ),
+                lambda item: print_field(printer, item[0], item[1]),
+                delimiter=",",
+            )
+        printer.print_string("\n")
 
 
 def parse_struct(
     parser: AttrParser,
-    results: dict[str, Attribute],
-) -> None:
+    attr_cls: type[ParametrizedAttribute],
+) -> Sequence[Attribute]:
     """Parse a struct-like attribute with optional fields."""
-    seen_fields: set[str] = set()
-    while True:
-        name = parser.parse_optional_identifier()
-        if name is None:
-            break
-        if name not in results:
-            parser.raise_error(f"unknown field '{name}'")
-        if name in seen_fields:
-            parser.raise_error(f"duplicate '{name}' field")
-        seen_fields.add(name)
-        parser.parse_punctuation("=")
-        value = parse_field(parser)
-        results[name] = value
-        if parser.parse_optional_punctuation(",") is None:
-            break
+    with parser.in_angle_brackets():
+        results = init_struct_defaults(attr_cls, parser)
+
+        seen_fields: set[str] = set()
+        while True:
+            name = parser.parse_optional_identifier()
+            if name is None:
+                break
+            if name not in results:
+                parser.raise_error(f"unknown field '{name}'")
+            if name in seen_fields:
+                parser.raise_error(f"duplicate '{name}' field")
+            seen_fields.add(name)
+            parser.parse_punctuation("=")
+            value = parse_field(parser)
+            results[name] = value
+            if parser.parse_optional_punctuation(",") is None:
+                break
+
+        return tuple(results.values())
 
 
 def init_struct_defaults(
@@ -369,28 +381,12 @@ class GatherDimensionNumbers(ParametrizedAttribute):
 
     def print_parameters(self, printer: Printer) -> None:
         """Print gather dimension numbers in structured format"""
-        with printer.in_angle_brackets():
-            with printer.indented():
-                print_struct(
-                    printer,
-                    [
-                        (field, getattr(self, field))
-                        for field, _ in self.get_irdl_definition().parameters
-                    ],
-                )
-            printer.print_string("\n")
+        print_struct(printer, self)
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse gather dimension numbers from structured format"""
-        with parser.in_angle_brackets():
-            results = init_struct_defaults(cls, parser)
-
-            parse_struct(parser, results)
-
-            return tuple(
-                results[field] for field, _ in cls.get_irdl_definition().parameters
-            )
+        return parse_struct(parser, cls)
 
 
 @irdl_attr_definition
