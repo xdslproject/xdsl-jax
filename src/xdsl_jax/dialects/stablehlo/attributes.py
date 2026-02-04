@@ -369,86 +369,11 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
 
     def print_parameters(self, printer: Printer) -> None:
         """Print scatter dimension numbers in structured format"""
-        with printer.in_angle_brackets():
-            with printer.indented():
-                fields = [
-                    (
-                        "update_window_dims",
-                        lambda: print_dims(printer, self.update_window_dims),
-                    ),
-                    (
-                        "inserted_window_dims",
-                        lambda: print_dims(printer, self.inserted_window_dims),
-                    ),
-                    (
-                        "input_batching_dims",
-                        lambda: print_dims(printer, self.input_batching_dims),
-                    ),
-                    (
-                        "scatter_indices_batching_dims",
-                        lambda: print_dims(printer, self.scatter_indices_batching_dims),
-                    ),
-                    (
-                        "scatter_dims_to_operand_dims",
-                        lambda: print_dims(printer, self.scatter_dims_to_operand_dims),
-                    ),
-                    (
-                        "index_vector_dim",
-                        lambda: printer.print_string(
-                            f"{self.index_vector_dim.value.data}"
-                        ),
-                    ),
-                ]
-
-                for i, (name, print_func) in enumerate(fields):
-                    printer.print_string(f"\n{name} = ")
-                    print_func()
-                    if i < len(fields) - 1:
-                        printer.print_string(",")
-            printer.print_string("\n")
+        print_struct(printer, self)
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
-        """Parse scatter dimension numbers from structured format"""
-        with parser.in_angle_brackets():
-            field_specs = [
-                ("update_window_dims", ArrayAttr([]), lambda: parse_dims(parser)),
-                ("inserted_window_dims", ArrayAttr([]), lambda: parse_dims(parser)),
-                ("input_batching_dims", ArrayAttr([]), lambda: parse_dims(parser)),
-                (
-                    "scatter_indices_batching_dims",
-                    ArrayAttr([]),
-                    lambda: parse_dims(parser),
-                ),
-                (
-                    "scatter_dims_to_operand_dims",
-                    ArrayAttr([]),
-                    lambda: parse_dims(parser),
-                ),
-                (
-                    "index_vector_dim",
-                    IntegerAttr(0, i64),
-                    lambda: IntegerAttr(parser.parse_integer(), i64),
-                ),
-            ]
-
-            results = [default for _, default, _ in field_specs]
-            seen_fields: set[str] = set()
-
-            while True:
-                for idx, (name, _, parse_func) in enumerate(field_specs):
-                    if parser.parse_optional_characters(name) is not None:
-                        if name in seen_fields:
-                            parser.raise_error(f"duplicate '{name}' field")
-                        seen_fields.add(name)
-                        parser.parse_punctuation("=")
-                        results[idx] = parse_func()
-                        parser.parse_optional_punctuation(",")
-                        break
-                else:
-                    break
-
-            return tuple(results)
+        return parse_struct(parser, cls)
 
 
 class GatherDimensionNumbers(ParametrizedAttribute):
