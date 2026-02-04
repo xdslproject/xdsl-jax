@@ -4,6 +4,7 @@ This module provides attribute definitions based on the StableHLO specification
 """
 
 from collections.abc import Sequence
+from typing import TypeAlias, get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, IntegerAttr, i64
 from xdsl.ir import (
@@ -18,25 +19,107 @@ from xdsl.irdl import irdl_attr_definition
 from xdsl.parser import AttrParser
 from xdsl.printer import Printer
 
+# Type alias for dimension values that can be either an array or a single integer
+DimValue: TypeAlias = ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]
+
 
 # region: Utility functions for dimension array parsing/printing
-def parse_dims(parser: AttrParser) -> ArrayAttr[IntegerAttr[I64]]:
-    """Parse dimension array in [1, 2, 3] format"""
-    value = parser.parse_comma_separated_list(
+def parse_dims(parser: AttrParser) -> DimValue:
+    """Parse a dimension value: either an array [1, 2, 3] or a single integer."""
+    value = parser.parse_optional_comma_separated_list(
         AttrParser.Delimiter.SQUARE,
         lambda: IntegerAttr(parser.parse_integer(), i64),
     )
-    return ArrayAttr(value)
+    if value is not None:
+        return ArrayAttr(value)
+    return IntegerAttr(parser.parse_integer(), i64)
 
 
-def print_dims(printer: Printer, dims: ArrayAttr[IntegerAttr[I64]]):
-    """Print dimension array in [1, 2, 3] format"""
-    printer.print_string("[")
-    printer.print_list(
-        dims.data,
-        lambda dim: printer.print_string(f"{dim.value.data}"),
-    )
-    printer.print_string("]")
+def print_dims(printer: Printer, dims: DimValue) -> None:
+    """Print a dimension value: either an array [1, 2, 3] or a single integer."""
+    if isinstance(dims, ArrayAttr):
+        with printer.in_square_brackets():
+            printer.print_list(
+                dims.data,
+                lambda dim: printer.print_int(dim.value.data),
+            )
+    else:
+        printer.print_int(dims.value.data)
+
+
+def should_print_field(field: DimValue) -> bool:
+    """Return True if field is non-default."""
+    if isinstance(field, ArrayAttr):
+        return bool(field.data)
+    return field.value.data != 0
+
+
+def print_field(printer: Printer, name: str, field: DimValue) -> None:
+    """Print a single field entry in the format 'name = value'."""
+    printer.print_string(f"\n{name} = ")
+    print_dims(printer, field)
+
+
+def print_struct(
+    printer: Printer,
+    attr: ParametrizedAttribute,
+) -> None:
+    """Print a struct-like attribute with optional fields."""
+    with printer.in_angle_brackets():
+        with printer.indented():
+            printer.print_list(
+                (
+                    (name, getattr(attr, name))
+                    for name, _ in attr.get_irdl_definition().parameters
+                    if should_print_field(getattr(attr, name))
+                ),
+                lambda item: print_field(printer, item[0], item[1]),
+                delimiter=",",
+            )
+        printer.print_string("\n")
+
+
+def parse_struct(
+    parser: AttrParser,
+    attr_cls: type[ParametrizedAttribute],
+) -> Sequence[Attribute]:
+    """Parse a struct-like attribute with optional fields."""
+    with parser.in_angle_brackets():
+        results = init_struct_defaults(attr_cls, parser)
+
+        seen_fields: set[str] = set()
+        while True:
+            name = parser.parse_optional_identifier()
+            if name is None:
+                break
+            if name not in results:
+                parser.raise_error(f"unknown field '{name}'")
+            if name in seen_fields:
+                parser.raise_error(f"duplicate '{name}' field")
+            seen_fields.add(name)
+            parser.parse_punctuation("=")
+            value = parse_dims(parser)
+            results[name] = value
+            if parser.parse_optional_punctuation(",") is None:
+                break
+
+        return tuple(results.values())
+
+
+def init_struct_defaults(
+    attr_cls: type[ParametrizedAttribute], parser: AttrParser
+) -> dict[str, Attribute]:
+    """Initialize default values for struct fields based on their type annotations."""
+    results: dict[str, Attribute] = {}
+    for field, annotation in attr_cls.__annotations__.items():
+        origin = get_origin(annotation)
+        if origin is ArrayAttr:
+            results[field] = ArrayAttr(())
+        elif origin is IntegerAttr:
+            results[field] = IntegerAttr(0, i64)
+        else:
+            parser.raise_error(f"unsupported field type for '{field}'")
+    return results
 
 
 # endregion
@@ -186,7 +269,7 @@ class DotAttr(ParametrizedAttribute):
         printer.print_string(f"\n{name} = [")
         printer.print_list(
             value.data,
-            lambda dim: printer.print_string(f"{dim.value.data}"),
+            lambda dim: printer.print_int(dim.value.data),
         )
         printer.print_string("]")
 
@@ -368,6 +451,33 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
             return tuple(results)
 
 
+class GatherDimensionNumbers(ParametrizedAttribute):
+    """
+    XLA gather dimension numbers.
+
+    This attribute models the dimension information for gather operations.
+    See external [documentation](https://github.com/openxla/stablehlo/blob/b075e948092d8a27ed0be48f4f8dbaa6df7e2e3e/stablehlo/dialect/StablehloAttrs.td#L42).
+    """
+
+    name = "stablehlo.gather"
+
+    offset_dims: ArrayAttr[IntegerAttr[I64]]
+    collapsed_slice_dims: ArrayAttr[IntegerAttr[I64]]
+    operand_batching_dims: ArrayAttr[IntegerAttr[I64]]
+    start_indices_batching_dims: ArrayAttr[IntegerAttr[I64]]
+    start_index_map: ArrayAttr[IntegerAttr[I64]]
+    index_vector_dim: IntegerAttr[I64]
+
+    def print_parameters(self, printer: Printer) -> None:
+        """Print gather dimension numbers in structured format"""
+        print_struct(printer, self)
+
+    @classmethod
+    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
+        """Parse gather dimension numbers from structured format"""
+        return parse_struct(parser, cls)
+
+
 @irdl_attr_definition
 class OutputOperandAlias(ParametrizedAttribute):
     """
@@ -414,7 +524,7 @@ class OutputOperandAlias(ParametrizedAttribute):
                 printer.print_string(",")
 
                 printer.print_string("\noperand_index = ")
-                printer.print_string(f"{self.operand_index.value.data}")
+                printer.print_int(self.operand_index.value.data)
                 printer.print_string(",")
 
                 printer.print_string("\noperand_tuple_indices = ")
@@ -425,23 +535,19 @@ class OutputOperandAlias(ParametrizedAttribute):
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
         """Parse the OutputOperandAlias attribute."""
         with parser.in_angle_brackets():
-            output_tuple_indices = ArrayAttr([])
-            operand_index = IntegerAttr(0, i64)
-            operand_tuple_indices = ArrayAttr([])
+            parser.parse_characters("output_tuple_indices")
+            parser.parse_punctuation("=")
+            output_tuple_indices = parse_dims(parser)
+            parser.parse_punctuation(",")
 
-            if parser.parse_optional_characters("output_tuple_indices") is not None:
-                parser.parse_punctuation("=")
-                output_tuple_indices = parse_dims(parser)
-                parser.parse_optional_punctuation(",")
+            parser.parse_characters("operand_index")
+            parser.parse_punctuation("=")
+            operand_index = IntegerAttr(parser.parse_integer(), i64)
+            parser.parse_punctuation(",")
 
-            if parser.parse_optional_characters("operand_index") is not None:
-                parser.parse_punctuation("=")
-                operand_index = IntegerAttr(parser.parse_integer(), i64)
-                parser.parse_optional_punctuation(",")
-
-            if parser.parse_optional_characters("operand_tuple_indices") is not None:
-                parser.parse_punctuation("=")
-                operand_tuple_indices = parse_dims(parser)
+            parser.parse_characters("operand_tuple_indices")
+            parser.parse_punctuation("=")
+            operand_tuple_indices = parse_dims(parser)
 
             return (output_tuple_indices, operand_index, operand_tuple_indices)
 

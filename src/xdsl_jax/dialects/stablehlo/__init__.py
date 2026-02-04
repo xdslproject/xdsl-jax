@@ -8,7 +8,6 @@ from .attributes import (
     OutputOperandAlias,
     PrecisionAttr,
     ResultAccuracyModeAttr,
-    ScatterDimensionNumbers,
     TokenType,
 )
 from .ops import (
@@ -72,7 +71,6 @@ StableHLO = Dialect(
         OutputOperandAlias,
         PrecisionAttr,
         ResultAccuracyModeAttr,
-        ScatterDimensionNumbers,
         TokenType,
     ],
 )
