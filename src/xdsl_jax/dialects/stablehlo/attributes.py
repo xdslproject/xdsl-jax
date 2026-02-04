@@ -4,7 +4,7 @@ This module provides attribute definitions based on the StableHLO specification
 """
 
 from collections.abc import Sequence
-from typing import get_origin
+from typing import TypeAlias, get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, IntegerAttr, i64
 from xdsl.ir import (
@@ -19,58 +19,45 @@ from xdsl.irdl import irdl_attr_definition
 from xdsl.parser import AttrParser
 from xdsl.printer import Printer
 
+# Type alias for dimension values that can be either an array or a single integer
+DimValue: TypeAlias = ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]
+
 
 # region: Utility functions for dimension array parsing/printing
-def parse_dims(parser: AttrParser, opened: bool = False) -> ArrayAttr[IntegerAttr[I64]]:
-    """Parse dimension array in [1, 2, 3] format."""
-    if not opened:
-        parser.parse_characters("[")
-    if parser.parse_optional_characters("]") is not None:
-        return ArrayAttr(())
-    value = parser.parse_comma_separated_list(
-        AttrParser.Delimiter.NONE,
+def parse_dims(parser: AttrParser) -> DimValue:
+    """Parse a dimension value: either an array [1, 2, 3] or a single integer."""
+    value = parser.parse_optional_comma_separated_list(
+        AttrParser.Delimiter.SQUARE,
         lambda: IntegerAttr(parser.parse_integer(), i64),
     )
-    parser.parse_characters("]")
-    return ArrayAttr(value)
+    if value is not None:
+        return ArrayAttr(value)
+    return IntegerAttr(parser.parse_integer(), i64)
 
 
-def print_dims(printer: Printer, dims: ArrayAttr[IntegerAttr[I64]]):
-    """Print dimension array in [1, 2, 3] format"""
-    with printer.in_square_brackets():
-        printer.print_list(
-            dims.data,
-            lambda dim: printer.print_int(dim.value.data),
-        )
+def print_dims(printer: Printer, dims: DimValue) -> None:
+    """Print a dimension value: either an array [1, 2, 3] or a single integer."""
+    if isinstance(dims, ArrayAttr):
+        with printer.in_square_brackets():
+            printer.print_list(
+                dims.data,
+                lambda dim: printer.print_int(dim.value.data),
+            )
+    else:
+        printer.print_int(dims.value.data)
 
 
-def should_print_field(field: ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]) -> bool:
+def should_print_field(field: DimValue) -> bool:
     """Return True if field is non-default."""
     if isinstance(field, ArrayAttr):
         return bool(field.data)
     return field.value.data != 0
 
 
-def parse_field(
-    parser: AttrParser,
-) -> ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]:
-    """Parse a field that may be an integer or a dimension list."""
-    if parser.parse_optional_characters("[") is not None:
-        return parse_dims(parser, opened=True)
-    return IntegerAttr(parser.parse_integer(), i64)
-
-
-def print_field(
-    printer: Printer,
-    name: str,
-    field: ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64],
-) -> None:
-    """Print a single field entry."""
+def print_field(printer: Printer, name: str, field: DimValue) -> None:
+    """Print a single field entry in the format 'name = value'."""
     printer.print_string(f"\n{name} = ")
-    if isinstance(field, ArrayAttr):
-        print_dims(printer, field)
-    else:  # IntegerAttr
-        printer.print_int(field.value.data)
+    print_dims(printer, field)
 
 
 def print_struct(
@@ -111,7 +98,7 @@ def parse_struct(
                 parser.raise_error(f"duplicate '{name}' field")
             seen_fields.add(name)
             parser.parse_punctuation("=")
-            value = parse_field(parser)
+            value = parse_dims(parser)
             results[name] = value
             if parser.parse_optional_punctuation(",") is None:
                 break
@@ -122,6 +109,7 @@ def parse_struct(
 def init_struct_defaults(
     attr_cls: type[ParametrizedAttribute], parser: AttrParser
 ) -> dict[str, Attribute]:
+    """Initialize default values for struct fields based on their type annotations."""
     results: dict[str, Attribute] = {}
     for field, annotation in attr_cls.__annotations__.items():
         origin = get_origin(annotation)
