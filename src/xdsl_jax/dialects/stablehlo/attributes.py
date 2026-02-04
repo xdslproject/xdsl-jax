@@ -19,45 +19,70 @@ from xdsl.irdl import irdl_attr_definition
 from xdsl.parser import AttrParser
 from xdsl.printer import Printer
 
-# Type alias for dimension values that can be either an array or a single integer
-DimValue: TypeAlias = ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]
+# Type aliases for dimension values
+Dims: TypeAlias = ArrayAttr[IntegerAttr[I64]]
+Index: TypeAlias = IntegerAttr[I64]
 
 
 # region: Utility functions for dimension array parsing/printing
-def parse_dims(parser: AttrParser) -> DimValue:
-    """Parse a dimension value: either an array [1, 2, 3] or a single integer."""
+def parse_optional_dims(parser: AttrParser) -> Dims | None:
+    """Parse an optional dimension array [1, 2, 3]. Returns None if not present."""
     value = parser.parse_optional_comma_separated_list(
         AttrParser.Delimiter.SQUARE,
         lambda: IntegerAttr(parser.parse_integer(), i64),
     )
-    if value is not None:
-        return ArrayAttr(value)
+    return ArrayAttr(value) if value is not None else None
+
+
+def parse_dims(parser: AttrParser) -> Dims:
+    """Parse a dimension array [1, 2, 3]."""
+    value = parser.parse_comma_separated_list(
+        AttrParser.Delimiter.SQUARE,
+        lambda: IntegerAttr(parser.parse_integer(), i64),
+    )
+    return ArrayAttr(value)
+
+
+def print_dims(printer: Printer, dims: Dims) -> None:
+    """Print a dimension array [1, 2, 3]."""
+    with printer.in_square_brackets():
+        printer.print_list(
+            dims.data,
+            lambda dim: printer.print_int(dim.value.data),
+        )
+
+
+def parse_index(parser: AttrParser) -> Index:
+    """Parse a single integer index."""
     return IntegerAttr(parser.parse_integer(), i64)
 
 
-def print_dims(printer: Printer, dims: DimValue) -> None:
-    """Print a dimension value: either an array [1, 2, 3] or a single integer."""
-    if isinstance(dims, ArrayAttr):
-        with printer.in_square_brackets():
-            printer.print_list(
-                dims.data,
-                lambda dim: printer.print_int(dim.value.data),
-            )
+def print_index(printer: Printer, index: Index) -> None:
+    """Print a single integer index."""
+    printer.print_int(index.value.data)
+
+
+def parse_field(parser: AttrParser) -> Dims | Index:
+    """Parse a dimension value: either an array [1, 2, 3] or a single integer index."""
+    if (dims := parse_optional_dims(parser)) is not None:
+        return dims
+    return parse_index(parser)
+
+
+def print_field(printer: Printer, name: str, field: Dims | Index) -> None:
+    """Print a single field entry in the format 'name = value'."""
+    printer.print_string(f"\n{name} = ")
+    if isinstance(field, ArrayAttr):
+        print_dims(printer, field)
     else:
-        printer.print_int(dims.value.data)
+        print_index(printer, field)
 
 
-def should_print_field(field: DimValue) -> bool:
+def should_print_field(field: Dims | Index) -> bool:
     """Return True if field is non-default."""
     if isinstance(field, ArrayAttr):
         return bool(field.data)
     return field.value.data != 0
-
-
-def print_field(printer: Printer, name: str, field: DimValue) -> None:
-    """Print a single field entry in the format 'name = value'."""
-    printer.print_string(f"\n{name} = ")
-    print_dims(printer, field)
 
 
 def print_struct(
@@ -98,7 +123,7 @@ def parse_struct(
                 parser.raise_error(f"duplicate '{name}' field")
             seen_fields.add(name)
             parser.parse_punctuation("=")
-            value = parse_dims(parser)
+            value = parse_field(parser)
             results[name] = value
             if parser.parse_optional_punctuation(",") is None:
                 break
@@ -441,7 +466,7 @@ class OutputOperandAlias(ParametrizedAttribute):
 
             parser.parse_characters("operand_index")
             parser.parse_punctuation("=")
-            operand_index = IntegerAttr(parser.parse_integer(), i64)
+            operand_index = parse_index(parser)
             parser.parse_punctuation(",")
 
             parser.parse_characters("operand_tuple_indices")
