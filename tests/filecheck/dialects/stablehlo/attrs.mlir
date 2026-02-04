@@ -146,6 +146,9 @@
     input_batching_dims = [3],
     scatter_indices_batching_dims = [4],
     scatter_dims_to_operand_dims = [5],
+    index_vector_dim = 6
+  >
+} : () -> ()
 
 // === Gather Dimension Numbers ===
 // CHECK-NEXT:    "test.op"() {gather = #stablehlo.gather<
