@@ -376,6 +376,7 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
         return parse_struct(parser, cls)
 
 
+@irdl_attr_definition
 class GatherDimensionNumbers(ParametrizedAttribute):
     """
     XLA gather dimension numbers.
