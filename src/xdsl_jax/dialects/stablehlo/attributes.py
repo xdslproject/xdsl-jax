@@ -372,7 +372,7 @@ class DotAttr(ParametrizedAttribute):
 
 
 @irdl_attr_definition
-class ScatterDimensionNumbers(ParametrizedAttribute):
+class ScatterDimensionNumbers(DimensionStructAttr):
     """
     XLA scatter dimension numbers.
 
@@ -388,14 +388,6 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
     scatter_indices_batching_dims: ArrayAttr[IntegerAttr[I64]]
     scatter_dims_to_operand_dims: ArrayAttr[IntegerAttr[I64]]
     index_vector_dim: IntegerAttr[I64]
-
-    def print_parameters(self, printer: Printer) -> None:
-        """Print scatter dimension numbers in structured format"""
-        print_struct(printer, self)
-
-    @classmethod
-    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
-        return parse_struct(parser, cls)
 
 
 @irdl_attr_definition
