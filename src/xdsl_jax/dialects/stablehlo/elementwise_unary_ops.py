@@ -3,10 +3,11 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import ClassVar, TypeAlias
+from typing import Generic, TypeAlias, TypeVar
 
 from xdsl.dialects.builtin import (
     AnyFloat,
+    AnyTensorType,
     ComplexType,
     IntegerType,
     TensorType,
@@ -14,11 +15,16 @@ from xdsl.dialects.builtin import (
 from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
-    VarConstraint,
-    base,
     irdl_op_definition,
     operand_def,
     result_def,
+    traits_def,
+)
+from xdsl.traits import NoMemoryEffect
+
+from xdsl_jax.xdsl_extras.traits import (
+    Elementwise,
+    SameOperandsAndResultShape,
 )
 
 # Type aliases
@@ -28,35 +34,30 @@ FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
 FloatTensorType: TypeAlias = TensorType[AnyFloat]
 
 
-class IntegerTensorLikeElementwiseUnaryOperation(IRDLOperation, abc.ABC):
-    T: ClassVar = VarConstraint("T", base(IntegerTensorType))
-
-    operand = operand_def(T)
-    result = result_def(T)
-
-    def __init__(self, operand: SSAValue, result_type: Attribute | None = None):
-        if result_type is None:
-            result_type = operand.type
-        super().__init__(operands=(operand,), result_types=(result_type,))
+# Generic type variables for templating
+T_IN = TypeVar("T_IN", bound=AnyTensorType)
+T_OUT = TypeVar("T_OUT", bound=AnyTensorType)
 
 
-class FloatOrComplexTensorLikeElementwiseUnaryOperation(IRDLOperation, abc.ABC):
-    T: ClassVar = VarConstraint("T", base(FloatOrComplexTensorType))
+class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_IN, T_OUT]):
+    """
+    Templated base class for elementwise unary operations.
 
-    operand = operand_def(T)
-    result = result_def(T)
+    This class provides a flexible template for unary operations that can work
+    with different tensor types.
 
-    def __init__(self, operand: SSAValue, result_type: Attribute | None = None):
-        if result_type is None:
-            result_type = operand.type
-        super().__init__(operands=(operand,), result_types=(result_type,))
+    For more informtation about the semantics, see:
+    https://openxla.org/xla/operation_semantics#element-wise_unary_functions
+    """
 
+    operand = operand_def(T_IN)
+    result = result_def(T_OUT)
 
-class FloatTensorLikeElementwiseUnaryOperation(IRDLOperation, abc.ABC):
-    T: ClassVar = VarConstraint("T", base(FloatTensorType))
-
-    operand = operand_def(T)
-    result = result_def(T)
+    traits = traits_def(
+        NoMemoryEffect(),
+        SameOperandsAndResultShape(),
+        Elementwise(),
+    )
 
     def __init__(self, operand: SSAValue, result_type: Attribute | None = None):
         if result_type is None:
@@ -65,7 +66,9 @@ class FloatTensorLikeElementwiseUnaryOperation(IRDLOperation, abc.ABC):
 
 
 @irdl_op_definition
-class CbrtOp(FloatOrComplexTensorLikeElementwiseUnaryOperation):
+class CbrtOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
     """
     Performs element-wise cubic root operation on `operand` tensor and produces a
     `result` tensor. Depending on the element type, does the following:
@@ -81,7 +84,7 @@ class CbrtOp(FloatOrComplexTensorLikeElementwiseUnaryOperation):
 
 
 @irdl_op_definition
-class CeilOp(FloatTensorLikeElementwiseUnaryOperation):
+class CeilOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
     Performs element-wise ceil of operand tensor and produces a result tensor.
     Implements the roundToIntegralTowardPositive operation from the IEEE-754
@@ -95,7 +98,9 @@ class CeilOp(FloatTensorLikeElementwiseUnaryOperation):
 
 
 @irdl_op_definition
-class CountLeadingZerosOp(IntegerTensorLikeElementwiseUnaryOperation):
+class CountLeadingZerosOp(
+    ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]
+):
     """
     Performs element-wise ceil of `operand` tensor and produces a `result` tensor.
     Implements the `roundToIntegralTowardPositive` operation from the IEEE-754
@@ -109,7 +114,7 @@ class CountLeadingZerosOp(IntegerTensorLikeElementwiseUnaryOperation):
 
 
 @irdl_op_definition
-class NotOp(IntegerTensorLikeElementwiseUnaryOperation):
+class NotOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
     Performs element-wise NOT of tensor `operand` and produces a `result` tensor.
     Depending on the element type, does the following:
@@ -124,7 +129,7 @@ class NotOp(IntegerTensorLikeElementwiseUnaryOperation):
 
 
 @irdl_op_definition
-class PopcntOp(IntegerTensorLikeElementwiseUnaryOperation):
+class PopcntOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
     Performs element-wise count of the number of bits set in the `operand` tensor
     and produces a `result` tensor.
