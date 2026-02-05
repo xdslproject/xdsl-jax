@@ -373,6 +373,25 @@ class DotAttr(ParametrizedAttribute):
 
 
 @irdl_attr_definition
+class ScatterDimensionNumbers(DimensionStructAttr):
+    """
+    XLA scatter dimension numbers.
+
+    This attribute models the dimension information for scatter operations.
+    See external [documentation](https://github.com/openxla/stablehlo/blob/b075e948092d8a27ed0be48f4f8dbaa6df7e2e3e/stablehlo/dialect/StablehloAttrs.td#L28).
+    """
+
+    name = "stablehlo.scatter"
+
+    update_window_dims: ArrayAttr[IntegerAttr[I64]]
+    inserted_window_dims: ArrayAttr[IntegerAttr[I64]]
+    input_batching_dims: ArrayAttr[IntegerAttr[I64]]
+    scatter_indices_batching_dims: ArrayAttr[IntegerAttr[I64]]
+    scatter_dims_to_operand_dims: ArrayAttr[IntegerAttr[I64]]
+    index_vector_dim: IntegerAttr[I64]
+
+
+@irdl_attr_definition
 class GatherDimensionNumbers(DimensionStructAttr):
     """
     XLA gather dimension numbers.
