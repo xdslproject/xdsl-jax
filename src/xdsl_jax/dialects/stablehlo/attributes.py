@@ -3,6 +3,7 @@ This module provides attribute definitions based on the StableHLO specification
 (https://github.com/openxla/stablehlo/blob/main/docs/spec.md).
 """
 
+from abc import ABC
 from collections.abc import Sequence
 from typing import TypeAlias, get_origin
 
