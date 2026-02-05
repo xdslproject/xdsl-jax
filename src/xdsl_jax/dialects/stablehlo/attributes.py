@@ -65,7 +65,7 @@ def print_index(printer: Printer, index: Index) -> None:
 # endregion
 
 
-class DimensionStructAttr(ParametrizedAttribute):
+class DimensionStructAttr(ParametrizedAttribute, ABC):
     """
     Base class for struct-like for dimension attributes.
     """
