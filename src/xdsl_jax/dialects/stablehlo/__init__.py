@@ -12,6 +12,13 @@ from .attributes import (
     ScatterDimensionNumbers,
     TokenType,
 )
+from .elementwise_unary_ops import (
+    CbrtOp,
+    CeilOp,
+    CountLeadingZerosOp,
+    NotOp,
+    PopcntOp,
+)
 from .ops import (
     AbsOp,
     AddOp,
@@ -20,15 +27,10 @@ from .ops import (
     Atan2Op,
     BitcastConvertOp,
     CaseOp,
-    CbrtOp,
-    CeilOp,
     ConstantOp,
-    CountLeadingZerosOp,
     MultiplyOp,
-    NotOp,
     OrOp,
     PadOp,
-    PopcntOp,
     ReturnOp,
     ShiftLeftOp,
     ShiftRightArithmeticOp,
@@ -41,6 +43,13 @@ from .ops import (
 StableHLO = Dialect(
     "stablehlo",
     [
+        # Elementwise unary operations
+        CbrtOp,
+        CeilOp,
+        CountLeadingZerosOp,
+        NotOp,
+        PopcntOp,
+        # Other operations
         AbsOp,
         AddOp,
         AfterAllOp,
@@ -48,21 +57,16 @@ StableHLO = Dialect(
         Atan2Op,
         BitcastConvertOp,
         CaseOp,
-        CbrtOp,
-        CeilOp,
         ConstantOp,
-        CountLeadingZerosOp,
         MultiplyOp,
-        NotOp,
         OrOp,
-        PopcntOp,
+        PadOp,
         ReturnOp,
         ShiftLeftOp,
         ShiftRightArithmeticOp,
         ShiftRightLogicalOp,
         SubtractOp,
         TransposeOp,
-        PadOp,
         XorOp,
     ],
     [
