@@ -19,110 +19,132 @@ from xdsl.irdl import irdl_attr_definition
 from xdsl.parser import AttrParser
 from xdsl.printer import Printer
 
-# Type alias for dimension values that can be either an array or a single integer
-DimValue: TypeAlias = ArrayAttr[IntegerAttr[I64]] | IntegerAttr[I64]
+# Type aliases for dimension values
+Dims: TypeAlias = ArrayAttr[IntegerAttr[I64]]
+Index: TypeAlias = IntegerAttr[I64]
 
 
 # region: Utility functions for dimension array parsing/printing
-def parse_dims(parser: AttrParser) -> DimValue:
-    """Parse a dimension value: either an array [1, 2, 3] or a single integer."""
+def parse_optional_dims(parser: AttrParser) -> Dims | None:
+    """Parse an optional dimension array [1, 2, 3]. Returns None if not present."""
     value = parser.parse_optional_comma_separated_list(
         AttrParser.Delimiter.SQUARE,
         lambda: IntegerAttr(parser.parse_integer(), i64),
     )
-    if value is not None:
-        return ArrayAttr(value)
+    return ArrayAttr(value) if value is not None else None
+
+
+def parse_dims(parser: AttrParser) -> Dims:
+    """Parse a dimension array [1, 2, 3]."""
+    value = parser.parse_comma_separated_list(
+        AttrParser.Delimiter.SQUARE,
+        lambda: IntegerAttr(parser.parse_integer(), i64),
+    )
+    return ArrayAttr(value)
+
+
+def print_dims(printer: Printer, dims: Dims) -> None:
+    """Print a dimension array [1, 2, 3]."""
+    with printer.in_square_brackets():
+        printer.print_list(
+            dims.data,
+            lambda dim: printer.print_int(dim.value.data),
+        )
+
+
+def parse_index(parser: AttrParser) -> Index:
+    """Parse a single integer index."""
     return IntegerAttr(parser.parse_integer(), i64)
 
 
-def print_dims(printer: Printer, dims: DimValue) -> None:
-    """Print a dimension value: either an array [1, 2, 3] or a single integer."""
-    if isinstance(dims, ArrayAttr):
-        with printer.in_square_brackets():
-            printer.print_list(
-                dims.data,
-                lambda dim: printer.print_int(dim.value.data),
-            )
-    else:
-        printer.print_int(dims.value.data)
-
-
-def should_print_field(field: DimValue) -> bool:
-    """Return True if field is non-default."""
-    if isinstance(field, ArrayAttr):
-        return bool(field.data)
-    return field.value.data != 0
-
-
-def print_field(printer: Printer, name: str, field: DimValue) -> None:
-    """Print a single field entry in the format 'name = value'."""
-    printer.print_string(f"\n{name} = ")
-    print_dims(printer, field)
-
-
-def print_struct(
-    printer: Printer,
-    attr: ParametrizedAttribute,
-) -> None:
-    """Print a struct-like attribute with optional fields."""
-    with printer.in_angle_brackets():
-        with printer.indented():
-            printer.print_list(
-                (
-                    (name, getattr(attr, name))
-                    for name, _ in attr.get_irdl_definition().parameters
-                    if should_print_field(getattr(attr, name))
-                ),
-                lambda item: print_field(printer, item[0], item[1]),
-                delimiter=",",
-            )
-        printer.print_string("\n")
-
-
-def parse_struct(
-    parser: AttrParser,
-    attr_cls: type[ParametrizedAttribute],
-) -> Sequence[Attribute]:
-    """Parse a struct-like attribute with optional fields."""
-    with parser.in_angle_brackets():
-        results = init_struct_defaults(attr_cls, parser)
-
-        seen_fields: set[str] = set()
-        while True:
-            name = parser.parse_optional_identifier()
-            if name is None:
-                break
-            if name not in results:
-                parser.raise_error(f"unknown field '{name}'")
-            if name in seen_fields:
-                parser.raise_error(f"duplicate '{name}' field")
-            seen_fields.add(name)
-            parser.parse_punctuation("=")
-            value = parse_dims(parser)
-            results[name] = value
-            if parser.parse_optional_punctuation(",") is None:
-                break
-
-        return tuple(results.values())
-
-
-def init_struct_defaults(
-    attr_cls: type[ParametrizedAttribute], parser: AttrParser
-) -> dict[str, Attribute]:
-    """Initialize default values for struct fields based on their type annotations."""
-    results: dict[str, Attribute] = {}
-    for field, annotation in attr_cls.__annotations__.items():
-        origin = get_origin(annotation)
-        if origin is ArrayAttr:
-            results[field] = ArrayAttr(())
-        elif origin is IntegerAttr:
-            results[field] = IntegerAttr(0, i64)
-        else:
-            parser.raise_error(f"unsupported field type for '{field}'")
-    return results
+def print_index(printer: Printer, index: Index) -> None:
+    """Print a single integer index."""
+    printer.print_int(index.value.data)
 
 
 # endregion
+
+
+class DimensionStructAttr(ParametrizedAttribute):
+    """
+    Base class for struct-like for dimension attributes.
+    """
+
+    @staticmethod
+    def _parse_field(parser: AttrParser) -> Dims | Index:
+        """Parse a field value: either an array [1, 2, 3] or a single integer index."""
+        if (dims := parse_optional_dims(parser)) is not None:
+            return dims
+        return parse_index(parser)
+
+    @staticmethod
+    def _print_field(printer: Printer, name: str, field: Dims | Index) -> None:
+        """Print a single field entry in the format 'name = value'."""
+        printer.print_string(f"\n{name} = ")
+        if isinstance(field, ArrayAttr):
+            print_dims(printer, field)
+        else:
+            print_index(printer, field)
+
+    @staticmethod
+    def _should_print_field(field: Dims | Index) -> bool:
+        """Return True if field is non-default."""
+        if isinstance(field, ArrayAttr):
+            return bool(field.data)
+        return field.value.data != 0
+
+    @classmethod
+    def _init_defaults(cls, parser: AttrParser) -> dict[str, Attribute]:
+        """Initialize default values for fields based on their type annotations."""
+        results: dict[str, Attribute] = {}
+        for field, annotation in cls.__annotations__.items():
+            origin = get_origin(annotation)
+            if origin is ArrayAttr:
+                results[field] = ArrayAttr(())
+            elif origin is IntegerAttr:
+                results[field] = IntegerAttr(0, i64)
+            else:
+                parser.raise_error(f"unsupported field type for '{field}'")
+        return results
+
+    def print_parameters(self, printer: Printer) -> None:
+        """Print struct fields in structured format, omitting defaults."""
+        with printer.in_angle_brackets():
+            with printer.indented():
+                printer.print_list(
+                    (
+                        (name, getattr(self, name))
+                        for name, _ in self.get_irdl_definition().parameters
+                        if self._should_print_field(getattr(self, name))
+                    ),
+                    lambda item: self._print_field(printer, item[0], item[1]),
+                    delimiter=",",
+                )
+            printer.print_string("\n")
+
+    @classmethod
+    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
+        """Parse struct fields from structured format."""
+        with parser.in_angle_brackets():
+            results = cls._init_defaults(parser)
+
+            seen_fields: set[str] = set()
+            while True:
+                name = parser.parse_optional_identifier()
+                if name is None:
+                    break
+                if name not in results:
+                    parser.raise_error(f"unknown field '{name}'")
+                if name in seen_fields:
+                    parser.raise_error(f"duplicate '{name}' field")
+                seen_fields.add(name)
+                parser.parse_punctuation("=")
+                value = cls._parse_field(parser)
+                results[name] = value
+                if parser.parse_optional_punctuation(",") is None:
+                    break
+
+            return tuple(results.values())
 
 
 class ComparisonDirection(StrEnum):
@@ -377,7 +399,7 @@ class ScatterDimensionNumbers(ParametrizedAttribute):
 
 
 @irdl_attr_definition
-class GatherDimensionNumbers(ParametrizedAttribute):
+class GatherDimensionNumbers(DimensionStructAttr):
     """
     XLA gather dimension numbers.
 
@@ -393,15 +415,6 @@ class GatherDimensionNumbers(ParametrizedAttribute):
     start_indices_batching_dims: ArrayAttr[IntegerAttr[I64]]
     start_index_map: ArrayAttr[IntegerAttr[I64]]
     index_vector_dim: IntegerAttr[I64]
-
-    def print_parameters(self, printer: Printer) -> None:
-        """Print gather dimension numbers in structured format"""
-        print_struct(printer, self)
-
-    @classmethod
-    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
-        """Parse gather dimension numbers from structured format"""
-        return parse_struct(parser, cls)
 
 
 @irdl_attr_definition
@@ -468,7 +481,7 @@ class OutputOperandAlias(ParametrizedAttribute):
 
             parser.parse_characters("operand_index")
             parser.parse_punctuation("=")
-            operand_index = IntegerAttr(parser.parse_integer(), i64)
+            operand_index = parse_index(parser)
             parser.parse_punctuation(",")
 
             parser.parse_characters("operand_tuple_indices")
