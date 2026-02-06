@@ -168,6 +168,7 @@ class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
     name = "stablehlo.is_finite"
 
 
+@irdl_op_definition
 class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
     Performs element-wise floor of `operand` tensor and produces a `result`
