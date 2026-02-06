@@ -16,8 +16,11 @@ from .elementwise_unary_ops import (
     CbrtOp,
     CeilOp,
     CountLeadingZerosOp,
+    FloorOp,
     NotOp,
     PopcntOp,
+    RoundNearestAfzOp,
+    RoundNearestEvenOp,
 )
 from .ops import (
     AbsOp,
@@ -47,8 +50,11 @@ StableHLO = Dialect(
         CbrtOp,
         CeilOp,
         CountLeadingZerosOp,
+        FloorOp,
         NotOp,
         PopcntOp,
+        RoundNearestAfzOp,
+        RoundNearestEvenOp,
         # Other operations
         AbsOp,
         AddOp,

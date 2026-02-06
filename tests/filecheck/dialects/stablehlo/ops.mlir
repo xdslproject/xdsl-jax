@@ -18,6 +18,10 @@
 // CHECK-GENERIC: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
 %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
 
+// CHECK: %floor = stablehlo.floor %tf32 : tensor<f32>
+// CHECK-GENERIC: %floor = "stablehlo.floor"(%tf32) : (tensor<f32>) -> tensor<f32>
+%floor = stablehlo.floor %tf32 : tensor<f32>
+
 // CHECK: %not = stablehlo.not %t0 : tensor<i32>
 // CHECK-GENERIC: %not = "stablehlo.not"(%t0) : (tensor<i32>) -> tensor<i32>
 %not = stablehlo.not %t0 : tensor<i32>
@@ -25,6 +29,14 @@
 // CHECK: %popcnt = stablehlo.popcnt %t0 : tensor<i32>
 // CHECK-GENERIC: %popcnt = "stablehlo.popcnt"(%t0) : (tensor<i32>) -> tensor<i32>
 %popcnt = stablehlo.popcnt %t0 : tensor<i32>
+
+// CHECK: %round_nearest_afz = stablehlo.round_nearest_afz %tf32 : tensor<f32>
+// CHECK-GENERIC: %round_nearest_afz = "stablehlo.round_nearest_afz"(%tf32) : (tensor<f32>) -> tensor<f32>
+%round_nearest_afz = stablehlo.round_nearest_afz %tf32 : tensor<f32>
+
+// CHECK: %round_nearest_even = stablehlo.round_nearest_even %tf32 : tensor<f32>
+// CHECK-GENERIC: %round_nearest_even = "stablehlo.round_nearest_even"(%tf32) : (tensor<f32>) -> tensor<f32>
+%round_nearest_even = stablehlo.round_nearest_even %tf32 : tensor<f32>
 
 // Other operations
 
