@@ -168,6 +168,23 @@ class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
     name = "stablehlo.is_finite"
 
 
+class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
+    """
+    Performs element-wise floor of `operand` tensor and produces a `result`
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#floor
+
+    Example:
+    ```mlir
+    %result = stablehlo.floor %operand : tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.floor"
+
+
 @irdl_op_definition
 class NotOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
@@ -193,3 +210,40 @@ class PopcntOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
 
     name = "stablehlo.popcnt"
+
+
+@irdl_op_definition
+class RoundNearestAfzOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
+    """
+    Performs element-wise rounding towards the nearest integer, breaking ties
+    away from zero, on the `operand` tensor and produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#round_nearest_afz
+
+    Example:
+    ```mlir
+    %result = stablehlo.round_nearest_afz %operand : tensor<5xf64>
+    ```
+    """
+
+    name = "stablehlo.round_nearest_afz"
+
+
+@irdl_op_definition
+class RoundNearestEvenOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
+    """
+    Performs element-wise rounding towards the nearest integer, breaking ties
+    towards the even integer, on the `operand` tensor and produces a `result`
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#round_nearest_even
+
+    Example:
+    ```mlir
+    %result = stablehlo.round_nearest_even %operand : tensor<5xf64>
+    ```
+    """
+
+    name = "stablehlo.round_nearest_even"
