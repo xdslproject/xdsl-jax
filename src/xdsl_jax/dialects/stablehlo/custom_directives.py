@@ -1,5 +1,5 @@
 """
-Custom directives for xDSL.
+Custom directives for the StableHLO dialect.
 """
 
 from xdsl.irdl import IRDLOperation
