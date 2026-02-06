@@ -52,7 +52,11 @@ class SameOperandsAndResultType(CustomDirective):
 
         # `() -> a` or `(a, a, ...) -> a` prints `a`
         result_type = result_types[0]
+<<<<<<< add-unary-rounding-ops
         if not operand_types or all(t == result_type for t in operand_types):
+=======
+        if all(t == result_type for t in operand_types):
+>>>>>>> main
             printer.print_attribute(result_type)
             return
 
