@@ -14,9 +14,18 @@
 // CHECK-GENERIC: %ceil = "stablehlo.ceil"(%tf32) : (tensor<f32>) -> tensor<f32>
 %ceil = stablehlo.ceil %tf32 : tensor<f32>
 
+// CHECK: %convert = stablehlo.convert %t0 : (tensor<i32>) -> tensor<f32>
+// CHECK-GENERIC: %convert = "stablehlo.convert"(%t0) : (tensor<i32>) -> tensor<f32>
+%convert = stablehlo.convert %t0 : (tensor<i32>) -> tensor<f32>
+
+
 // CHECK: %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
 // CHECK-GENERIC: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
 %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
+
+// CHECK: %is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
+// CHECK-GENERIC: %is_finite = "stablehlo.is_finite"(%tf32) : (tensor<f32>) -> tensor<i1>
+%is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
 
 // CHECK: %not = stablehlo.not %t0 : tensor<i32>
 // CHECK-GENERIC: %not = "stablehlo.not"(%t0) : (tensor<i32>) -> tensor<i32>

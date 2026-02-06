@@ -6,6 +6,7 @@ import abc
 from typing import Generic, TypeAlias, TypeVar
 
 from xdsl.dialects.builtin import (
+    I1,
     AnyFloat,
     AnyTensorType,
     ComplexType,
@@ -32,8 +33,11 @@ from .custom_directives import SameOperandsAndResultType
 # Type aliases
 IntegerTensorType: TypeAlias = TensorType[IntegerType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
+IntOrFloatOrComplexType: TypeAlias = IntegerType | AnyFloat | ComplexType
 FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
 FloatTensorType: TypeAlias = TensorType[AnyFloat]
+PredTensorType: TypeAlias = TensorType[I1]
+IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 
 
 # Generic type variables for templating
@@ -107,6 +111,30 @@ class CeilOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
 
 
 @irdl_op_definition
+class ConvertOp(
+    ElementwiseUnaryOperation[
+        IntOrFloatOrComplexTensorType, IntOrFloatOrComplexTensorType
+    ]
+):
+    """
+    Performs an element-wise conversion from one element type to another on
+    `operand` tensor and produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#convert
+
+    Example:
+    ```mlir
+    %result = stablehlo.convert %operand : (tensor<3xi64>) -> tensor<3xcomplex<f64>>
+    ```
+    """
+
+    name = "stablehlo.convert"
+
+    traits = traits_def(SameOperandsAndResultShape())
+
+
+@irdl_op_definition
 class CountLeadingZerosOp(
     ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]
 ):
@@ -120,6 +148,24 @@ class CountLeadingZerosOp(
     """
 
     name = "stablehlo.count_leading_zeros"
+
+
+@irdl_op_definition
+class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
+    """
+    Performs element-wise check whether the value in `x` is finite (i.e. is
+    neither +Inf, -Inf, nor NaN) and produces a `y` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#is_finite
+
+    Example:
+    ```mlir
+    %y = stablehlo.is_finite %x : (tensor<7xf64>) -> tensor<7xi1>
+    ```
+    """
+
+    name = "stablehlo.is_finite"
 
 
 @irdl_op_definition

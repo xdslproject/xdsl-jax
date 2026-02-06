@@ -15,7 +15,9 @@ from .attributes import (
 from .elementwise_unary_ops import (
     CbrtOp,
     CeilOp,
+    ConvertOp,
     CountLeadingZerosOp,
+    IsFiniteOp,
     NotOp,
     PopcntOp,
 )
@@ -46,7 +48,9 @@ StableHLO = Dialect(
         # Elementwise unary operations
         CbrtOp,
         CeilOp,
+        ConvertOp,
         CountLeadingZerosOp,
+        IsFiniteOp,
         NotOp,
         PopcntOp,
         # Other operations
