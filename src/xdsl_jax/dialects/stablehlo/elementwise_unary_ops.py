@@ -27,6 +27,8 @@ from xdsl_jax.xdsl_extras.traits import (
     SameOperandsAndResultShape,
 )
 
+from .custom_directives import SameOperandsAndResultType
+
 # Type aliases
 IntegerTensorType: TypeAlias = TensorType[IntegerType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
@@ -58,6 +60,13 @@ class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_IN, T_OUT]):
         SameOperandsAndResultShape(),
         Elementwise(),
     )
+
+    assembly_format = (
+        "$operand attr-dict `:` "
+        "custom<SameOperandsAndResultType>(type($operand), type($result))"
+    )
+
+    custom_directives = (SameOperandsAndResultType,)
 
     def __init__(self, operand: SSAValue, result_type: Attribute | None = None):
         if result_type is None:

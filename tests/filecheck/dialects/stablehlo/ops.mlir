@@ -1,45 +1,51 @@
 // RUN: XDSL_ROUNDTRIP
+// RUN: XDSL_GENERIC_ROUNDTRIP
 
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
 
 // Elementwise unary operations
 
-// CHECK: %cbrt = "stablehlo.cbrt"(%tf32) : (tensor<f32>) -> tensor<f32>
-%cbrt = "stablehlo.cbrt"(%tf32) : (tensor<f32>) -> tensor<f32>
+// CHECK: %cbrt = stablehlo.cbrt %tf32 : tensor<f32>
+// CHECK-GENERIC: %cbrt = "stablehlo.cbrt"(%tf32) : (tensor<f32>) -> tensor<f32>
+%cbrt = stablehlo.cbrt %tf32 : tensor<f32>
 
-// CHECK: %ceil = "stablehlo.ceil"(%tf32) : (tensor<f32>) -> tensor<f32>
-%ceil = "stablehlo.ceil"(%tf32) : (tensor<f32>) -> tensor<f32>
+// CHECK: %ceil = stablehlo.ceil %tf32 : tensor<f32>
+// CHECK-GENERIC: %ceil = "stablehlo.ceil"(%tf32) : (tensor<f32>) -> tensor<f32>
+%ceil = stablehlo.ceil %tf32 : tensor<f32>
 
-// CHECK: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
-%count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
+// CHECK: %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
+// CHECK-GENERIC: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
+%count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
 
-// CHECK: %not = "stablehlo.not"(%t0) : (tensor<i32>) -> tensor<i32>
-%not = "stablehlo.not"(%t0) : (tensor<i32>) -> tensor<i32>
+// CHECK: %not = stablehlo.not %t0 : tensor<i32>
+// CHECK-GENERIC: %not = "stablehlo.not"(%t0) : (tensor<i32>) -> tensor<i32>
+%not = stablehlo.not %t0 : tensor<i32>
 
-// CHECK: %popcnt = "stablehlo.popcnt"(%t0) : (tensor<i32>) -> tensor<i32>
-%popcnt = "stablehlo.popcnt"(%t0) : (tensor<i32>) -> tensor<i32>
+// CHECK: %popcnt = stablehlo.popcnt %t0 : tensor<i32>
+// CHECK-GENERIC: %popcnt = "stablehlo.popcnt"(%t0) : (tensor<i32>) -> tensor<i32>
+%popcnt = stablehlo.popcnt %t0 : tensor<i32>
 
 // Other operations
 
-// CHECK: %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
 %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
 
-// CHECK: %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
 %token0 = "test.op"() : () -> !stablehlo.token
 %token1 = "test.op"() : () -> !stablehlo.token
-// CHECK: %after_all = "stablehlo.after_all"(%token0, %token1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
+// CHECK-GENERIC: %after_all = "stablehlo.after_all"(%token0, %token1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
 %after_all = "stablehlo.after_all"(%token0, %token1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
 
-// CHECK: %atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+// CHECK-GENERIC: %atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
 %atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
 
-// CHECK: %multiply = "stablehlo.multiply"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %multiply = "stablehlo.multiply"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %multiply = "stablehlo.multiply"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %subtract = "stablehlo.subtract"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %subtract = "stablehlo.subtract"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %subtract = "stablehlo.subtract"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
 %transpose_operand = "test.op"() : () -> tensor<2x3x2xi32>
@@ -47,7 +53,7 @@
 //            [[1,2], [3,4], [5,6]],
 //            [[7,8], [9,10], [11,12]]
 //           ]
-// CHECK:  %transpose_result = "stablehlo.transpose"(%transpose_operand) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+// CHECK-GENERIC:  %transpose_result = "stablehlo.transpose"(%transpose_operand) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
 %transpose_result = "stablehlo.transpose"(%transpose_operand) {
   permutation = array<i64: 2, 1, 0>
 } : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
@@ -68,7 +74,7 @@
   edge_padding_high = array<i64: 2, 1>,
   interior_padding = array<i64: 1, 2>
 } : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
-// CHECK: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {edge_padding_low = array<i64: 0, 1>, edge_padding_high = array<i64: 2, 1>, interior_padding = array<i64: 1, 2>} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// CHECK-GENERIC: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {edge_padding_low = array<i64: 0, 1>, edge_padding_high = array<i64: 2, 1>, interior_padding = array<i64: 1, 2>} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
 // %result: [
 //           [0, 1, 0, 0, 2, 0, 0, 3, 0],
 //           [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -77,22 +83,22 @@
 //           [0, 0, 0, 0, 0, 0, 0, 0, 0]
 //          ]
 
-// CHECK: %and = "stablehlo.and"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %and = "stablehlo.and"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %and = "stablehlo.and"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %or = "stablehlo.or"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %or = "stablehlo.or"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %or = "stablehlo.or"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %xor = "stablehlo.xor"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %xor = "stablehlo.xor"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %xor = "stablehlo.xor"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %shift_left = "stablehlo.shift_left"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %shift_left = "stablehlo.shift_left"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %shift_left = "stablehlo.shift_left"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %shift_right_arithmetic = "stablehlo.shift_right_arithmetic"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %shift_right_arithmetic = "stablehlo.shift_right_arithmetic"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %shift_right_arithmetic = "stablehlo.shift_right_arithmetic"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %shift_right_logical = "stablehlo.shift_right_logical"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK-GENERIC: %shift_right_logical = "stablehlo.shift_right_logical"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %shift_right_logical = "stablehlo.shift_right_logical"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 
 // %bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
@@ -102,15 +108,15 @@
 %result_branch0 = "test.op"() : () -> tensor<2xi64>
 %result_branch1 = "test.op"() : () -> tensor<2xi64>
 
-// CHECK: %0, %1 = "stablehlo.case"(%index) ({
+// CHECK-GENERIC: %0, %1 = "stablehlo.case"(%index) ({
 %0:2 = "stablehlo.case"(%index) ({
-  // CHECK: "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
+  // CHECK-GENERIC: "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
   "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
 }, {
-  // CHECK: "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
+  // CHECK-GENERIC: "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
   "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
-// CHECK: }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
+// CHECK-GENERIC: }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 
-// CHECK: %constant = "stablehlo.constant"() {value = dense<[[0.000000e+00, 1.000000e+00], [2.000000e+00, 3.000000e+00]]> : tensor<2x2xf32>} : () -> tensor<2x2xf32>
+// CHECK-GENERIC: %constant = "stablehlo.constant"() {value = dense<[[0.000000e+00, 1.000000e+00], [2.000000e+00, 3.000000e+00]]> : tensor<2x2xf32>} : () -> tensor<2x2xf32>
 %constant = "stablehlo.constant"() {value = dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>} : () -> tensor<2x2xf32>
