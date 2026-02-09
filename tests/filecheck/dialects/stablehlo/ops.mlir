@@ -3,8 +3,18 @@
 
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
+%c0 = "test.op"() : () -> tensor<complex<f32>>
 
 // Elementwise unary operations
+
+
+// CHECK: %abs = stablehlo.abs %t0 : tensor<i32>
+// CHECK-GENERIC: %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
+%abs = stablehlo.abs %t0 : tensor<i32>
+
+// CHECK: %complex_abs = stablehlo.abs %c0 : (tensor<complex<f32>>) -> tensor<f32>
+// CHECK-GENERIC: %complex_abs = "stablehlo.abs"(%c0) : (tensor<complex<f32>>) -> tensor<f32>
+%complex_abs = stablehlo.abs %c0 : (tensor<complex<f32>>) -> tensor<f32>
 
 // CHECK: %cbrt = stablehlo.cbrt %tf32 : tensor<f32>
 // CHECK-GENERIC: %cbrt = "stablehlo.cbrt"(%tf32) : (tensor<f32>) -> tensor<f32>
@@ -95,9 +105,6 @@
 %tanh = stablehlo.tanh %tf32 : tensor<f32>
 
 // Other operations
-
-// CHECK-GENERIC: %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
-%abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
 
 // CHECK-GENERIC: %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>

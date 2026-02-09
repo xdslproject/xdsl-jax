@@ -64,16 +64,18 @@ _SIGNLESS_INT_CONSTR = _int_constr(Signedness.SIGNLESS)
 _SIGNED_INT_CONSTR = _int_constr(Signedness.SIGNED)
 
 # Type aliases
-SignedIntType: TypeAlias = Annotated[IntegerType, _SIGNED_INT_CONSTR]
+SIntType: TypeAlias = Annotated[IntegerType, _SIGNLESS_INT_CONSTR]
 IntType: TypeAlias = Annotated[IntegerType, _UNSIGNED_INT_CONSTR | _SIGNLESS_INT_CONSTR]
 IntegerTensorType: TypeAlias = TensorType[IntType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-SignedIntOrFloatOrComplexType: TypeAlias = SignedIntType | FloatOrComplexType
+SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
+SIntOrFloatType: TypeAlias = SIntType | AnyFloat
 IntOrFloatOrComplexType: TypeAlias = IntType | AnyFloat | ComplexType
 FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
 FloatTensorType: TypeAlias = TensorType[AnyFloat]
 PredTensorType: TypeAlias = TensorType[I1]
-SIntOrFloatOrComplexTensorType: TypeAlias = TensorType[SignedIntOrFloatOrComplexType]
+SIntOrFloatOrComplexTensorType: TypeAlias = TensorType[SIntOrFloatOrComplexType]
+SIntOrFloatTensorType: TypeAlias = TensorType[SIntOrFloatType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 
 
@@ -113,6 +115,25 @@ class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_IN, T_OUT]):
         if result_type is None:
             result_type = operand.type
         super().__init__(operands=(operand,), result_types=(result_type,))
+
+
+@irdl_op_definition
+class AbsOp(
+    ElementwiseUnaryOperation[SIntOrFloatOrComplexTensorType, SIntOrFloatTensorType]
+):
+    """
+    Performs element-wise abs operation on operand tensor and produces a result tensor.
+    Depending on the element type, does the following:
+
+    * For signed integers: integer modulus.
+    * For floats: abs from IEEE-754.
+    * For complex numbers: complex modulus.
+    * For quantized types: dequantize_op_quantize(abs, operand, type(result)).
+
+    [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#abs)
+    """
+
+    name = "stablehlo.abs"
 
 
 @irdl_op_definition
