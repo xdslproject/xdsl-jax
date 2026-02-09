@@ -61,6 +61,14 @@
 // CHECK-GENERIC: %round_nearest_even = "stablehlo.round_nearest_even"(%tf32) : (tensor<f32>) -> tensor<f32>
 %round_nearest_even = stablehlo.round_nearest_even %tf32 : tensor<f32>
 
+// CHECK: %rsqrt = stablehlo.rsqrt %tf32 : tensor<f32>
+// CHECK-GENERIC: %rsqrt = "stablehlo.rsqrt"(%tf32) : (tensor<f32>) -> tensor<f32>
+%rsqrt = stablehlo.rsqrt %tf32 : tensor<f32>
+
+// CHECK: %sqrt = stablehlo.sqrt %tf32 : tensor<f32>
+// CHECK-GENERIC: %sqrt = "stablehlo.sqrt"(%tf32) : (tensor<f32>) -> tensor<f32>
+%sqrt = stablehlo.sqrt %tf32 : tensor<f32>
+
 // Other operations
 
 // CHECK-GENERIC: %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>

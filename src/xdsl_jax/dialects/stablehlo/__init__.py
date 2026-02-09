@@ -26,6 +26,8 @@ from .elementwise_unary_ops import (
     RealOp,
     RoundNearestAfzOp,
     RoundNearestEvenOp,
+    RsqrtOp,
+    SqrtOp,
 )
 from .ops import (
     AbsOp,
@@ -65,6 +67,8 @@ StableHLO = Dialect(
         RealOp,
         RoundNearestAfzOp,
         RoundNearestEvenOp,
+        RsqrtOp,
+        SqrtOp,
         # Other operations
         AbsOp,
         AddOp,
