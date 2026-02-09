@@ -16,8 +16,10 @@ from xdsl.dialects.builtin import (
 from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
+    ParsePropInAttrDict,
     irdl_op_definition,
     operand_def,
+    opt_prop_def,
     result_def,
     traits_def,
 )
@@ -28,6 +30,7 @@ from xdsl_jax.xdsl_extras.traits import (
     SameOperandsAndResultShape,
 )
 
+from .attributes import ResultAccuracyMode, ResultAccuracyModeAttr
 from .custom_directives import SameOperandsAndResultType
 
 # Type aliases
@@ -248,3 +251,56 @@ class RoundNearestEvenOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorT
     """
 
     name = "stablehlo.round_nearest_even"
+
+
+@irdl_op_definition
+class RsqrtOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise reciprocal square root operation on `operand` tensor
+    and produces a `result` tensor, implementing the `rSqrt` operation from the
+    IEEE-754 specification.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#rsqrt
+
+    Example:
+    ```mlir
+    %result = stablehlo.rsqrt %operand : tensor<2x2xf32>
+    ```
+    """
+
+    name = "stablehlo.rsqrt"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class SqrtOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise square root operation on `operand` tensor and produces
+    a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#sqrt
+
+    Example:
+    ```mlir
+    %result = stablehlo.sqrt %operand : tensor<2x2xf32>
+    ```
+    """
+
+    name = "stablehlo.sqrt"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
