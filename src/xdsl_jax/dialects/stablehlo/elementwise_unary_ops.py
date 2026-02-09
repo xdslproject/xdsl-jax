@@ -171,6 +171,7 @@ class ImagOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType
     name = "stablehlo.imag"
 
 
+@irdl_op_definition
 class ExponentialMinusOneOp(
     ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
 ):
