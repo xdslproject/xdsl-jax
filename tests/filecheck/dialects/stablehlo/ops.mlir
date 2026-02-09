@@ -30,13 +30,13 @@
 // CHECK-GENERIC: %exponential = "stablehlo.exponential"(%tf32) : (tensor<f32>) -> tensor<f32>
 %exponential = stablehlo.exponential %tf32 : tensor<f32>
 
-// CHECK: %is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
-// CHECK-GENERIC: %is_finite = "stablehlo.is_finite"(%tf32) : (tensor<f32>) -> tensor<i1>
-%is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
-
 // CHECK: %floor = stablehlo.floor %tf32 : tensor<f32>
 // CHECK-GENERIC: %floor = "stablehlo.floor"(%tf32) : (tensor<f32>) -> tensor<f32>
 %floor = stablehlo.floor %tf32 : tensor<f32>
+
+// CHECK: %is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
+// CHECK-GENERIC: %is_finite = "stablehlo.is_finite"(%tf32) : (tensor<f32>) -> tensor<i1>
+%is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
 
 // CHECK: %logistic = stablehlo.logistic %tf32 : tensor<f32>
 // CHECK-GENERIC: %logistic = "stablehlo.logistic"(%tf32) : (tensor<f32>) -> tensor<f32>

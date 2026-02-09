@@ -206,24 +206,6 @@ class ExponentialOp(
 
 
 @irdl_op_definition
-class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
-    """
-    Performs element-wise check whether the value in `x` is finite (i.e. is
-    neither +Inf, -Inf, nor NaN) and produces a `y` tensor.
-
-    See:
-    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#is_finite
-
-    Example:
-    ```mlir
-    %y = stablehlo.is_finite %x : (tensor<7xf64>) -> tensor<7xi1>
-    ```
-    """
-
-    name = "stablehlo.is_finite"
-
-
-@irdl_op_definition
 class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
     Performs element-wise floor of `operand` tensor and produces a `result`
@@ -239,6 +221,24 @@ class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
 
     name = "stablehlo.floor"
+
+
+@irdl_op_definition
+class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
+    """
+    Performs element-wise check whether the value in `x` is finite (i.e. is
+    neither +Inf, -Inf, nor NaN) and produces a `y` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#is_finite
+
+    Example:
+    ```mlir
+    %y = stablehlo.is_finite %x : (tensor<7xf64>) -> tensor<7xi1>
+    ```
+    """
+
+    name = "stablehlo.is_finite"
 
 
 @irdl_op_definition
