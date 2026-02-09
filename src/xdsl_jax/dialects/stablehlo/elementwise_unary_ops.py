@@ -3,14 +3,17 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic, TypeAlias, TypeVar
+from typing import Annotated, Generic, TypeAlias, TypeVar
 
 from xdsl.dialects.builtin import (
     I1,
     AnyFloat,
     AnyTensorType,
     ComplexType,
+    IntAttrConstraint,
     IntegerType,
+    Signedness,
+    SignednessAttr,
     TensorType,
 )
 from xdsl.ir import Attribute, SSAValue
@@ -23,6 +26,11 @@ from xdsl.irdl import (
     result_def,
     traits_def,
 )
+from xdsl.irdl.constraints import (
+    EqAttrConstraint,
+    IntSetConstraint,
+    ParamAttrConstraint,
+)
 from xdsl.traits import NoMemoryEffect
 
 from xdsl_jax.xdsl_extras.traits import (
@@ -33,13 +41,39 @@ from xdsl_jax.xdsl_extras.traits import (
 from .attributes import ResultAccuracyMode, ResultAccuracyModeAttr
 from .custom_directives import SameOperandsAndResultType
 
+# Integer type constraint with fixed widths
+_INT_WIDTH_CONSTR = IntAttrConstraint(
+    IntSetConstraint(frozenset((2, 4, 8, 16, 32, 64)))
+)
+
+
+def _int_constr(signedness: Signedness) -> ParamAttrConstraint[IntegerType]:
+    """Create an integer type constraint with fixed widths and signedness."""
+    return ParamAttrConstraint(
+        IntegerType,
+        (_INT_WIDTH_CONSTR, EqAttrConstraint(SignednessAttr(signedness))),
+    )
+
+
+# NOTE: IntegerType is defined in the StableHLO spec as:
+# IntegerType ::= SignedIntegerType | UnsignedIntegerType,
+# but the MLIR implementation is using signless integers instead of signed,
+# and there is a TODO to fix it.
+_UNSIGNED_INT_CONSTR = _int_constr(Signedness.UNSIGNED)
+_SIGNLESS_INT_CONSTR = _int_constr(Signedness.SIGNLESS)
+_SIGNED_INT_CONSTR = _int_constr(Signedness.SIGNED)
+
 # Type aliases
-IntegerTensorType: TypeAlias = TensorType[IntegerType]
+SignedIntType: TypeAlias = Annotated[IntegerType, _SIGNED_INT_CONSTR]
+IntType: TypeAlias = Annotated[IntegerType, _UNSIGNED_INT_CONSTR | _SIGNLESS_INT_CONSTR]
+IntegerTensorType: TypeAlias = TensorType[IntType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-IntOrFloatOrComplexType: TypeAlias = IntegerType | AnyFloat | ComplexType
+SignedIntOrFloatOrComplexType: TypeAlias = SignedIntType | FloatOrComplexType
+IntOrFloatOrComplexType: TypeAlias = IntType | AnyFloat | ComplexType
 FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
 FloatTensorType: TypeAlias = TensorType[AnyFloat]
 PredTensorType: TypeAlias = TensorType[I1]
+SIntOrFloatOrComplexTensorType: TypeAlias = TensorType[SignedIntOrFloatOrComplexType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 
 
@@ -434,6 +468,28 @@ class RsqrtOp(
     )
 
     irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class SignOp(
+    ElementwiseUnaryOperation[
+        SIntOrFloatOrComplexTensorType, SIntOrFloatOrComplexTensorType
+    ]
+):
+    """
+    Returns the sign of the `operand` element-wise and produces a `result`
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#sign
+
+    Example:
+    ```mlir
+    %result = stablehlo.sign %operand : tensor<5xf64>
+    ```
+    """
+
+    name = "stablehlo.sign"
 
 
 @irdl_op_definition

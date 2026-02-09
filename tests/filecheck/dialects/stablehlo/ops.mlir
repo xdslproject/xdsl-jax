@@ -74,6 +74,10 @@
 // CHECK-GENERIC: %rsqrt = "stablehlo.rsqrt"(%tf32) : (tensor<f32>) -> tensor<f32>
 %rsqrt = stablehlo.rsqrt %tf32 : tensor<f32>
 
+// CHECK: %sign = stablehlo.sign %tf32 : tensor<f32>
+// CHECK-GENERIC: %sign = "stablehlo.sign"(%tf32) : (tensor<f32>) -> tensor<f32>
+%sign = stablehlo.sign %tf32 : tensor<f32>
+
 // CHECK: %sine = stablehlo.sine %tf32 : tensor<f32>
 // CHECK-GENERIC: %sine = "stablehlo.sine"(%tf32) : (tensor<f32>) -> tensor<f32>
 %sine = stablehlo.sine %tf32 : tensor<f32>
