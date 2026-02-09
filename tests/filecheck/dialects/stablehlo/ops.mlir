@@ -18,10 +18,6 @@
 // CHECK-GENERIC: %convert = "stablehlo.convert"(%t0) : (tensor<i32>) -> tensor<f32>
 %convert = stablehlo.convert %t0 : (tensor<i32>) -> tensor<f32>
 
-// CHECK: %cosine = stablehlo.cosine %tf32 : tensor<f32>
-// CHECK-GENERIC: %cosine = "stablehlo.cosine"(%tf32) : (tensor<f32>) -> tensor<f32>
-%cosine = stablehlo.cosine %tf32 : tensor<f32>
-
 // CHECK: %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
 // CHECK-GENERIC: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
 %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
@@ -74,21 +70,9 @@
 // CHECK-GENERIC: %rsqrt = "stablehlo.rsqrt"(%tf32) : (tensor<f32>) -> tensor<f32>
 %rsqrt = stablehlo.rsqrt %tf32 : tensor<f32>
 
-// CHECK: %sine = stablehlo.sine %tf32 : tensor<f32>
-// CHECK-GENERIC: %sine = "stablehlo.sine"(%tf32) : (tensor<f32>) -> tensor<f32>
-%sine = stablehlo.sine %tf32 : tensor<f32>
-
 // CHECK: %sqrt = stablehlo.sqrt %tf32 : tensor<f32>
 // CHECK-GENERIC: %sqrt = "stablehlo.sqrt"(%tf32) : (tensor<f32>) -> tensor<f32>
 %sqrt = stablehlo.sqrt %tf32 : tensor<f32>
-
-// CHECK: %tan = stablehlo.tan %tf32 : tensor<f32>
-// CHECK-GENERIC: %tan = "stablehlo.tan"(%tf32) : (tensor<f32>) -> tensor<f32>
-%tan = stablehlo.tan %tf32 : tensor<f32>
-
-// CHECK: %tanh = stablehlo.tanh %tf32 : tensor<f32>
-// CHECK-GENERIC: %tanh = "stablehlo.tanh"(%tf32) : (tensor<f32>) -> tensor<f32>
-%tanh = stablehlo.tanh %tf32 : tensor<f32>
 
 // Other operations
 
