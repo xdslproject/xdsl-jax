@@ -154,6 +154,23 @@ class CountLeadingZerosOp(
 
 
 @irdl_op_definition
+class ImagOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType]):
+    """
+    Extracts the imaginary part, element-wise, from the `operand` and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#imag
+
+    Example:
+    ```mlir
+    %result = stablehlo.imag %operand : (tensor<2xcomplex<f32>>) -> tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.imag"
+
+
 class ExponentialMinusOneOp(
     ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
 ):
@@ -320,6 +337,28 @@ class LogPlusOneOp(
 
 
 @irdl_op_definition
+class NegateOp(
+    ElementwiseUnaryOperation[
+        IntOrFloatOrComplexTensorType, IntOrFloatOrComplexTensorType
+    ]
+):
+    """
+    Performs element-wise negation of `operand` tensor and produces a `result`
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#negate
+
+    Example:
+    ```mlir
+    %result = stablehlo.negate %operand : tensor<2x3xi32>
+    ```
+    """
+
+    name = "stablehlo.negate"
+
+
+@irdl_op_definition
 class NotOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
     Performs element-wise NOT of tensor `operand` and produces a `result` tensor.
@@ -344,6 +383,24 @@ class PopcntOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
 
     name = "stablehlo.popcnt"
+
+
+@irdl_op_definition
+class RealOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType]):
+    """
+    Extracts the real part, element-wise, from the `operand` and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#real
+
+    Example:
+    ```mlir
+    %result = stablehlo.real %operand : tensor<2xcomplex<f32>> : tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.real"
 
 
 @irdl_op_definition
