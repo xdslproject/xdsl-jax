@@ -16,6 +16,7 @@ from .elementwise_unary_ops import (
     CbrtOp,
     CeilOp,
     ConvertOp,
+    CosineOp,
     CountLeadingZerosOp,
     ExponentialMinusOneOp,
     ExponentialOp,
@@ -29,7 +30,10 @@ from .elementwise_unary_ops import (
     RoundNearestAfzOp,
     RoundNearestEvenOp,
     RsqrtOp,
+    SineOp,
     SqrtOp,
+    TanhOp,
+    TanOp,
 )
 from .ops import (
     AbsOp,
@@ -59,6 +63,7 @@ StableHLO = Dialect(
         CbrtOp,
         CeilOp,
         ConvertOp,
+        CosineOp,
         CountLeadingZerosOp,
         ExponentialMinusOneOp,
         ExponentialOp,
@@ -72,7 +77,10 @@ StableHLO = Dialect(
         RoundNearestAfzOp,
         RoundNearestEvenOp,
         RsqrtOp,
+        SineOp,
         SqrtOp,
+        TanOp,
+        TanhOp,
         # Other operations
         AbsOp,
         AddOp,
