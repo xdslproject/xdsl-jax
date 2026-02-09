@@ -154,6 +154,58 @@ class CountLeadingZerosOp(
 
 
 @irdl_op_definition
+class ExponentialMinusOneOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise exponential minus one operation on `operand` tensor
+    and produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#exponential_minus_one
+
+    Example:
+    ```mlir
+    %result = stablehlo.exponential_minus_one %operand : tensor<2xf64>
+    ```
+    """
+
+    name = "stablehlo.exponential_minus_one"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class ExponentialOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise exponential operation on `operand` tensor and produces
+    a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#exponential
+
+    Example:
+    ```mlir
+    %result = stablehlo.exponential %operand : tensor<2x2xf64>
+    ```
+    """
+
+    name = "stablehlo.exponential"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
 class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
     """
     Performs element-wise check whether the value in `x` is finite (i.e. is
@@ -187,6 +239,84 @@ class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
 
     name = "stablehlo.floor"
+
+
+@irdl_op_definition
+class LogisticOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise logistic operation on `operand` tensor and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#logistic
+
+    Example:
+    ```mlir
+    %result = stablehlo.logistic %operand : tensor<2x2xf64>
+    ```
+    """
+
+    name = "stablehlo.logistic"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class LogOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise logarithm operation on `operand` tensor and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#log
+
+    Example:
+    ```mlir
+    %result = stablehlo.log %operand : tensor<2x2xf64>
+    ```
+    """
+
+    name = "stablehlo.log"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class LogPlusOneOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise logarithm plus one operation on `operand` tensor and
+    produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#log_plus_one
+
+    Example:
+    ```mlir
+    %result = stablehlo.log_plus_one %operand : tensor<5xf64>
+    ```
+    """
+
+    name = "stablehlo.log_plus_one"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
 
 
 @irdl_op_definition

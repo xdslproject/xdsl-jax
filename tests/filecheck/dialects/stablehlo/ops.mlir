@@ -18,10 +18,17 @@
 // CHECK-GENERIC: %convert = "stablehlo.convert"(%t0) : (tensor<i32>) -> tensor<f32>
 %convert = stablehlo.convert %t0 : (tensor<i32>) -> tensor<f32>
 
-
 // CHECK: %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
 // CHECK-GENERIC: %count_leading_zeros = "stablehlo.count_leading_zeros"(%t0) : (tensor<i32>) -> tensor<i32>
 %count_leading_zeros = stablehlo.count_leading_zeros %t0 : tensor<i32>
+
+// CHECK: %exponential_minus_one = stablehlo.exponential_minus_one %tf32 : tensor<f32>
+// CHECK-GENERIC: %exponential_minus_one = "stablehlo.exponential_minus_one"(%tf32) : (tensor<f32>) -> tensor<f32>
+%exponential_minus_one = stablehlo.exponential_minus_one %tf32 : tensor<f32>
+
+// CHECK: %exponential = stablehlo.exponential %tf32 : tensor<f32>
+// CHECK-GENERIC: %exponential = "stablehlo.exponential"(%tf32) : (tensor<f32>) -> tensor<f32>
+%exponential = stablehlo.exponential %tf32 : tensor<f32>
 
 // CHECK: %is_finite = stablehlo.is_finite %tf32 : (tensor<f32>) -> tensor<i1>
 // CHECK-GENERIC: %is_finite = "stablehlo.is_finite"(%tf32) : (tensor<f32>) -> tensor<i1>
@@ -30,6 +37,18 @@
 // CHECK: %floor = stablehlo.floor %tf32 : tensor<f32>
 // CHECK-GENERIC: %floor = "stablehlo.floor"(%tf32) : (tensor<f32>) -> tensor<f32>
 %floor = stablehlo.floor %tf32 : tensor<f32>
+
+// CHECK: %logistic = stablehlo.logistic %tf32 : tensor<f32>
+// CHECK-GENERIC: %logistic = "stablehlo.logistic"(%tf32) : (tensor<f32>) -> tensor<f32>
+%logistic = stablehlo.logistic %tf32 : tensor<f32>
+
+// CHECK: %log = stablehlo.log %tf32 : tensor<f32>
+// CHECK-GENERIC: %log = "stablehlo.log"(%tf32) : (tensor<f32>) -> tensor<f32>
+%log = stablehlo.log %tf32 : tensor<f32>
+
+// CHECK: %log_plus_one = stablehlo.log_plus_one %tf32 : tensor<f32>
+// CHECK-GENERIC: %log_plus_one = "stablehlo.log_plus_one"(%tf32) : (tensor<f32>) -> tensor<f32>
+%log_plus_one = stablehlo.log_plus_one %tf32 : tensor<f32>
 
 // CHECK: %not = stablehlo.not %t0 : tensor<i32>
 // CHECK-GENERIC: %not = "stablehlo.not"(%t0) : (tensor<i32>) -> tensor<i32>
