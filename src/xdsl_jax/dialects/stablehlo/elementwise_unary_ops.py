@@ -138,6 +138,32 @@ class ConvertOp(
 
 
 @irdl_op_definition
+class CosineOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise cosine operation on `operand` tensor and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#cosine
+
+    Example:
+    ```mlir
+    %result = stablehlo.cosine %operand : tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.cosine"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
 class CountLeadingZerosOp(
     ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]
 ):
@@ -151,24 +177,6 @@ class CountLeadingZerosOp(
     """
 
     name = "stablehlo.count_leading_zeros"
-
-
-@irdl_op_definition
-class ImagOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType]):
-    """
-    Extracts the imaginary part, element-wise, from the `operand` and produces a
-    `result` tensor.
-
-    See:
-    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#imag
-
-    Example:
-    ```mlir
-    %result = stablehlo.imag %operand : (tensor<2xcomplex<f32>>) -> tensor<2xf32>
-    ```
-    """
-
-    name = "stablehlo.imag"
 
 
 @irdl_op_definition
@@ -239,6 +247,24 @@ class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
 
     name = "stablehlo.floor"
+
+
+@irdl_op_definition
+class ImagOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType]):
+    """
+    Extracts the imaginary part, element-wise, from the `operand` and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#imag
+
+    Example:
+    ```mlir
+    %result = stablehlo.imag %operand : (tensor<2xcomplex<f32>>) -> tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.imag"
 
 
 @irdl_op_definition
@@ -469,6 +495,32 @@ class RsqrtOp(
 
 
 @irdl_op_definition
+class SineOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise sine operation on `operand` tensor and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#sine
+
+    Example:
+    ```mlir
+    %result = stablehlo.sine %operand : tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.sine"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
 class SqrtOp(
     ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
 ):
@@ -486,6 +538,58 @@ class SqrtOp(
     """
 
     name = "stablehlo.sqrt"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class TanOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise tangent operation on `operand` tensor and
+    produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#tan
+
+    Example:
+    ```mlir
+    %result = stablehlo.tan %operand : tensor<2x2xf64>
+    ```
+    """
+
+    name = "stablehlo.tan"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class TanhOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise hyperbolic tangent operation on `operand` tensor and
+    produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#tanh
+
+    Example:
+    ```mlir
+    %result = stablehlo.tanh %operand : tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.tanh"
 
     result_accuracy = opt_prop_def(
         ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
