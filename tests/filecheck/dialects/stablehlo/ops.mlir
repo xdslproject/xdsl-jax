@@ -3,7 +3,8 @@
 
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
-%c0 = "test.op"() : () -> tensor<complex<f32>>
+%tcomplex = "test.op"() : () -> tensor<complex<f32>>
+
 
 // Elementwise unary operations
 
@@ -12,9 +13,9 @@
 // CHECK-GENERIC: %abs = "stablehlo.abs"(%t0) : (tensor<i32>) -> tensor<i32>
 %abs = stablehlo.abs %t0 : tensor<i32>
 
-// CHECK: %complex_abs = stablehlo.abs %c0 : (tensor<complex<f32>>) -> tensor<f32>
-// CHECK-GENERIC: %complex_abs = "stablehlo.abs"(%c0) : (tensor<complex<f32>>) -> tensor<f32>
-%complex_abs = stablehlo.abs %c0 : (tensor<complex<f32>>) -> tensor<f32>
+// CHECK: %complex_abs = stablehlo.abs %tcomplex : (tensor<complex<f32>>) -> tensor<f32>
+// CHECK-GENERIC: %complex_abs = "stablehlo.abs"(%tcomplex) : (tensor<complex<f32>>) -> tensor<f32>
+%complex_abs = stablehlo.abs %tcomplex : (tensor<complex<f32>>) -> tensor<f32>
 
 // CHECK: %cbrt = stablehlo.cbrt %tf32 : tensor<f32>
 // CHECK-GENERIC: %cbrt = "stablehlo.cbrt"(%tf32) : (tensor<f32>) -> tensor<f32>
@@ -44,6 +45,14 @@
 // CHECK-GENERIC: %exponential = "stablehlo.exponential"(%tf32) : (tensor<f32>) -> tensor<f32>
 %exponential = stablehlo.exponential %tf32 : tensor<f32>
 
+// CHECK: %imag = stablehlo.imag %tcomplex : (tensor<complex<f32>>) -> tensor<f32>
+// CHECK-GENERIC: %imag = "stablehlo.imag"(%tcomplex) : (tensor<complex<f32>>) -> tensor<f32>
+%imag = stablehlo.imag %tcomplex : (tensor<complex<f32>>) -> tensor<f32>
+
+// CHECK: %negate = stablehlo.negate %t0 : tensor<i32>
+// CHECK-GENERIC: %negate = "stablehlo.negate"(%t0) : (tensor<i32>) -> tensor<i32>
+%negate = stablehlo.negate %t0 : tensor<i32>
+
 // CHECK: %floor = stablehlo.floor %tf32 : tensor<f32>
 // CHECK-GENERIC: %floor = "stablehlo.floor"(%tf32) : (tensor<f32>) -> tensor<f32>
 %floor = stablehlo.floor %tf32 : tensor<f32>
@@ -71,6 +80,10 @@
 // CHECK: %popcnt = stablehlo.popcnt %t0 : tensor<i32>
 // CHECK-GENERIC: %popcnt = "stablehlo.popcnt"(%t0) : (tensor<i32>) -> tensor<i32>
 %popcnt = stablehlo.popcnt %t0 : tensor<i32>
+
+// CHECK: %real = stablehlo.real %tcomplex : (tensor<complex<f32>>) -> tensor<f32>
+// CHECK-GENERIC: %real = "stablehlo.real"(%tcomplex) : (tensor<complex<f32>>) -> tensor<f32>
+%real = stablehlo.real %tcomplex : (tensor<complex<f32>>) -> tensor<f32>
 
 // CHECK: %round_nearest_afz = stablehlo.round_nearest_afz %tf32 : tensor<f32>
 // CHECK-GENERIC: %round_nearest_afz = "stablehlo.round_nearest_afz"(%tf32) : (tensor<f32>) -> tensor<f32>
