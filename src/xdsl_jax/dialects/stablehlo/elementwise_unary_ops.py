@@ -3,17 +3,15 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Annotated, Generic, TypeAlias, TypeVar
+from typing import Generic, Literal, TypeAlias, TypeVar
 
 from xdsl.dialects.builtin import (
     I1,
     AnyFloat,
     AnyTensorType,
     ComplexType,
-    IntAttrConstraint,
     IntegerType,
     Signedness,
-    SignednessAttr,
     TensorType,
 )
 from xdsl.ir import Attribute, SSAValue
@@ -26,11 +24,6 @@ from xdsl.irdl import (
     result_def,
     traits_def,
 )
-from xdsl.irdl.constraints import (
-    EqAttrConstraint,
-    IntSetConstraint,
-    ParamAttrConstraint,
-)
 from xdsl.traits import NoMemoryEffect
 
 from xdsl_jax.xdsl_extras.traits import (
@@ -41,31 +34,19 @@ from xdsl_jax.xdsl_extras.traits import (
 from .attributes import ResultAccuracyMode, ResultAccuracyModeAttr
 from .custom_directives import SameOperandsAndResultType
 
-# Integer type constraint with fixed widths
-_INT_WIDTH_CONSTR = IntAttrConstraint(
-    IntSetConstraint(frozenset((2, 4, 8, 16, 32, 64)))
-)
-
-
-def _int_constr(signedness: Signedness) -> ParamAttrConstraint[IntegerType]:
-    """Create an integer type constraint with fixed widths and signedness."""
-    return ParamAttrConstraint(
-        IntegerType,
-        (_INT_WIDTH_CONSTR, EqAttrConstraint(SignednessAttr(signedness))),
-    )
-
-
+# Type aliases
+SIntType: TypeAlias = IntegerType[
+    Literal[2, 4, 8, 16, 32, 64],
+    Literal[Signedness.SIGNLESS],
+]
 # NOTE: IntegerType is defined in the StableHLO spec as:
 # IntegerType ::= SignedIntegerType | UnsignedIntegerType,
 # but the MLIR implementation is using signless integers instead of signed,
 # and there is a TODO to fix it.
-_UNSIGNED_INT_CONSTR = _int_constr(Signedness.UNSIGNED)
-_SIGNLESS_INT_CONSTR = _int_constr(Signedness.SIGNLESS)
-_SIGNED_INT_CONSTR = _int_constr(Signedness.SIGNED)
-
-# Type aliases
-SIntType: TypeAlias = Annotated[IntegerType, _SIGNLESS_INT_CONSTR]
-IntType: TypeAlias = Annotated[IntegerType, _UNSIGNED_INT_CONSTR | _SIGNLESS_INT_CONSTR]
+IntType: TypeAlias = IntegerType[
+    Literal[2, 4, 8, 16, 32, 64],
+    Literal[Signedness.UNSIGNED, Signedness.SIGNLESS],
+]
 IntegerTensorType: TypeAlias = TensorType[IntType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
 SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
