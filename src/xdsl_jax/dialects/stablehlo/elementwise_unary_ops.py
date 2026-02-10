@@ -183,6 +183,7 @@ class CountLeadingZerosOp(
 class ExponentialMinusOneOp(
     ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
 ):
+    """
     Performs element-wise exponential minus one operation on `operand` tensor
     and produces a `result` tensor.
 
