@@ -183,7 +183,6 @@ class CountLeadingZerosOp(
 class ExponentialMinusOneOp(
     ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
 ):
-    """
     Performs element-wise exponential minus one operation on `operand` tensor
     and produces a `result` tensor.
 
@@ -250,6 +249,24 @@ class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
 
 
 @irdl_op_definition
+class ImagOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType]):
+    """
+    Extracts the imaginary part, element-wise, from the `operand` and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#imag
+
+    Example:
+    ```mlir
+    %result = stablehlo.imag %operand : (tensor<2xcomplex<f32>>) -> tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.imag"
+
+
+@irdl_op_definition
 class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
     """
     Performs element-wise check whether the value in `x` is finite (i.e. is
@@ -265,6 +282,106 @@ class IsFiniteOp(ElementwiseUnaryOperation[FloatTensorType, PredTensorType]):
     """
 
     name = "stablehlo.is_finite"
+
+
+@irdl_op_definition
+class LogisticOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise logistic operation on `operand` tensor and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#logistic
+
+    Example:
+    ```mlir
+    %result = stablehlo.logistic %operand : tensor<2x2xf64>
+    ```
+    """
+
+    name = "stablehlo.logistic"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class LogOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise logarithm operation on `operand` tensor and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#log
+
+    Example:
+    ```mlir
+    %result = stablehlo.log %operand : tensor<2x2xf64>
+    ```
+    """
+
+    name = "stablehlo.log"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class LogPlusOneOp(
+    ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatOrComplexTensorType]
+):
+    """
+    Performs element-wise logarithm plus one operation on `operand` tensor and
+    produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#log_plus_one
+
+    Example:
+    ```mlir
+    %result = stablehlo.log_plus_one %operand : tensor<5xf64>
+    ```
+    """
+
+    name = "stablehlo.log_plus_one"
+
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class NegateOp(
+    ElementwiseUnaryOperation[
+        IntOrFloatOrComplexTensorType, IntOrFloatOrComplexTensorType
+    ]
+):
+    """
+    Performs element-wise negation of `operand` tensor and produces a `result`
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#negate
+
+    Example:
+    ```mlir
+    %result = stablehlo.negate %operand : tensor<2x3xi32>
+    ```
+    """
+
+    name = "stablehlo.negate"
 
 
 @irdl_op_definition
@@ -370,6 +487,24 @@ class PopcntOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
 
     name = "stablehlo.popcnt"
+
+
+@irdl_op_definition
+class RealOp(ElementwiseUnaryOperation[FloatOrComplexTensorType, FloatTensorType]):
+    """
+    Extracts the real part, element-wise, from the `operand` and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#real
+
+    Example:
+    ```mlir
+    %result = stablehlo.real %operand : tensor<2xcomplex<f32>> : tensor<2xf32>
+    ```
+    """
+
+    name = "stablehlo.real"
 
 
 @irdl_op_definition
