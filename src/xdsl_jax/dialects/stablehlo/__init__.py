@@ -13,6 +13,7 @@ from .attributes import (
     TokenType,
 )
 from .elementwise_unary_ops import (
+    AbsOp,
     CbrtOp,
     CeilOp,
     ConvertOp,
@@ -33,13 +34,13 @@ from .elementwise_unary_ops import (
     RoundNearestAfzOp,
     RoundNearestEvenOp,
     RsqrtOp,
+    SignOp,
     SineOp,
     SqrtOp,
     TanhOp,
     TanOp,
 )
 from .ops import (
-    AbsOp,
     AddOp,
     AfterAllOp,
     AndOp,
@@ -63,6 +64,7 @@ StableHLO = Dialect(
     "stablehlo",
     [
         # Elementwise unary operations
+        AbsOp,
         CbrtOp,
         CeilOp,
         ConvertOp,
@@ -84,11 +86,11 @@ StableHLO = Dialect(
         RoundNearestEvenOp,
         RsqrtOp,
         SineOp,
+        SignOp,
         SqrtOp,
         TanOp,
         TanhOp,
         # Other operations
-        AbsOp,
         AddOp,
         AfterAllOp,
         AndOp,

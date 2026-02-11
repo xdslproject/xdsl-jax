@@ -110,35 +110,6 @@ class FloatOrComplexTensorLikeElementwiseBinaryOperation(IRDLOperation, abc.ABC)
 
 
 @irdl_op_definition
-class AbsOp(IRDLOperation):
-    """
-    Performs element-wise abs operation on operand tensor and produces a result tensor.
-    Depending on the element type, does the following:
-
-    * For signed integers: integer modulus.
-    * For floats: abs from IEEE-754.
-    * For complex numbers: complex modulus.
-    * For quantized types: dequantize_op_quantize(abs, operand, type(result)).
-
-    [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#abs)
-    """
-
-    name = "stablehlo.abs"
-
-    # TODO: Remove this constraint for complex types.
-    T: ClassVar = VarConstraint("T", base(AnyTensorType))
-
-    operand = operand_def(T)
-    result = result_def(T)
-
-    def __init__(self, operand: SSAValue, result_type: Attribute | None = None):
-        if result_type is None:
-            # TODO: Constraints for complex types.
-            result_type = operand.type
-        super().__init__(operands=(operand,), result_types=(result_type,))
-
-
-@irdl_op_definition
 class AddOp(ElementwiseBinaryOperation):
     """
     Performs element-wise addition of two tensors `lhs` and `rhs` and produces a

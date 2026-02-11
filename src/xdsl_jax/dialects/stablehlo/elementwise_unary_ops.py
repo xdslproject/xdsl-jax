@@ -3,7 +3,7 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic, TypeAlias, TypeVar
+from typing import Generic, Literal, TypeAlias, TypeVar
 
 from xdsl.dialects.builtin import (
     I1,
@@ -11,6 +11,7 @@ from xdsl.dialects.builtin import (
     AnyTensorType,
     ComplexType,
     IntegerType,
+    Signedness,
     TensorType,
 )
 from xdsl.ir import Attribute, SSAValue
@@ -34,12 +35,28 @@ from .attributes import ResultAccuracyMode, ResultAccuracyModeAttr
 from .custom_directives import SameOperandsAndResultType
 
 # Type aliases
-IntegerTensorType: TypeAlias = TensorType[IntegerType]
+SIntType: TypeAlias = IntegerType[
+    Literal[2, 4, 8, 16, 32, 64],
+    Literal[Signedness.SIGNLESS],
+]
+# NOTE: IntegerType is defined in the StableHLO spec as:
+# IntegerType ::= SignedIntegerType | UnsignedIntegerType,
+# but the MLIR implementation is using signless integers instead of signed,
+# and there is a TODO to fix it.
+IntType: TypeAlias = IntegerType[
+    Literal[2, 4, 8, 16, 32, 64],
+    Literal[Signedness.UNSIGNED, Signedness.SIGNLESS],
+]
+IntegerTensorType: TypeAlias = TensorType[IntType]
 FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-IntOrFloatOrComplexType: TypeAlias = IntegerType | AnyFloat | ComplexType
+SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
+SIntOrFloatType: TypeAlias = SIntType | AnyFloat
+IntOrFloatOrComplexType: TypeAlias = IntType | AnyFloat | ComplexType
 FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
 FloatTensorType: TypeAlias = TensorType[AnyFloat]
 PredTensorType: TypeAlias = TensorType[I1]
+SIntOrFloatOrComplexTensorType: TypeAlias = TensorType[SIntOrFloatOrComplexType]
+SIntOrFloatTensorType: TypeAlias = TensorType[SIntOrFloatType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 
 
@@ -79,6 +96,25 @@ class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_IN, T_OUT]):
         if result_type is None:
             result_type = operand.type
         super().__init__(operands=(operand,), result_types=(result_type,))
+
+
+@irdl_op_definition
+class AbsOp(
+    ElementwiseUnaryOperation[SIntOrFloatOrComplexTensorType, SIntOrFloatTensorType]
+):
+    """
+    Performs element-wise abs operation on operand tensor and produces a result tensor.
+    Depending on the element type, does the following:
+
+    * For signed integers: integer modulus.
+    * For floats: abs from IEEE-754.
+    * For complex numbers: complex modulus.
+    * For quantized types: dequantize_op_quantize(abs, operand, type(result)).
+
+    [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#abs)
+    """
+
+    name = "stablehlo.abs"
 
 
 @irdl_op_definition
@@ -492,6 +528,28 @@ class RsqrtOp(
     )
 
     irdl_options = (ParsePropInAttrDict(),)
+
+
+@irdl_op_definition
+class SignOp(
+    ElementwiseUnaryOperation[
+        SIntOrFloatOrComplexTensorType, SIntOrFloatOrComplexTensorType
+    ]
+):
+    """
+    Returns the sign of the `operand` element-wise and produces a `result`
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#sign
+
+    Example:
+    ```mlir
+    %result = stablehlo.sign %operand : tensor<5xf64>
+    ```
+    """
+
+    name = "stablehlo.sign"
 
 
 @irdl_op_definition
