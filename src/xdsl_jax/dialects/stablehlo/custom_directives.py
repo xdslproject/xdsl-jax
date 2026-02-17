@@ -27,25 +27,26 @@ class SameOperandsAndResultType(CustomDirective):
       and result. Otherwise, the single type applies to all operands and the result.
     """
 
-    operand_type: TypeDirective
+    operand_types: TypeDirective
     result_type: TypeDirective
 
     def parse(self, parser: Parser, state: ParsingState) -> bool:
         # Try to parse a function type first
         functional_type = FunctionalTypeDirective(
-            self.operand_type.inner, self.result_type.inner
+            self.operand_types.inner, self.result_type.inner
         )
         if functional_type.parse(parser, state):
             return True
 
-        # Single type: applies to both operand and result
+        # Single type: applies to all operands and result
         single_type = parser.parse_type()
-        self.operand_type.set(state, (single_type,))
+        n_operands = len(state.operand_types)
+        self.operand_types.set(state, (single_type,) * n_operands)
         self.result_type.set(state, (single_type,))
         return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
-        operand_types = self.operand_type.get(op)
+        operand_types = self.operand_types.get(op)
         result_types = self.result_type.get(op)
 
         state.print_whitespace(printer)
