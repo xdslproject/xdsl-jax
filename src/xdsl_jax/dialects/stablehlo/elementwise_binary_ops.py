@@ -14,7 +14,7 @@ from xdsl.irdl import (
     result_def,
     traits_def,
 )
-from xdsl.traits import NoMemoryEffect
+from xdsl.traits import Commutative, NoMemoryEffect
 
 from xdsl_jax.xdsl_extras import (
     Elementwise,
@@ -91,6 +91,10 @@ class AddOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     name = "stablehlo.add"
 
+    traits = traits_def(
+        Commutative(),
+    )
+
 
 @irdl_op_definition
 class AndOp(ElementwiseBinaryOperation[PredOrIntTensorType]):
@@ -105,6 +109,10 @@ class AndOp(ElementwiseBinaryOperation[PredOrIntTensorType]):
     """
 
     name = "stablehlo.and"
+
+    traits = traits_def(
+        Commutative(),
+    )
 
 
 @irdl_op_definition
@@ -141,6 +149,10 @@ class MultiplyOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     name = "stablehlo.multiply"
 
+    traits = traits_def(
+        Commutative(),
+    )
+
 
 @irdl_op_definition
 class OrOp(ElementwiseBinaryOperation[IntegerTensorType]):
@@ -155,6 +167,10 @@ class OrOp(ElementwiseBinaryOperation[IntegerTensorType]):
     """
 
     name = "stablehlo.or"
+
+    traits = traits_def(
+        Commutative(),
+    )
 
 
 @irdl_op_definition
@@ -224,3 +240,7 @@ class XorOp(ElementwiseBinaryOperation[IntegerTensorType]):
     """
 
     name = "stablehlo.xor"
+
+    traits = traits_def(
+        Commutative(),
+    )
