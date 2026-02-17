@@ -12,6 +12,18 @@ from .attributes import (
     ScatterDimensionNumbers,
     TokenType,
 )
+from .elementwise_binary_ops import (
+    AddOp,
+    AndOp,
+    Atan2Op,
+    MultiplyOp,
+    OrOp,
+    ShiftLeftOp,
+    ShiftRightArithmeticOp,
+    ShiftRightLogicalOp,
+    SubtractOp,
+    XorOp,
+)
 from .elementwise_unary_ops import (
     AbsOp,
     CbrtOp,
@@ -41,23 +53,13 @@ from .elementwise_unary_ops import (
     TanOp,
 )
 from .ops import (
-    AddOp,
     AfterAllOp,
-    AndOp,
-    Atan2Op,
     BitcastConvertOp,
     CaseOp,
     ConstantOp,
-    MultiplyOp,
-    OrOp,
     PadOp,
     ReturnOp,
-    ShiftLeftOp,
-    ShiftRightArithmeticOp,
-    ShiftRightLogicalOp,
-    SubtractOp,
     TransposeOp,
-    XorOp,
 )
 
 StableHLO = Dialect(
@@ -90,24 +92,25 @@ StableHLO = Dialect(
         SqrtOp,
         TanOp,
         TanhOp,
-        # Other operations
+        # Elementwise binary operations
         AddOp,
-        AfterAllOp,
         AndOp,
         Atan2Op,
-        BitcastConvertOp,
-        CaseOp,
-        ConstantOp,
         MultiplyOp,
         OrOp,
-        PadOp,
-        ReturnOp,
         ShiftLeftOp,
         ShiftRightArithmeticOp,
         ShiftRightLogicalOp,
         SubtractOp,
-        TransposeOp,
         XorOp,
+        # Other operations
+        AfterAllOp,
+        BitcastConvertOp,
+        CaseOp,
+        ConstantOp,
+        PadOp,
+        ReturnOp,
+        TransposeOp,
     ],
     [
         ComparisonDirectionAttr,
