@@ -3,6 +3,7 @@
 
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
+%t5f32 = "test.op"() : () -> tensor<5xf32>
 %tcomplex = "test.op"() : () -> tensor<complex<f32>>
 
 
@@ -132,6 +133,14 @@
 // CHECK: %atan2 = stablehlo.atan2 %tf32, %tf32 : tensor<f32>
 // CHECK-GENERIC: %atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
 %atan2 = stablehlo.atan2 %tf32, %tf32 : tensor<f32>
+
+// CHECK: %complex = stablehlo.complex %tf32, %tf32 : tensor<complex<f32>>
+// CHECK-GENERIC: %complex = "stablehlo.complex"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<complex<f32>>
+%complex = stablehlo.complex %tf32, %tf32 : tensor<complex<f32>>
+
+// CHECK: %complex2 = stablehlo.complex %t5f32, %t5f32 : tensor<5xcomplex<f32>>
+// CHECK-GENERIC: %complex2 = "stablehlo.complex"(%t5f32, %t5f32) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
+%complex2 = stablehlo.complex %t5f32, %t5f32 : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 
 // CHECK: %divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
 // CHECK-GENERIC: %divide = "stablehlo.divide"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>

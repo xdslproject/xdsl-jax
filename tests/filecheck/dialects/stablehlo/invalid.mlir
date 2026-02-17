@@ -42,6 +42,19 @@
 
 // -----
 
+%operand = "test.op"() : () -> tensor<5xf16>
+// CHECK: Operation does not verify: operand 'lhs' at position 0 does not verify:
+// CHECK: Unexpected attribute f16
+%result = "stablehlo.complex"(%operand, %operand) : (tensor<5xf16>, tensor<5xf16>) -> tensor<5xcomplex<f16>>
+
+// -----
+
+%operand = "test.op"() : () -> tensor<5xf32>
+// CHECK: expected tensor with complex element type
+%result = stablehlo.complex %operand, %operand : tensor<5xf32>
+
+// -----
+
 // CHECK: unknown field 'unknown_field'
 "test.op"() {gather = #stablehlo.gather<
   offset_dims = [0],

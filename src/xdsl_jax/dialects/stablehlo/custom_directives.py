@@ -2,6 +2,10 @@
 Custom directives for the StableHLO dialect.
 """
 
+from typing import cast
+
+from xdsl.dialects.builtin import ComplexType, TensorType
+from xdsl.ir import Attribute
 from xdsl.irdl import IRDLOperation
 from xdsl.irdl.declarative_assembly_format import (
     CustomDirective,
@@ -13,6 +17,19 @@ from xdsl.irdl.declarative_assembly_format import (
 )
 from xdsl.parser import Parser
 from xdsl.printer import Printer
+
+
+def _create_real_type(shaped_type: TensorType[Attribute]) -> TensorType[Attribute]:
+    """
+    Takes a tensor type that may have complex elements and returns a type
+    with the same shape but real numeric element type.
+
+    Ex: tensor<4xcomplex<f32>> -> tensor<4xf32>
+    """
+    element_type: Attribute = shaped_type.element_type
+    if isinstance(element_type, ComplexType):
+        element_type = cast(ComplexType, element_type).element_type
+    return TensorType(element_type, shaped_type.get_shape(), shaped_type.encoding)
 
 
 @irdl_custom_directive
@@ -58,4 +75,62 @@ class SameOperandsAndResultType(CustomDirective):
             return
 
         # Fall back to generic
+        printer.print_function_type(operand_types, result_types)
+
+
+@irdl_custom_directive
+class ComplexOpType(CustomDirective):
+    """
+    Custom directive that prints/parses types for the stablehlo.complex op.
+
+    The complex op takes two real-typed operands (lhs, rhs) and produces a
+    complex-typed result. The operand types are inferred from the result type.
+
+    - Print: If both operand types equal the "real type" derived from the result
+      (same shape, element type stripped of complex wrapper), print just the
+      result type. Otherwise, fall back to functional type.
+    - Parse: Parse a type. If it's a function type, assign types directly.
+      Otherwise, expect a tensor with complex element type, and infer the
+      operand types from the real component of the complex element type.
+    """
+
+    operand_types: TypeDirective
+    result_types: TypeDirective
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        # Handle function type fallback: (lhs_type, rhs_type) -> result_type
+        functional_type = FunctionalTypeDirective(
+            self.operand_types.inner, self.result_types.inner
+        )
+        if functional_type.parse(parser, state):
+            return True
+
+        # Single type: operand type is inferred from complex result type
+        parsed_type = parser.parse_type()
+        complex_tensor = cast(TensorType[Attribute], parsed_type)
+        if not (
+            isinstance(parsed_type, TensorType)
+            and isinstance(complex_tensor.element_type, ComplexType)
+        ):
+            parser.raise_error("expected tensor with complex element type")
+
+        real_type = _create_real_type(complex_tensor)
+        self.operand_types.set(state, (real_type, real_type))
+        self.result_types.set(state, (complex_tensor,))
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        operand_types = self.operand_types.get(op)
+        result_types = self.result_types.get(op)
+        result_type = cast(TensorType[Attribute], result_types[0])
+
+        state.print_whitespace(printer)
+
+        real_type = _create_real_type(result_type)
+
+        if all(t == real_type for t in operand_types):
+            printer.print_attribute(result_type)
+            return
+
+        # Fall back to functional type
         printer.print_function_type(operand_types, result_types)
