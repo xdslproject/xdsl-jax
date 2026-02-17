@@ -132,6 +132,68 @@ class Atan2Op(ElementwiseBinaryOperation[FloatOrComplexTensorType]):
 
 
 @irdl_op_definition
+class DivideOp(ElementwiseBinaryOperation[IntOrFloatOrComplexTensorType]):
+    """
+    Performs element-wise division of dividend `lhs` and divisor `rhs` tensors
+    and produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#divide
+
+    Example:
+    ```mlir
+    %result = stablehlo.divide %lhs, %rhs : tensor<4xf32>
+    ```
+    """
+
+    name = "stablehlo.divide"
+
+
+@irdl_op_definition
+class MaximumOp(ElementwiseBinaryOperation[AnyTensorType]):
+    """
+    Performs element-wise max operation on tensors `lhs` and `rhs` and produces
+    a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#maximum
+
+    Example:
+    ```mlir
+    %result = stablehlo.maximum %lhs, %rhs : tensor<4xf32>
+    ```
+    """
+
+    name = "stablehlo.maximum"
+
+    traits = traits_def(
+        Commutative(),
+    )
+
+
+@irdl_op_definition
+class MinimumOp(ElementwiseBinaryOperation[AnyTensorType]):
+    """
+    Performs element-wise min operation on tensors `lhs` and `rhs` and produces a
+    `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#minimum
+
+    Example:
+    ```mlir
+    %result = stablehlo.minimum %lhs, %rhs : tensor<4xf32>
+    ```
+    """
+
+    name = "stablehlo.minimum"
+
+    traits = traits_def(
+        Commutative(),
+    )
+
+
+@irdl_op_definition
 class MultiplyOp(ElementwiseBinaryOperation[AnyTensorType]):
     """
     Performs element-wise product of two tensors `lhs` and `rhs` and produces a
@@ -171,6 +233,42 @@ class OrOp(ElementwiseBinaryOperation[IntegerTensorType]):
     traits = traits_def(
         Commutative(),
     )
+
+
+@irdl_op_definition
+class PowerOp(ElementwiseBinaryOperation[AnyTensorType]):
+    """
+    Performs element-wise exponentiation of `lhs` tensor by `rhs` tensor and
+    produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#power
+
+    Example:
+    ```mlir
+    %result = stablehlo.power %lhs, %rhs : tensor<6xf64>
+    ```
+    """
+
+    name = "stablehlo.power"
+
+
+@irdl_op_definition
+class RemainderOp(ElementwiseBinaryOperation[AnyTensorType]):
+    """
+    Performs element-wise remainder of dividend `lhs` and divisor `rhs` tensors
+    and produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#remainder
+
+    Example:
+    ```mlir
+    %result = stablehlo.remainder %lhs, %rhs : tensor<4xi64>
+    ```
+    """
+
+    name = "stablehlo.remainder"
 
 
 @irdl_op_definition
