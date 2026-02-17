@@ -119,35 +119,45 @@
 
 // Elementwise binary operations
 
+// CHECK: %add = stablehlo.add %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%add = stablehlo.add %t0, %t0 : tensor<i32>
 
+// CHECK: %and = stablehlo.and %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %and = "stablehlo.and"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%and = "stablehlo.and"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%and = stablehlo.and %t0, %t0 : tensor<i32>
 
+// CHECK: %atan2 = stablehlo.atan2 %tf32, %tf32 : tensor<f32>
 // CHECK-GENERIC: %atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
-%atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+%atan2 = stablehlo.atan2 %tf32, %tf32 : tensor<f32>
 
+// CHECK: %multiply = stablehlo.multiply %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %multiply = "stablehlo.multiply"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%multiply = "stablehlo.multiply"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%multiply = stablehlo.multiply %t0, %t0 : tensor<i32>
 
+// CHECK: %or = stablehlo.or %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %or = "stablehlo.or"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%or = "stablehlo.or"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%or = stablehlo.or %t0, %t0 : tensor<i32>
 
+// CHECK: %shift_left = stablehlo.shift_left %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %shift_left = "stablehlo.shift_left"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%shift_left = "stablehlo.shift_left"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%shift_left = stablehlo.shift_left %t0, %t0 : tensor<i32>
 
+// CHECK: %shift_right_arithmetic = stablehlo.shift_right_arithmetic %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %shift_right_arithmetic = "stablehlo.shift_right_arithmetic"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%shift_right_arithmetic = "stablehlo.shift_right_arithmetic"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%shift_right_arithmetic = stablehlo.shift_right_arithmetic %t0, %t0 : tensor<i32>
 
+// CHECK: %shift_right_logical = stablehlo.shift_right_logical %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %shift_right_logical = "stablehlo.shift_right_logical"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%shift_right_logical = "stablehlo.shift_right_logical"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%shift_right_logical = stablehlo.shift_right_logical %t0, %t0 : tensor<i32>
 
+// CHECK: %subtract = stablehlo.subtract %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %subtract = "stablehlo.subtract"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%subtract = "stablehlo.subtract"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%subtract = stablehlo.subtract %t0, %t0 : tensor<i32>
 
+// CHECK: %xor = stablehlo.xor %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %xor = "stablehlo.xor"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
-%xor = "stablehlo.xor"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
+%xor = stablehlo.xor %t0, %t0 : tensor<i32>
 
 // Other operations
 
