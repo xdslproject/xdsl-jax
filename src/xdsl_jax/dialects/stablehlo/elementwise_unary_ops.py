@@ -3,17 +3,9 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic, Literal, TypeAlias, TypeVar
+from typing import Generic, TypeVar
 
-from xdsl.dialects.builtin import (
-    I1,
-    AnyFloat,
-    AnyTensorType,
-    ComplexType,
-    IntegerType,
-    Signedness,
-    TensorType,
-)
+from xdsl.dialects.builtin import AnyTensorType
 from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
@@ -33,39 +25,22 @@ from xdsl_jax.xdsl_extras.traits import (
 
 from .attributes import ResultAccuracyMode, ResultAccuracyModeAttr
 from .custom_directives import SameOperandsAndResultType
-
-# Type aliases
-SIntType: TypeAlias = IntegerType[
-    Literal[2, 4, 8, 16, 32, 64],
-    Literal[Signedness.SIGNLESS],
-]
-# NOTE: IntegerType is defined in the StableHLO spec as:
-# IntegerType ::= SignedIntegerType | UnsignedIntegerType,
-# but the MLIR implementation is using signless integers instead of signed,
-# and there is a TODO to fix it.
-IntType: TypeAlias = IntegerType[
-    Literal[2, 4, 8, 16, 32, 64],
-    Literal[Signedness.UNSIGNED, Signedness.SIGNLESS],
-]
-IntegerTensorType: TypeAlias = TensorType[IntType]
-FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
-SIntOrFloatType: TypeAlias = SIntType | AnyFloat
-IntOrFloatOrComplexType: TypeAlias = IntType | AnyFloat | ComplexType
-FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
-FloatTensorType: TypeAlias = TensorType[AnyFloat]
-PredTensorType: TypeAlias = TensorType[I1]
-SIntOrFloatOrComplexTensorType: TypeAlias = TensorType[SIntOrFloatOrComplexType]
-SIntOrFloatTensorType: TypeAlias = TensorType[SIntOrFloatType]
-IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
-
+from .types import (
+    FloatOrComplexTensorType,
+    FloatTensorType,
+    IntegerTensorType,
+    IntOrFloatOrComplexTensorType,
+    PredTensorType,
+    SIntOrFloatOrComplexTensorType,
+    SIntOrFloatTensorType,
+)
 
 # Generic type variables for templating
-T_IN = TypeVar("T_IN", bound=AnyTensorType)
-T_OUT = TypeVar("T_OUT", bound=AnyTensorType)
+T_OP = TypeVar("T_OP", bound=AnyTensorType)
+T_RES = TypeVar("T_RES", bound=AnyTensorType)
 
 
-class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_IN, T_OUT]):
+class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_OP, T_RES]):
     """
     Templated base class for elementwise unary operations.
 
@@ -76,8 +51,8 @@ class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_IN, T_OUT]):
     https://openxla.org/xla/operation_semantics#element-wise_unary_functions
     """
 
-    operand = operand_def(T_IN)
-    result = result_def(T_OUT)
+    operand = operand_def(T_OP)
+    result = result_def(T_RES)
 
     traits = traits_def(
         NoMemoryEffect(),

@@ -3,16 +3,9 @@ Binary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import ClassVar, TypeAlias
+from typing import ClassVar
 
-from xdsl.dialects.builtin import (
-    I32,
-    AnyFloat,
-    AnyTensorType,
-    ComplexType,
-    IntegerType,
-    TensorType,
-)
+from xdsl.dialects.builtin import AnyTensorType
 from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
@@ -23,15 +16,10 @@ from xdsl.irdl import (
     result_def,
 )
 
-IntegerTensorType: TypeAlias = TensorType[IntegerType]
-FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
-
-# TODO: Change to SI32 once StableHLO adopts signful integer semantics
-# See: https://github.com/openxla/stablehlo/issues/22
-# https://github.com/openxla/stablehlo/issues/2489
-SI32TensorType: TypeAlias = TensorType[I32]
-
+from .types import (
+    FloatOrComplexTensorType,
+    IntegerTensorType,
+)
 
 # region Abstract Base Classes
 
