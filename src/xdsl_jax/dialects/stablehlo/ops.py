@@ -11,13 +11,10 @@ from typing import ClassVar, TypeAlias, cast
 
 from xdsl.dialects.builtin import (
     I32,
-    AnyFloat,
     AnyTensorType,
     AnyTensorTypeConstr,
-    ComplexType,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
-    IntegerType,
     TensorType,
     i64,
 )
@@ -36,14 +33,12 @@ from xdsl.irdl import (
     var_region_def,
     var_result_def,
 )
-from xdsl.traits import IsTerminator
+from xdsl.traits import IsTerminator, Pure
 from xdsl.utils.exceptions import VerifyException
 
 from xdsl_jax.dialects.stablehlo.attributes import TokenType
 
-IntegerTensorType: TypeAlias = TensorType[IntegerType]
-FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
+from .types import TensorOrTokenOrBufferType
 
 # TODO: Change to SI32 once StableHLO adopts signful integer semantics
 # See: https://github.com/openxla/stablehlo/issues/22
@@ -159,8 +154,11 @@ class ReturnOp(IRDLOperation):
 
     name = "stablehlo.return"
 
-    input = var_operand_def(AnyTensorType)
-    traits = traits_def(IsTerminator())
+    input = var_operand_def(TensorOrTokenOrBufferType)
+
+    traits = traits_def(Pure(), IsTerminator())
+
+    assembly_format = "$input attr-dict (`:` type($input)^)?"
 
     def __init__(self, input: list[SSAValue]):
         super().__init__(operands=(input,))

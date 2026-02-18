@@ -7,13 +7,18 @@ from typing import Literal, TypeAlias
 from xdsl.dialects.builtin import (
     I1,
     AnyFloat,
+    AnyTensorType,
     ComplexType,
     Float32Type,
     Float64Type,
     IntegerType,
+    MemRefType,
     Signedness,
     TensorType,
 )
+from xdsl.ir import Attribute
+
+from .attributes import TokenType
 
 SIntType: TypeAlias = IntegerType[
     Literal[2, 4, 8, 16, 32, 64],
@@ -35,6 +40,7 @@ FloatOrComplexType: TypeAlias = AnyFloat | HLO_ComplexType
 SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
 SIntOrFloatType: TypeAlias = SIntType | AnyFloat
 IntOrFloatOrComplexType: TypeAlias = IntType | AnyFloat | HLO_ComplexType
+BufferType: TypeAlias = MemRefType[Attribute]
 FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
 Float32Or64TensorType: TypeAlias = TensorType[Float32Or64Type]
 FloatTensorType: TypeAlias = TensorType[AnyFloat]
@@ -47,3 +53,4 @@ PredOrIntType: TypeAlias = IntegerType[
 ]
 PredOrIntTensorType: TypeAlias = TensorType[PredOrIntType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
+TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
