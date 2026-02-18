@@ -12,7 +12,6 @@ from typing import ClassVar, TypeAlias, cast
 from xdsl.dialects.builtin import (
     I32,
     AnyTensorType,
-    AnyTensorTypeConstr,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
     TensorType,
@@ -21,7 +20,6 @@ from xdsl.dialects.builtin import (
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
     AnyAttr,
-    BaseAttr,
     IRDLOperation,
     VarConstraint,
     attr_def,
@@ -33,12 +31,17 @@ from xdsl.irdl import (
     var_region_def,
     var_result_def,
 )
-from xdsl.traits import IsTerminator, Pure
+from xdsl.traits import (
+    IsTerminator,
+    Pure,
+    RecursivelySpeculatable,
+    RecursiveMemoryEffect,
+    SingleBlockImplicitTerminator,
+)
 from xdsl.utils.exceptions import VerifyException
 
-from xdsl_jax.dialects.stablehlo.attributes import TokenType
-
-from .types import TensorOrTokenOrBufferType
+from .attributes import TokenType
+from .types import TensorOrTokenOrBufferType, TensorOrTokenType
 
 # TODO: Change to SI32 once StableHLO adopts signful integer semantics
 # See: https://github.com/openxla/stablehlo/issues/22
@@ -134,7 +137,13 @@ class CaseOp(IRDLOperation):
     name = "stablehlo.case"
     index = operand_def(SI32TensorType)
     branches = var_region_def("single_block")
-    _results = var_result_def(AnyTensorTypeConstr | BaseAttr(TokenType))
+    _results = var_result_def(TensorOrTokenType)
+
+    traits = traits_def(
+        RecursiveMemoryEffect(),
+        RecursivelySpeculatable(),
+        SingleBlockImplicitTerminator(ReturnOp),
+    )
 
     def __init__(
         self,

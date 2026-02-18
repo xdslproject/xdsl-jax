@@ -53,4 +53,5 @@ PredOrIntType: TypeAlias = IntegerType[
 ]
 PredOrIntTensorType: TypeAlias = TensorType[PredOrIntType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
+TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
 TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
