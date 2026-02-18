@@ -47,6 +47,29 @@ SI32TensorType: TypeAlias = TensorType[I32]
 
 
 @irdl_op_definition
+class ReturnOp(IRDLOperation):
+    """This op is un-documented.
+
+    StableHLO's return is used inside of the bodies of StableHLO ops.
+    It behaves like func.return but for StableHLO ops.
+    The func.return op is used inside of func.func op.
+
+    https://discord.com/channels/999073994483433573/1259494021269688360/1259992088565645312
+    """
+
+    name = "stablehlo.return"
+
+    input = var_operand_def(TensorOrTokenOrBufferType)
+
+    traits = traits_def(Pure(), IsTerminator())
+
+    assembly_format = "$input attr-dict (`:` type($input)^)?"
+
+    def __init__(self, input: list[SSAValue]):
+        super().__init__(operands=(input,))
+
+
+@irdl_op_definition
 class AfterAllOp(IRDLOperation):
     """
     Ensures that the operations producing the inputs are executed before any operations
@@ -139,29 +162,6 @@ class ConstantOp(IRDLOperation):
 
     def __init__(self, value: DenseIntOrFPElementsAttr):
         super().__init__(attributes={"value": value}, result_types=(value.type,))
-
-
-@irdl_op_definition
-class ReturnOp(IRDLOperation):
-    """This op is un-documented.
-
-    StableHLO's return is used inside of the bodies of StableHLO ops.
-    It behaves like func.return but for StableHLO ops.
-    The func.return op is used inside of func.func op.
-
-    https://discord.com/channels/999073994483433573/1259494021269688360/1259992088565645312
-    """
-
-    name = "stablehlo.return"
-
-    input = var_operand_def(TensorOrTokenOrBufferType)
-
-    traits = traits_def(Pure(), IsTerminator())
-
-    assembly_format = "$input attr-dict (`:` type($input)^)?"
-
-    def __init__(self, input: list[SSAValue]):
-        super().__init__(operands=(input,))
 
 
 @irdl_op_definition
