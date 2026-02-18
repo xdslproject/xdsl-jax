@@ -192,10 +192,6 @@
 
 // Other operations
 
-// CHECK: stablehlo.return %t0 : tensor<f32>
-// CHECK-GENERIC: "stablehlo.return"(%t0) : (tensor<f32>) -> ()
-stablehlo.return %tf32 : tensor<f32>
-
 %token0 = "test.op"() : () -> !stablehlo.token
 %token1 = "test.op"() : () -> !stablehlo.token
 // CHECK-GENERIC: %after_all = "stablehlo.after_all"(%token0, %token1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
@@ -245,11 +241,13 @@ stablehlo.return %tf32 : tensor<f32>
 
 // CHECK-GENERIC: %0, %1 = "stablehlo.case"(%index) ({
 %0:2 = "stablehlo.case"(%index) ({
+  // CHECK: stablehlo.return %result_branch0, %result_branch0 : tensor<2xi64>, tensor<2xi64>
   // CHECK-GENERIC: "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
-  "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
+  stablehlo.return %result_branch0, %result_branch0 : tensor<2xi64>, tensor<2xi64>
 }, {
+  // CHECK: stablehlo.return %result_branch1, %result_branch1 : tensor<2xi64>, tensor<2xi64>
   // CHECK-GENERIC: "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
-  "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
+  stablehlo.return %result_branch1, %result_branch1 : tensor<2xi64>, tensor<2xi64>
 // CHECK-GENERIC: }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 
