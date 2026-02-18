@@ -3,6 +3,7 @@
 
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
+%t5f32 = "test.op"() : () -> tensor<5xf32>
 %tcomplex = "test.op"() : () -> tensor<complex<f32>>
 
 
@@ -117,7 +118,9 @@
 // CHECK-GENERIC: %tanh = "stablehlo.tanh"(%tf32) : (tensor<f32>) -> tensor<f32>
 %tanh = stablehlo.tanh %tf32 : tensor<f32>
 
+
 // Elementwise binary operations
+
 
 // CHECK: %add = stablehlo.add %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %add = "stablehlo.add"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
@@ -131,6 +134,26 @@
 // CHECK-GENERIC: %atan2 = "stablehlo.atan2"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
 %atan2 = stablehlo.atan2 %tf32, %tf32 : tensor<f32>
 
+// CHECK: %complex = stablehlo.complex %tf32, %tf32 : tensor<complex<f32>>
+// CHECK-GENERIC: %complex = "stablehlo.complex"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<complex<f32>>
+%complex = stablehlo.complex %tf32, %tf32 : tensor<complex<f32>>
+
+// CHECK: %complex2 = stablehlo.complex %t5f32, %t5f32 : tensor<5xcomplex<f32>>
+// CHECK-GENERIC: %complex2 = "stablehlo.complex"(%t5f32, %t5f32) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
+%complex2 = stablehlo.complex %t5f32, %t5f32 : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
+
+// CHECK: %divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
+// CHECK-GENERIC: %divide = "stablehlo.divide"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+%divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
+
+// CHECK: %maximum = stablehlo.maximum %tf32, %tf32 : tensor<f32>
+// CHECK-GENERIC: %maximum = "stablehlo.maximum"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+%maximum = stablehlo.maximum %tf32, %tf32 : tensor<f32>
+
+// CHECK: %minimum = stablehlo.minimum %tf32, %tf32 : tensor<f32>
+// CHECK-GENERIC: %minimum = "stablehlo.minimum"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+%minimum = stablehlo.minimum %tf32, %tf32 : tensor<f32>
+
 // CHECK: %multiply = stablehlo.multiply %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %multiply = "stablehlo.multiply"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %multiply = stablehlo.multiply %t0, %t0 : tensor<i32>
@@ -138,6 +161,14 @@
 // CHECK: %or = stablehlo.or %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %or = "stablehlo.or"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %or = stablehlo.or %t0, %t0 : tensor<i32>
+
+// CHECK: %power = stablehlo.power %tf32, %tf32 : tensor<f32>
+// CHECK-GENERIC: %power = "stablehlo.power"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+%power = stablehlo.power %tf32, %tf32 : tensor<f32>
+
+// CHECK: %remainder = stablehlo.remainder %tf32, %tf32 : tensor<f32>
+// CHECK-GENERIC: %remainder = "stablehlo.remainder"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
+%remainder = stablehlo.remainder %tf32, %tf32 : tensor<f32>
 
 // CHECK: %shift_left = stablehlo.shift_left %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %shift_left = "stablehlo.shift_left"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
