@@ -19,10 +19,13 @@ from xdsl.traits import Commutative, NoMemoryEffect
 from xdsl_jax.xdsl_extras import (
     Elementwise,
     SameOperandsAndResultShape,
+    SameOperandsElementType,
 )
 
-from .custom_directives import SameOperandsAndResultType
+from .custom_directives import ComplexOpType, SameOperandsAndResultType
 from .types import (
+    ComplexTensorType,
+    Float32Or64TensorType,
     FloatOrComplexTensorType,
     IntegerTensorType,
     IntOrFloatOrComplexTensorType,
@@ -129,6 +132,35 @@ class Atan2Op(ElementwiseBinaryOperation[FloatOrComplexTensorType]):
     """
 
     name = "stablehlo.atan2"
+
+
+@irdl_op_definition
+class ComplexOp(ElementwiseBinaryOperation[Float32Or64TensorType]):
+    """
+    Performs element-wise conversion to a complex value from a pair of real and
+    imaginary values, `lhs` and `rhs`, and produces a `result` tensor.
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#complex
+    Example:
+    ```mlir
+    %result = stablehlo.complex %lhs, %rhs : tensor<2xcomplex<f64>>
+    ```
+    """
+
+    name = "stablehlo.complex"
+
+    result = result_def(ComplexTensorType)
+
+    assembly_format = (
+        "$lhs `,` $rhs attr-dict"
+        " `:` custom<ComplexOpType>(type(operands), type(results))"
+    )
+
+    custom_directives = (ComplexOpType,)
+
+    traits = traits_def(
+        SameOperandsElementType(),
+    )
 
 
 @irdl_op_definition
