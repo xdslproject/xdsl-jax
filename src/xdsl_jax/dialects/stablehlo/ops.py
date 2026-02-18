@@ -32,7 +32,9 @@ from xdsl.irdl import (
     var_result_def,
 )
 from xdsl.traits import (
+    ConditionallySpeculatable,
     IsTerminator,
+    NoMemoryEffect,
     Pure,
     RecursivelySpeculatable,
     RecursiveMemoryEffect,
@@ -116,6 +118,10 @@ class BitcastConvertOp(IRDLOperation):
     name = "stablehlo.bitcast_convert"
     input = operand_def(AnyTensorType)
     result = result_def(AnyTensorType)
+
+    assembly_format = "operands attr-dict `:` functional-type(operands, results)"
+
+    traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
 
     def __init__(self, input: SSAValue, result: Attribute):
         super().__init__(operands=(input,), result_types=(result,))

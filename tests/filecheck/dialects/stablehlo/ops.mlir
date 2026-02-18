@@ -232,8 +232,9 @@
 //           [0, 0, 0, 0, 0, 0, 0, 0, 0]
 //          ]
 
-// %bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
-%bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
+// CHECK: %bitcast = stablehlo.bitcast_convert %t0 : (tensor<i32>) -> tensor<2xi16>
+// CHECK-GENERIC: %bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
+%bitcast = stablehlo.bitcast_convert %t0 : (tensor<i32>) -> tensor<2xi16>
 
 %index = "test.op"() : () -> tensor<i32>
 %result_branch0 = "test.op"() : () -> tensor<2xi64>
