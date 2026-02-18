@@ -36,11 +36,11 @@ from .types import (
 )
 
 # Generic type variables for templating
-T_OP = TypeVar("T_OP", bound=AnyTensorType)
-T_RES = TypeVar("T_RES", bound=AnyTensorType)
+T_OPERAND = TypeVar("T_OPERAND", bound=AnyTensorType)
+T_RESULT = TypeVar("T_RESULT", bound=AnyTensorType)
 
 
-class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_OP, T_RES]):
+class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_OPERAND, T_RESULT]):
     """
     Templated base class for elementwise unary operations.
 
@@ -51,8 +51,8 @@ class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_OP, T_RES]):
     https://openxla.org/xla/operation_semantics#element-wise_unary_functions
     """
 
-    operand = operand_def(T_OP)
-    result = result_def(T_RES)
+    operand = operand_def(T_OPERAND)
+    result = result_def(T_RESULT)
 
     traits = traits_def(
         NoMemoryEffect(),
