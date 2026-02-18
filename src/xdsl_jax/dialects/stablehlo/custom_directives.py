@@ -17,6 +17,7 @@ from xdsl.irdl.declarative_assembly_format import (
 )
 from xdsl.parser import Parser
 from xdsl.printer import Printer
+from xdsl.utils.hints import isa
 
 
 def _create_real_type(shaped_type: TensorType[Attribute]) -> TensorType[Attribute]:
@@ -27,8 +28,8 @@ def _create_real_type(shaped_type: TensorType[Attribute]) -> TensorType[Attribut
     Ex: tensor<4xcomplex<f32>> -> tensor<4xf32>
     """
     element_type: Attribute = shaped_type.element_type
-    if isinstance(element_type, ComplexType):
-        element_type = cast(ComplexType, element_type).element_type
+    if isa(element_type, ComplexType):
+        element_type = element_type.element_type
     return TensorType(element_type, shaped_type.get_shape(), shaped_type.encoding)
 
 
@@ -107,16 +108,12 @@ class ComplexOpType(CustomDirective):
 
         # Single type: operand type is inferred from complex result type
         parsed_type = parser.parse_type()
-        complex_tensor = cast(TensorType[Attribute], parsed_type)
-        if not (
-            isinstance(parsed_type, TensorType)
-            and isinstance(complex_tensor.element_type, ComplexType)
-        ):
+        if not isa(parsed_type, TensorType[ComplexType]):
             parser.raise_error("expected tensor with complex element type")
 
-        real_type = _create_real_type(complex_tensor)
+        real_type = _create_real_type(parsed_type)
         self.operand_types.set(state, (real_type, real_type))
-        self.result_types.set(state, (complex_tensor,))
+        self.result_types.set(state, (parsed_type,))
         return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
