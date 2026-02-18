@@ -202,10 +202,9 @@
 //            [[1,2], [3,4], [5,6]],
 //            [[7,8], [9,10], [11,12]]
 //           ]
-// CHECK-GENERIC:  %transpose_result = "stablehlo.transpose"(%transpose_operand) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
-%transpose_result = "stablehlo.transpose"(%transpose_operand) {
-  permutation = array<i64: 2, 1, 0>
-} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+// CHECK: %transpose_result = stablehlo.transpose %transpose_operand, dims = [2, 1, 0] : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+// CHECK-GENERIC: %transpose_result = "stablehlo.transpose"(%transpose_operand) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+%transpose_result = stablehlo.transpose %transpose_operand, dims = [2, 1, 0] : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
 // %result: [
 //           [[1,7], [3,9], [5,11]],
 //           [[2,8], [4,10], [6,12]]

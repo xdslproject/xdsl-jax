@@ -191,11 +191,16 @@ class TransposeOp(IRDLOperation):
 
     name = "stablehlo.transpose"
 
-    ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
-
-    operand = operand_def(TensorType.constr(ELEMENT_TYPE))
-    result = result_def(TensorType.constr(ELEMENT_TYPE))
+    operand = operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
     permutation = attr_def(DenseArrayBase.constr(i64))
+
+    traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
+
+    assembly_format = (
+        "$operand `,` `dims` `=` $permutation "
+        "attr-dict `:` functional-type(operands, results)"
+    )
 
     def __init__(
         self, operand: SSAValue, permutation: DenseArrayBase, result_type: Attribute
