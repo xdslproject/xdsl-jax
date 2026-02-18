@@ -62,7 +62,7 @@ class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_OPERAND, T_RES
 
     assembly_format = (
         "$operand attr-dict `:` "
-        "custom<SameOperandsAndResultType>(type($operand), type($result))"
+        "custom<SameOperandsAndResultType>(type(operands), type(results))"
     )
 
     custom_directives = (SameOperandsAndResultType,)
