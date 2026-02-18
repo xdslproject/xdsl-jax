@@ -6,6 +6,7 @@ from typing import Literal, TypeAlias
 
 from xdsl.dialects.builtin import (
     I1,
+    I32,
     AnyFloat,
     AnyTensorType,
     ComplexType,
@@ -36,6 +37,10 @@ Float32Or64Type: TypeAlias = Float32Type | Float64Type
 HLO_ComplexType: TypeAlias = ComplexType[Float32Or64Type]
 ComplexTensorType: TypeAlias = TensorType[HLO_ComplexType]
 IntegerTensorType: TypeAlias = TensorType[IntType]
+# TODO: Change to SI32 once StableHLO adopts signful integer semantics
+# See: https://github.com/openxla/stablehlo/issues/22
+# https://github.com/openxla/stablehlo/issues/2489
+SI32TensorType: TypeAlias = TensorType[I32]
 FloatOrComplexType: TypeAlias = AnyFloat | HLO_ComplexType
 SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
 SIntOrFloatType: TypeAlias = SIntType | AnyFloat

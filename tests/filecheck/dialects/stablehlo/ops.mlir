@@ -217,12 +217,19 @@
 //            [4, 5, 6]
 //           ]
 // %padding_value: 0
-%pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {
-  edge_padding_low = array<i64: 0, 1>,
-  edge_padding_high = array<i64: 2, 1>,
-  interior_padding = array<i64: 1, 2>
-} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
-// CHECK-GENERIC: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {edge_padding_low = array<i64: 0, 1>, edge_padding_high = array<i64: 2, 1>, interior_padding = array<i64: 1, 2>} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// CHECK: %pad_result = stablehlo.pad %pad_operand, %padding_value, 
+//   low = [0, 1], 
+//   high = [2, 1], 
+//   interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// CHECK-GENERIC: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {
+//   edge_padding_low = array<i64: 0, 1>,
+//   edge_padding_high = array<i64: 2, 1>,
+//   interior_padding = array<i64: 1, 2>
+// } : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+%pad_result = stablehlo.pad %pad_operand, %padding_value, 
+  low = [0, 1], 
+  high = [2, 1], 
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
 // %result: [
 //           [0, 1, 0, 0, 2, 0, 0, 3, 0],
 //           [0, 0, 0, 0, 0, 0, 0, 0, 0],

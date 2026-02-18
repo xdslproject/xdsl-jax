@@ -7,10 +7,9 @@ consume StableHLO programs.
 """
 
 from collections.abc import Sequence
-from typing import ClassVar, TypeAlias, cast
+from typing import ClassVar, cast
 
 from xdsl.dialects.builtin import (
-    I32,
     AnyTensorType,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
@@ -42,13 +41,10 @@ from xdsl.traits import (
 )
 from xdsl.utils.exceptions import VerifyException
 
-from .attributes import TokenType
-from .types import TensorOrTokenOrBufferType, TensorOrTokenType
+from xdsl_jax.xdsl_extras.traits import SameOperandsAndResultElementType
 
-# TODO: Change to SI32 once StableHLO adopts signful integer semantics
-# See: https://github.com/openxla/stablehlo/issues/22
-# https://github.com/openxla/stablehlo/issues/2489
-SI32TensorType: TypeAlias = TensorType[I32]
+from .attributes import TokenType
+from .types import SI32TensorType, TensorOrTokenOrBufferType, TensorOrTokenType
 
 
 @irdl_op_definition
@@ -269,12 +265,22 @@ class PadOp(IRDLOperation):
 
     ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
 
-    operand = operand_def(TensorType.constr(ELEMENT_TYPE))
-    padding_value = operand_def(TensorType.constr(ELEMENT_TYPE))
-    result = result_def(TensorType.constr(ELEMENT_TYPE))
+    operand = operand_def(AnyTensorType)
+    padding_value = operand_def(SI32TensorType)
+    result = result_def(AnyTensorType)
     edge_padding_low = attr_def(DenseArrayBase.constr(i64))
     edge_padding_high = attr_def(DenseArrayBase.constr(i64))
     interior_padding = attr_def(DenseArrayBase.constr(i64))
+
+    traits = traits_def(NoMemoryEffect(), SameOperandsAndResultElementType())
+
+    assembly_format = (
+        "$operand `,` $padding_value `,` "
+        "`low` `=` $edge_padding_low `,` "
+        "`high` `=` $edge_padding_high `,` "
+        "`interior` `=` $interior_padding "
+        "attr-dict `:` functional-type(operands, results)"
+    )
 
     def __init__(
         self,
