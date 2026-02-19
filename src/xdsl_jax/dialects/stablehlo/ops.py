@@ -25,6 +25,7 @@ from xdsl.irdl import (
     attr_def,
     irdl_op_definition,
     operand_def,
+    opt_prop_def,
     result_def,
     traits_def,
     var_operand_def,
@@ -42,11 +43,20 @@ from xdsl.traits import (
 )
 from xdsl.utils.exceptions import VerifyException
 
-from xdsl_jax.xdsl_extras.traits import SameOperandsAndResultElementType
+from xdsl_jax.xdsl_extras.traits import (
+    Elementwise,
+    SameOperandsAndResultElementType,
+    SameOperandsAndResultShape,
+)
 
-from .attributes import TokenType
+from .attributes import ComparisonDirectionAttr, ComparisonTypeAttr, TokenType
 from .custom_directives import ConstantOpValue, SameOperandsAndResultType
-from .types import SI32TensorType, TensorOrTokenOrBufferType, TensorOrTokenType
+from .types import (
+    PredTensorType,
+    SI32TensorType,
+    TensorOrTokenOrBufferType,
+    TensorOrTokenType,
+)
 
 
 @irdl_op_definition
@@ -170,6 +180,56 @@ class CaseOp(IRDLOperation):
 
 
 @irdl_op_definition
+class ClampOp(IRDLOperation):
+    """Element-wise clamp with min and max bounds.
+
+    See: https://github.com/openxla/stablehlo/blob/main/docs/spec.md#clamp
+    """
+
+    name = "stablehlo.clamp"
+
+    min = operand_def(AnyTensorType)
+    operand = operand_def(AnyTensorType)
+    max = operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+
+    assembly_format = (
+        "$min `,` $operand `,` $max attr-dict `:` "
+        "custom<SameOperandsAndResultType>(type(operands), type(results))"
+    )
+
+    custom_directives = (SameOperandsAndResultType,)
+
+    traits = traits_def(
+        NoMemoryEffect(),
+    )
+
+
+@irdl_op_definition
+class CompareOp(IRDLOperation):
+    """Element-wise compare with direction and type attributes."""
+
+    name = "stablehlo.compare"
+
+    assembly_format = (
+        "$comparison_direction `,` $lhs `,` $rhs (`,` $comparison_type^)? "
+        "attr-dict `:` functional-type(operands, results)"
+    )
+
+    lhs = operand_def(AnyTensorType)
+    rhs = operand_def(AnyTensorType)
+    result = result_def(PredTensorType)
+    comparison_direction = attr_def(ComparisonDirectionAttr)
+    comparison_type = opt_prop_def(ComparisonTypeAttr)
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        Elementwise(),
+        SameOperandsAndResultShape(),
+    )
+
+
+@irdl_op_definition
 class ConstantOp(IRDLOperation, ConstantLikeInterface):
     """
     Produces an `output` tensor from a constant `value`.
@@ -193,6 +253,41 @@ class ConstantOp(IRDLOperation, ConstantLikeInterface):
     def get_constant_value(self) -> DenseIntOrFPElementsAttr:
         """Return the constant value attribute. Required by ConstantLikeInterface."""
         return self.value
+
+
+@irdl_op_definition
+class MapOp(IRDLOperation):
+    """
+    Applies a map function `computation` to `inputs` along the `dimensions` and
+    produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#map
+
+    Example:
+    ```mlir
+    %result = "stablehlo.map"(%input0, %input1) ({
+      ^bb0(%arg0: tensor<i64>, %arg1: tensor<i64>):
+        %0 = stablehlo.multiply %arg0, %arg1 : tensor<i64>
+        stablehlo.return %0 : tensor<i64>
+    }) {
+      dimensions = array<i64: 0, 1>
+    } : (tensor<2x2xi64>, tensor<2x2xi64>) -> tensor<2x2xi64>
+    ```
+    """
+
+    name = "stablehlo.map"
+
+    inputs = var_operand_def(AnyTensorType)
+    dimensions = attr_def(DenseArrayBase.constr(i64))
+    result = result_def(AnyTensorType)
+    computation = var_region_def("single_block")
+
+    traits = traits_def(
+        RecursiveMemoryEffect(),
+        SameOperandsAndResultShape(),
+        SingleBlockImplicitTerminator(ReturnOp),
+    )
 
 
 @irdl_op_definition
