@@ -45,7 +45,7 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl_jax.xdsl_extras.traits import SameOperandsAndResultElementType
 
 from .attributes import TokenType
-from .custom_directives import ConstantOpValue
+from .custom_directives import ConstantOpValue, SameOperandsAndResultType
 from .types import SI32TensorType, TensorOrTokenOrBufferType, TensorOrTokenType
 
 
@@ -86,6 +86,15 @@ class AfterAllOp(IRDLOperation):
     name = "stablehlo.after_all"
     inputs = var_operand_def(TokenType)
     result = result_def(TokenType)
+
+    traits = traits_def(Pure())
+
+    assembly_format = (
+        "$inputs attr-dict"
+        " `:` custom<SameOperandsAndResultType>"
+        "(type($inputs), type($result))"
+    )
+    custom_directives = (SameOperandsAndResultType,)
 
     def __init__(self, inputs: Sequence[SSAValue]):
         super().__init__(operands=[inputs], result_types=(TokenType(),))
