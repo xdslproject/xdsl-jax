@@ -1,6 +1,7 @@
 // RUN: XDSL_ROUNDTRIP
 // RUN: XDSL_GENERIC_ROUNDTRIP
 
+%pred = "test.op"() : () -> tensor<i1>
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
 %t5f32 = "test.op"() : () -> tensor<5xf32>
@@ -189,6 +190,51 @@
 // CHECK: %xor = stablehlo.xor %t0, %t0 : tensor<i32>
 // CHECK-GENERIC: %xor = "stablehlo.xor"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> tensor<i32>
 %xor = stablehlo.xor %t0, %t0 : tensor<i32>
+
+// Control flow operations
+
+// CHECK: %if_result = "stablehlo.if"(%pred) ({
+// CHECK:   stablehlo.return %t0 : tensor<i32>
+// CHECK: }, {
+// CHECK:   stablehlo.return %t0 : tensor<i32>
+// CHECK: }) : (tensor<i1>) -> tensor<i32>
+// CHECK-GENERIC: %if_result = "stablehlo.if"(%pred) ({
+// CHECK-GENERIC:   "stablehlo.return"(%t0) : (tensor<i32>) -> ()
+// CHECK-GENERIC: }, {
+// CHECK-GENERIC:   "stablehlo.return"(%t0) : (tensor<i32>) -> ()
+// CHECK-GENERIC: }) : (tensor<i1>) -> tensor<i32>
+%if_result = "stablehlo.if"(%pred) ({
+  stablehlo.return %t0 : tensor<i32>
+}, {
+  stablehlo.return %t0 : tensor<i32>
+}) : (tensor<i1>) -> tensor<i32>
+
+%init_i = "test.op"() : () -> tensor<i64>
+%init_sum = "test.op"() : () -> tensor<i64>
+// CHECK: %{{.*}}, %{{.*}} = stablehlo.while(%{{.*}} = %init_i, %{{.*}} = %init_sum) : tensor<i64>, tensor<i64>
+// CHECK: cond {
+// CHECK:   stablehlo.return %{{.*}} : tensor<i64>
+// CHECK: } do {
+// CHECK:   stablehlo.return %{{.*}}, %{{.*}} : tensor<i64>, tensor<i64>
+// CHECK: }
+// CHECK-GENERIC: %{{.*}}, %{{.*}} = "stablehlo.while"(%init_i, %init_sum) ({
+// CHECK-GENERIC: ^{{.*}}(%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>):
+// CHECK-GENERIC:   "stablehlo.return"(%{{.*}}) : (tensor<i64>) -> ()
+// CHECK-GENERIC: }, {
+// CHECK-GENERIC: ^{{.*}}(%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>):
+// CHECK-GENERIC:   "stablehlo.return"(%{{.*}}, %{{.*}}) : (tensor<i64>, tensor<i64>) -> ()
+// CHECK-GENERIC: }) : (tensor<i64>, tensor<i64>) -> (tensor<i64>, tensor<i64>)
+%while_r0, %while_r1 = stablehlo.while(%while_arg0 = %init_i, %while_arg1 = %init_sum) : tensor<i64>, tensor<i64>
+cond {
+  stablehlo.return %while_arg0 : tensor<i64>
+} do {
+  stablehlo.return %while_arg0, %while_arg1 : tensor<i64>, tensor<i64>
+}
+
+// CHECK: %ob0, %ob1 = stablehlo.optimization_barrier %t0, %t0 : tensor<i32>, tensor<i32>
+// CHECK-GENERIC: %ob0, %ob1 = "stablehlo.optimization_barrier"(%t0, %t0) : (tensor<i32>, tensor<i32>) -> (tensor<i32>, tensor<i32>)
+%ob0, %ob1 = stablehlo.optimization_barrier %t0, %t0 : tensor<i32>, tensor<i32>
+
 
 // Other operations
 

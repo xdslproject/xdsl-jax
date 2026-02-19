@@ -12,6 +12,7 @@ from .attributes import (
     ScatterDimensionNumbers,
     TokenType,
 )
+from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
 from .elementwise_binary_ops import (
     AddOp,
     AndOp,
@@ -118,6 +119,10 @@ StableHLO = Dialect(
         ShiftRightLogicalOp,
         SubtractOp,
         XorOp,
+        # Control flow operations
+        IfOp,
+        OptimizationBarrierOp,
+        WhileOp,
         # Other operations
         AfterAllOp,
         BitcastConvertOp,
