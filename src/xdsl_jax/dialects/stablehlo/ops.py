@@ -16,6 +16,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
+from xdsl.interfaces import ConstantLikeInterface
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
     AnyAttr,
@@ -44,6 +45,7 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl_jax.xdsl_extras.traits import SameOperandsAndResultElementType
 
 from .attributes import TokenType
+from .custom_directives import ConstantOpValue
 from .types import SI32TensorType, TensorOrTokenOrBufferType, TensorOrTokenType
 
 
@@ -159,7 +161,7 @@ class CaseOp(IRDLOperation):
 
 
 @irdl_op_definition
-class ConstantOp(IRDLOperation):
+class ConstantOp(IRDLOperation, ConstantLikeInterface):
     """
     Produces an `output` tensor from a constant `value`.
 
@@ -171,8 +173,17 @@ class ConstantOp(IRDLOperation):
     value = attr_def(DenseIntOrFPElementsAttr)
     output = result_def(AnyTensorType)
 
+    traits = traits_def(Pure())
+
+    assembly_format = "attr-dict custom <ConstantOpValue>($value, type($output))"
+    custom_directives = (ConstantOpValue,)
+
     def __init__(self, value: DenseIntOrFPElementsAttr):
         super().__init__(attributes={"value": value}, result_types=(value.type,))
+
+    def get_constant_value(self) -> DenseIntOrFPElementsAttr:
+        """Return the constant value attribute. Required by ConstantLikeInterface."""
+        return self.value
 
 
 @irdl_op_definition
