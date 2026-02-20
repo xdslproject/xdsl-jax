@@ -7,7 +7,7 @@ consume StableHLO programs.
 """
 
 from collections.abc import Sequence
-from typing import ClassVar, cast
+from typing import cast
 
 from xdsl.dialects.builtin import (
     AnyTensorType,
@@ -19,9 +19,7 @@ from xdsl.dialects.builtin import (
 from xdsl.interfaces import ConstantLikeInterface
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
-    AnyAttr,
     IRDLOperation,
-    VarConstraint,
     attr_def,
     irdl_op_definition,
     operand_def,
@@ -273,8 +271,6 @@ class PadOp(IRDLOperation):
     """
 
     name = "stablehlo.pad"
-
-    ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
 
     operand = operand_def(AnyTensorType)
     padding_value = operand_def(SI32TensorType)
