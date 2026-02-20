@@ -194,8 +194,9 @@
 
 %token0 = "test.op"() : () -> !stablehlo.token
 %token1 = "test.op"() : () -> !stablehlo.token
+// CHECK: %after_all = stablehlo.after_all %token0, %token1 : !stablehlo.token
 // CHECK-GENERIC: %after_all = "stablehlo.after_all"(%token0, %token1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
-%after_all = "stablehlo.after_all"(%token0, %token1) : (!stablehlo.token, !stablehlo.token) -> !stablehlo.token
+%after_all = stablehlo.after_all %token0, %token1 : !stablehlo.token
 
 %transpose_operand = "test.op"() : () -> tensor<2x3x2xi32>
 // %operand: [
