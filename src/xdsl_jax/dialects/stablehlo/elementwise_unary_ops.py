@@ -109,6 +109,12 @@ class CbrtOp(
 
     name = "stablehlo.cbrt"
 
+    result_accuracy = opt_prop_def(
+        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
 
 @irdl_op_definition
 class CeilOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):

@@ -7,26 +7,18 @@ consume StableHLO programs.
 """
 
 from collections.abc import Sequence
-from typing import ClassVar, TypeAlias, cast
+from typing import cast
 
 from xdsl.dialects.builtin import (
-    I32,
-    AnyFloat,
     AnyTensorType,
-    AnyTensorTypeConstr,
-    ComplexType,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
-    IntegerType,
     TensorType,
     i64,
 )
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
-    AnyAttr,
-    BaseAttr,
     IRDLOperation,
-    VarConstraint,
     attr_def,
     irdl_op_definition,
     operand_def,
@@ -36,19 +28,44 @@ from xdsl.irdl import (
     var_region_def,
     var_result_def,
 )
-from xdsl.traits import IsTerminator
+from xdsl.traits import (
+    ConditionallySpeculatable,
+    IsTerminator,
+    NoMemoryEffect,
+    Pure,
+    RecursivelySpeculatable,
+    RecursiveMemoryEffect,
+    SingleBlockImplicitTerminator,
+)
 from xdsl.utils.exceptions import VerifyException
 
-from xdsl_jax.dialects.stablehlo.attributes import TokenType
+from xdsl_jax.xdsl_extras.traits import SameOperandsAndResultElementType
 
-IntegerTensorType: TypeAlias = TensorType[IntegerType]
-FloatOrComplexType: TypeAlias = AnyFloat | ComplexType
-FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
+from .attributes import TokenType
+from .types import SI32TensorType, TensorOrTokenOrBufferType, TensorOrTokenType
 
-# TODO: Change to SI32 once StableHLO adopts signful integer semantics
-# See: https://github.com/openxla/stablehlo/issues/22
-# https://github.com/openxla/stablehlo/issues/2489
-SI32TensorType: TypeAlias = TensorType[I32]
+
+@irdl_op_definition
+class ReturnOp(IRDLOperation):
+    """This op is un-documented.
+
+    StableHLO's return is used inside of the bodies of StableHLO ops.
+    It behaves like func.return but for StableHLO ops.
+    The func.return op is used inside of func.func op.
+
+    https://discord.com/channels/999073994483433573/1259494021269688360/1259992088565645312
+    """
+
+    name = "stablehlo.return"
+
+    input = var_operand_def(TensorOrTokenOrBufferType)
+
+    traits = traits_def(Pure(), IsTerminator())
+
+    assembly_format = "$input attr-dict (`:` type($input)^)?"
+
+    def __init__(self, input: list[SSAValue]):
+        super().__init__(operands=(input,))
 
 
 @irdl_op_definition
@@ -96,6 +113,10 @@ class BitcastConvertOp(IRDLOperation):
     input = operand_def(AnyTensorType)
     result = result_def(AnyTensorType)
 
+    assembly_format = "operands attr-dict `:` functional-type(operands, results)"
+
+    traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
+
     def __init__(self, input: SSAValue, result: Attribute):
         super().__init__(operands=(input,), result_types=(result,))
 
@@ -116,7 +137,13 @@ class CaseOp(IRDLOperation):
     name = "stablehlo.case"
     index = operand_def(SI32TensorType)
     branches = var_region_def("single_block")
-    _results = var_result_def(AnyTensorTypeConstr | BaseAttr(TokenType))
+    _results = var_result_def(TensorOrTokenType)
+
+    traits = traits_def(
+        RecursiveMemoryEffect(),
+        RecursivelySpeculatable(),
+        SingleBlockImplicitTerminator(ReturnOp),
+    )
 
     def __init__(
         self,
@@ -147,26 +174,6 @@ class ConstantOp(IRDLOperation):
 
 
 @irdl_op_definition
-class ReturnOp(IRDLOperation):
-    """This op is un-documented.
-
-    StableHLO's return is used inside of the bodies of StableHLO ops.
-    It behaves like func.return but for StableHLO ops.
-    The func.return op is used inside of func.func op.
-
-    https://discord.com/channels/999073994483433573/1259494021269688360/1259992088565645312
-    """
-
-    name = "stablehlo.return"
-
-    input = var_operand_def(AnyTensorType)
-    traits = traits_def(IsTerminator())
-
-    def __init__(self, input: list[SSAValue]):
-        super().__init__(operands=(input,))
-
-
-@irdl_op_definition
 class TransposeOp(IRDLOperation):
     """
     Permutes the dimensions of `operand` tensor using `permutation` and produces a
@@ -178,11 +185,16 @@ class TransposeOp(IRDLOperation):
 
     name = "stablehlo.transpose"
 
-    ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
-
-    operand = operand_def(TensorType.constr(ELEMENT_TYPE))
-    result = result_def(TensorType.constr(ELEMENT_TYPE))
+    operand = operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
     permutation = attr_def(DenseArrayBase.constr(i64))
+
+    traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
+
+    assembly_format = (
+        "$operand `,` `dims` `=` $permutation "
+        "attr-dict `:` functional-type(operands, results)"
+    )
 
     def __init__(
         self, operand: SSAValue, permutation: DenseArrayBase, result_type: Attribute
@@ -249,14 +261,22 @@ class PadOp(IRDLOperation):
 
     name = "stablehlo.pad"
 
-    ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
-
-    operand = operand_def(TensorType.constr(ELEMENT_TYPE))
-    padding_value = operand_def(TensorType.constr(ELEMENT_TYPE))
-    result = result_def(TensorType.constr(ELEMENT_TYPE))
+    operand = operand_def(AnyTensorType)
+    padding_value = operand_def(SI32TensorType)
+    result = result_def(AnyTensorType)
     edge_padding_low = attr_def(DenseArrayBase.constr(i64))
     edge_padding_high = attr_def(DenseArrayBase.constr(i64))
     interior_padding = attr_def(DenseArrayBase.constr(i64))
+
+    traits = traits_def(NoMemoryEffect(), SameOperandsAndResultElementType())
+
+    assembly_format = (
+        "$operand `,` $padding_value `,` "
+        "`low` `=` $edge_padding_low `,` "
+        "`high` `=` $edge_padding_high `,` "
+        "`interior` `=` $interior_padding "
+        "attr-dict `:` functional-type(operands, results)"
+    )
 
     def __init__(
         self,

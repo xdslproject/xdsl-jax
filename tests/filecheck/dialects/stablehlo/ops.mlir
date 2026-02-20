@@ -202,10 +202,9 @@
 //            [[1,2], [3,4], [5,6]],
 //            [[7,8], [9,10], [11,12]]
 //           ]
-// CHECK-GENERIC:  %transpose_result = "stablehlo.transpose"(%transpose_operand) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
-%transpose_result = "stablehlo.transpose"(%transpose_operand) {
-  permutation = array<i64: 2, 1, 0>
-} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+// CHECK: %transpose_result = stablehlo.transpose %transpose_operand, dims = [2, 1, 0] : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+// CHECK-GENERIC: %transpose_result = "stablehlo.transpose"(%transpose_operand) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+%transpose_result = stablehlo.transpose %transpose_operand, dims = [2, 1, 0] : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
 // %result: [
 //           [[1,7], [3,9], [5,11]],
 //           [[2,8], [4,10], [6,12]]
@@ -218,12 +217,19 @@
 //            [4, 5, 6]
 //           ]
 // %padding_value: 0
-%pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {
-  edge_padding_low = array<i64: 0, 1>,
-  edge_padding_high = array<i64: 2, 1>,
-  interior_padding = array<i64: 1, 2>
-} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
-// CHECK-GENERIC: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {edge_padding_low = array<i64: 0, 1>, edge_padding_high = array<i64: 2, 1>, interior_padding = array<i64: 1, 2>} : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// CHECK: %pad_result = stablehlo.pad %pad_operand, %padding_value, 
+//   low = [0, 1], 
+//   high = [2, 1], 
+//   interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// CHECK-GENERIC: %pad_result = "stablehlo.pad"(%pad_operand, %padding_value) {
+//   edge_padding_low = array<i64: 0, 1>,
+//   edge_padding_high = array<i64: 2, 1>,
+//   interior_padding = array<i64: 1, 2>
+// } : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+%pad_result = stablehlo.pad %pad_operand, %padding_value, 
+  low = [0, 1], 
+  high = [2, 1], 
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
 // %result: [
 //           [0, 1, 0, 0, 2, 0, 0, 3, 0],
 //           [0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -232,8 +238,9 @@
 //           [0, 0, 0, 0, 0, 0, 0, 0, 0]
 //          ]
 
-// %bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
-%bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
+// CHECK: %bitcast = stablehlo.bitcast_convert %t0 : (tensor<i32>) -> tensor<2xi16>
+// CHECK-GENERIC: %bitcast = "stablehlo.bitcast_convert"(%t0) : (tensor<i32>) -> tensor<2xi16>
+%bitcast = stablehlo.bitcast_convert %t0 : (tensor<i32>) -> tensor<2xi16>
 
 %index = "test.op"() : () -> tensor<i32>
 %result_branch0 = "test.op"() : () -> tensor<2xi64>
@@ -241,11 +248,13 @@
 
 // CHECK-GENERIC: %0, %1 = "stablehlo.case"(%index) ({
 %0:2 = "stablehlo.case"(%index) ({
+  // CHECK: stablehlo.return %result_branch0, %result_branch0 : tensor<2xi64>, tensor<2xi64>
   // CHECK-GENERIC: "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
-  "stablehlo.return"(%result_branch0, %result_branch0) : (tensor<2xi64>, tensor<2xi64>) -> ()
+  stablehlo.return %result_branch0, %result_branch0 : tensor<2xi64>, tensor<2xi64>
 }, {
+  // CHECK: stablehlo.return %result_branch1, %result_branch1 : tensor<2xi64>, tensor<2xi64>
   // CHECK-GENERIC: "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
-  "stablehlo.return"(%result_branch1, %result_branch1) : (tensor<2xi64>, tensor<2xi64>) -> ()
+  stablehlo.return %result_branch1, %result_branch1 : tensor<2xi64>, tensor<2xi64>
 // CHECK-GENERIC: }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 
