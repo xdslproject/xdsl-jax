@@ -30,6 +30,7 @@ from xdsl.irdl import (
 )
 from xdsl.traits import (
     ConditionallySpeculatable,
+    ConstantLike,
     IsTerminator,
     NoMemoryEffect,
     Pure,
@@ -42,6 +43,7 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl_jax.xdsl_extras.traits import SameOperandsAndResultElementType
 
 from .attributes import TokenType
+from .custom_directives import ConstantOpValue
 from .types import SI32TensorType, TensorOrTokenOrBufferType, TensorOrTokenType
 
 
@@ -168,6 +170,11 @@ class ConstantOp(IRDLOperation):
 
     value = attr_def(DenseIntOrFPElementsAttr)
     output = result_def(AnyTensorType)
+
+    traits = traits_def(Pure(), ConstantLike())
+
+    assembly_format = "attr-dict custom <ConstantOpValue>($value, type($output))"
+    custom_directives = (ConstantOpValue,)
 
     def __init__(self, value: DenseIntOrFPElementsAttr):
         super().__init__(attributes={"value": value}, result_types=(value.type,))
