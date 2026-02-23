@@ -14,6 +14,7 @@ from xdsl.irdl.declarative_assembly_format import (
     ParsingState,
     PrintingState,
     TypeDirective,
+    VariableDirective,
     irdl_custom_directive,
 )
 from xdsl.parser import Parser
@@ -59,7 +60,12 @@ class SameOperandsAndResultType(CustomDirective):
 
         # Single type: applies to all operands and result
         single_type = parser.parse_type()
-        n_operands = len(state.operand_types)
+        inner = self.operand_types.inner
+        if isinstance(inner, VariableDirective):
+            operands = state.operands[inner.index]
+            n_operands = len(operands) if operands else 0
+        else:
+            n_operands = len(state.operand_types)
         self.operand_types.set(state, (single_type,) * n_operands)
         self.result_type.set(state, (single_type,))
         return True
