@@ -6,8 +6,8 @@ site_author: Sasha Lopoukhine
 copyright: Copyright Sasha Lopoukhine
 
 # Repository
-repo_name: xdsl/xdsl-jax
-repo_url: https://github.com/xdsl/xdsl-jax
+repo_name: xdslproject/xdsl-jax
+repo_url: https://github.com/xdslproject/xdsl-jax
 
 extra:
   social:
