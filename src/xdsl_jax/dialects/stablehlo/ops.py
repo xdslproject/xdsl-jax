@@ -7,7 +7,7 @@ consume StableHLO programs.
 """
 
 from collections.abc import Sequence
-from typing import ClassVar, cast
+from typing import cast
 
 from xdsl.dialects.builtin import (
     AnyTensorType,
@@ -16,12 +16,9 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
-from xdsl.interfaces import ConstantLikeInterface
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
-    AnyAttr,
     IRDLOperation,
-    VarConstraint,
     attr_def,
     irdl_op_definition,
     operand_def,
@@ -34,6 +31,7 @@ from xdsl.irdl import (
 )
 from xdsl.traits import (
     ConditionallySpeculatable,
+    ConstantLike,
     IsTerminator,
     NoMemoryEffect,
     Pure,
@@ -230,7 +228,7 @@ class CompareOp(IRDLOperation):
 
 
 @irdl_op_definition
-class ConstantOp(IRDLOperation, ConstantLikeInterface):
+class ConstantOp(IRDLOperation):
     """
     Produces an `output` tensor from a constant `value`.
 
@@ -242,17 +240,13 @@ class ConstantOp(IRDLOperation, ConstantLikeInterface):
     value = attr_def(DenseIntOrFPElementsAttr)
     output = result_def(AnyTensorType)
 
-    traits = traits_def(Pure())
+    traits = traits_def(Pure(), ConstantLike())
 
     assembly_format = "attr-dict custom <ConstantOpValue>($value, type($output))"
     custom_directives = (ConstantOpValue,)
 
     def __init__(self, value: DenseIntOrFPElementsAttr):
         super().__init__(attributes={"value": value}, result_types=(value.type,))
-
-    def get_constant_value(self) -> DenseIntOrFPElementsAttr:
-        """Return the constant value attribute. Required by ConstantLikeInterface."""
-        return self.value
 
 
 @irdl_op_definition
@@ -377,8 +371,6 @@ class PadOp(IRDLOperation):
     """
 
     name = "stablehlo.pad"
-
-    ELEMENT_TYPE: ClassVar = VarConstraint("ELEMENT_TYPE", AnyAttr())
 
     operand = operand_def(AnyTensorType)
     padding_value = operand_def(SI32TensorType)
