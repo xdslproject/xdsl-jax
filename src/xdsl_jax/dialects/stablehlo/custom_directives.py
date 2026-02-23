@@ -162,3 +162,32 @@ class ConstantOpValue(CustomDirective):
         attr.print_without_type(printer)
         printer.print_string(" : ")
         printer.print_attribute(attr.type)
+
+
+@irdl_custom_directive
+class PairwiseOpType(CustomDirective):
+    """
+    Custom directive for ops with pairwise same operand and result types
+    (e.g. stablehlo.optimization_barrier).
+
+    Mirrors MLIR StableHLO's printPairwiseOpType/parsePairwiseOpType:
+    - Parse: one type list (e.g. `tensor<f32>, tensor<f32>`) is parsed and used
+      for both operands and results (results = operands).
+    - Print: operand types are printed comma-separated (result types are the same).
+    """
+
+    operand_types: TypeDirective
+    result_types: TypeDirective
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        types = parser.parse_comma_separated_list(
+            parser.Delimiter.NONE, parser.parse_type
+        )
+        self.operand_types.set(state, types)
+        self.result_types.set(state, types)
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        operand_types = self.operand_types.get(op)
+        state.print_whitespace(printer)
+        printer.print_list(operand_types, printer.print_attribute)
