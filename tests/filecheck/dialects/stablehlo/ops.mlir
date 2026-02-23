@@ -309,9 +309,9 @@ cond {
 // CHECK-GENERIC: %constant = "stablehlo.constant"() {value = dense<[[0.000000e+00, 1.000000e+00], [2.000000e+00, 3.000000e+00]]> : tensor<2x2xf32>} : () -> tensor<2x2xf32>
 %constant = stablehlo.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
 
-// CHECK: %clamp2 = stablehlo.clamp %t0, %t0, %t0 : tensor<i32>
-// CHECK-GENERIC: %clamp2 = "stablehlo.clamp"(%t0, %t0, %t0) : (tensor<i32>, tensor<i32>, tensor<i32>) -> tensor<i32>
-%clamp2 = stablehlo.clamp %t0, %t0, %t0 : tensor<i32>
+// CHECK: %clamp = stablehlo.clamp %t0, %t0, %t0 : tensor<i32>
+// CHECK-GENERIC: %clamp = "stablehlo.clamp"(%t0, %t0, %t0) : (tensor<i32>, tensor<i32>, tensor<i32>) -> tensor<i32>
+%clamp = stablehlo.clamp %t0, %t0, %t0 : tensor<i32>
 
 // CHECK: %compare = stablehlo.compare EQ, %t0, %t0 : (tensor<i32>, tensor<i32>) -> tensor<i1>
 // CHECK-GENERIC: %compare = "stablehlo.compare"(%t0, %t0) {comparison_direction = #stablehlo<comparison_direction EQ>} : (tensor<i32>, tensor<i32>) -> tensor<i1>
