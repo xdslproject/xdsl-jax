@@ -4,10 +4,11 @@ Custom directives for the StableHLO dialect.
 
 from typing import cast
 
-from xdsl.dialects.builtin import ComplexType, TensorType
+from xdsl.dialects.builtin import ComplexType, DenseIntOrFPElementsAttr, TensorType
 from xdsl.ir import Attribute
 from xdsl.irdl import IRDLOperation
 from xdsl.irdl.declarative_assembly_format import (
+    AttributeVariable,
     CustomDirective,
     FunctionalTypeDirective,
     ParsingState,
@@ -131,3 +132,27 @@ class ComplexOpType(CustomDirective):
 
         # Fall back to functional type
         printer.print_function_type(operand_types, result_types)
+
+
+@irdl_custom_directive
+class ConstantOpValue(CustomDirective):
+    """
+    Custom directive for stablehlo.constant that prints and parses the value
+    attribute in stripped form, then infers the result type from the attribute's type.
+    """
+
+    value: AttributeVariable
+    result_type: TypeDirective
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        attr = cast(DenseIntOrFPElementsAttr, parser.parse_attribute())
+        self.value.set(state, attr)
+        self.result_type.set(state, (attr.type,))
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        attr = cast(DenseIntOrFPElementsAttr, self.value.get(op))
+        state.print_whitespace(printer)
+        attr.print_without_type(printer)
+        printer.print_string(" : ")
+        printer.print_attribute(attr.type)
