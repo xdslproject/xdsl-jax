@@ -11,7 +11,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
-from xdsl.ir import Attribute, BlockArgument, Operation, Region, SSAValue
+from xdsl.ir import Attribute, BlockArgument, Region, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
     irdl_op_definition,
@@ -25,8 +25,6 @@ from xdsl.irdl.operations import SameVariadicOperandSize
 from xdsl.parser import Parser, UnresolvedOperand
 from xdsl.printer import Printer
 from xdsl.traits import (
-    ConditionallySpeculatable,
-    RecursivelySpeculatable,
     RecursiveMemoryEffect,
     SingleBlockImplicitTerminator,
 )
@@ -34,16 +32,7 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl.utils.type import get_element_type_or_self, have_compatible_shape
 
 from .ops import ReturnOp
-
-
-class RecursivelySpeculatableIfAllInputsStatic(ConditionallySpeculatable):
-    @classmethod
-    def is_speculatable(cls, op: Operation):
-        inputs_static = all(
-            isinstance(operand_type, TensorType) and operand_type.has_static_shape()
-            for operand_type in op.operand_types
-        )
-        return inputs_static and RecursivelySpeculatable.is_speculatable(op)
+from .traits import RecursivelySpeculatableIfAllInputsStatic
 
 
 def _parse_reduce_operand_pairs(
