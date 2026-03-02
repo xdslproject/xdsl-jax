@@ -71,6 +71,7 @@ from .ops import (
     ReturnOp,
     TransposeOp,
 )
+from .reduction_ops import ReduceOp
 
 StableHLO = Dialect(
     "stablehlo",
@@ -123,6 +124,8 @@ StableHLO = Dialect(
         IfOp,
         OptimizationBarrierOp,
         WhileOp,
+        # Reduction operations
+        ReduceOp,
         # Other operations
         AfterAllOp,
         BitcastConvertOp,
