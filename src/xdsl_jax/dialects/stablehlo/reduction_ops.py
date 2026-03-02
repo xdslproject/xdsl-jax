@@ -32,7 +32,7 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl.utils.type import get_element_type_or_self, have_compatible_shape
 
 from .ops import ReturnOp
-from .traits import RecursivelySpeculatableIfAllInputsStatic
+from .traits import RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput
 
 
 def _parse_reduce_operand_pairs(
@@ -319,7 +319,7 @@ class ReduceOp(IRDLOperation):
 
     traits = traits_def(
         RecursiveMemoryEffect(),
-        RecursivelySpeculatableIfAllInputsStatic(),
+        RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput(),
         SingleBlockImplicitTerminator(ReturnOp),
     )
 
