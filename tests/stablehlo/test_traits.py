@@ -30,6 +30,12 @@ class TensorCompatOp(IRDLOperation):
     res = result_def(AnyTensorType)
 
 
+@irdl_op_definition
+class EmptyCompatOp(IRDLOperation):
+    name = "test.empty_compat"
+    traits = traits_def(CompatibleOperandsAndResultType())
+
+
 def test_compatible_operands_and_result_type_pass():
     operand1 = create_ssa_value(TensorType(i32, [2, 3]))
     operand2 = create_ssa_value(TensorType(i32, [2, DYNAMIC_INDEX]))
@@ -59,5 +65,13 @@ def test_compatible_operands_and_result_type_element_mismatch():
     )
     with pytest.raises(
         VerifyException, match="requires compatible types for all operands/results"
+    ):
+        op.verify()
+
+
+def test_compatible_operands_and_result_type_requires_operand_or_result():
+    op = EmptyCompatOp.create()
+    with pytest.raises(
+        VerifyException, match="requires at least one operand or result"
     ):
         op.verify()
