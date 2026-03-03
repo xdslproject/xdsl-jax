@@ -38,6 +38,11 @@ from .traits import RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput
 def _parse_reduce_operand_pairs(
     parser: Parser,
 ) -> tuple[tuple[UnresolvedOperand, UnresolvedOperand], ...]:
+    """Parse the operand pairs of the reduce operation to the parser.
+    Specified as:
+    `(operand init: init_operand), (operand2 init: init2), ...`
+    """
+
     def parse_operand_pair() -> tuple[UnresolvedOperand, UnresolvedOperand]:
         parser.parse_punctuation("(")
         operand = parser.parse_unresolved_operand()
@@ -55,6 +60,10 @@ def _parse_reduce_operand_pairs(
 def _parse_reduce_dimensions(
     parser: Parser,
 ) -> list[int]:
+    """Parse the dimensions of the reduce operation to the parser.
+    Specified as:
+    `across dimensions = [dim0, dim1, ...]`
+    """
     parser.parse_keyword("across")
     parser.parse_keyword("dimensions")
     parser.parse_punctuation("=")
@@ -65,6 +74,10 @@ def _parse_reduce_dimensions(
 
 
 def _parse_reduce_reducer_args(parser: Parser) -> tuple[Parser.Argument, ...]:
+    """Parse the reducer arguments of the reduce operation to the parser.
+    Specified as:
+    `(arg : type, arg : type) for each pair`
+    """
     reducer_args: list[Parser.Argument] = []
     while parser.parse_optional_punctuation("(") is not None:
         arg0 = parser.parse_argument(expect_type=True)
@@ -80,6 +93,11 @@ def _print_reduce_operand_pairs(
     inputs: Sequence[SSAValue],
     init_values: Sequence[SSAValue],
 ) -> None:
+    """Print the operand pairs of the reduce operation to the printer.
+    Specified as:
+    `(operand init: init_operand), (operand2 init: init2), ...`
+    """
+
     def print_operand_pair(pair: tuple[SSAValue, SSAValue]) -> None:
         with printer.in_parens():
             printer.print_ssa_value(pair[0])
@@ -94,6 +112,10 @@ def _print_reduce_dimensions_and_attrs(
     dimensions: DenseArrayBase | None,
     attributes: Mapping[str, Attribute],
 ) -> None:
+    """Print the dimensions and attributes of the reduce operation to the printer.
+    Specified as:
+    `across dimensions = [dim0, dim1, ...]`
+    """
     printer.print_string(" across dimensions = [")
     if dimensions is None:
         dims: tuple[int, ...] = ()
@@ -112,6 +134,7 @@ def _print_reduce_function_type(
     init_values: Sequence[SSAValue],
     results: Sequence[SSAValue],
 ) -> None:
+    """Print the function type of the reduce operation to the printer."""
     printer.print_string(" : ")
     operand_types = [v.type for v in inputs] + [v.type for v in init_values]
     result_types = [r.type for r in results]
@@ -123,6 +146,10 @@ def _print_reduce_reducer(
     body: Region,
     num_pairs: int,
 ) -> None:
+    """Print the reducer region of the reduce operation to the printer.
+    Specified as:
+    `reducer (arg : type, arg : type) for each pair`
+    """
     printer.print_string("\nreducer ")
     block = body.blocks[0]
 
@@ -143,11 +170,14 @@ def _verify_reduce_counts(
     init_values: Sequence[SSAValue],
     result: Sequence[SSAValue],
 ) -> int:
+    """Verify the number of input/init_value pairs to be the same according
+    to the StableHLO specification. Specified as:
+    (C3) `size(inputs) = size(init_values) = size(results) = N`
+    """
     num_pairs = len(inputs)
     if num_pairs == 0:
         raise VerifyException("Reduce op expects at least one input/init_value pair")
 
-    # (C3) size(inputs) = size(init_values) = size(results) = N
     if len(init_values) != num_pairs or len(result) != num_pairs:
         raise VerifyException(
             "Reduce op requires the same number of inputs, init_values, and results"
@@ -159,7 +189,10 @@ def _verify_reduce_counts(
 def _verify_reduce_input_shapes(
     input_types: Sequence[TensorType[Attribute]],
 ) -> tuple[tuple[int, ...], int]:
-    # (C1) same(shape(inputs...))
+    """Verify all inputs to have the compatible shape according
+    to the StableHLO specification. Specified as:
+    (C1) `same(shape(inputs))`
+    """
     first_input_type = input_types[0]
     for in_type in input_types[1:]:
         if not have_compatible_shape(first_input_type, in_type):
@@ -170,8 +203,11 @@ def _verify_reduce_input_shapes(
 
 
 def _verify_reduce_dimensions(dims: Sequence[int], rank: int) -> None:
-    # (C4) 0 <= dimensions < rank(inputs[0])
-    # (C5) is_unique(dimensions)
+    """Verify the dimensions of the reduce operation to have the correct dimensions
+    according to the StableHLO specification. Specified as:
+    (C4) `0 <= dimensions < rank(inputs[0])`
+    (C5) `is_unique(dimensions)`
+    """
     if len(set(dims)) != len(dims):
         raise VerifyException(f"Reduce dimensions must be unique, got {dims}")
     for dim in dims:
@@ -185,7 +221,10 @@ def _verify_reduce_init_values(
     init_types: Sequence[TensorType[Attribute]],
     input_elem_types: Sequence[Attribute],
 ) -> None:
-    # (C2) element_type(inputs...) = element_type(init_values...)
+    """Verify the init values of the reduce operation to have the correct element
+    type according to the StableHLO specification. Specified as:
+    (C2) `element_type(inputs) = element_type(init_values)`
+    """
     for idx, (init_type, input_elem_type) in enumerate(
         zip(init_types, input_elem_types)
     ):
@@ -206,7 +245,13 @@ def _verify_reduce_results(
     dims: Sequence[int],
     input_elem_types: Sequence[Attribute],
 ) -> None:
-    # (C7) shape(results...) = shape(inputs...) without dimensions
+    """Verify the results of the reduce operation to have the correct shape and
+    element type according to the StableHLO specification. Specified as:
+    (C7) `shape(results) = shape(inputs)` except that the dimension
+    sizes of inputs corresponding to dimensions are not included.
+    (C8) `element_type(results[i]) = Ei` for all `i` in `[0,N)`.
+    where `Ei` is the element type of the input tensors.
+    """
     dims_set = set(dims)
     expected_shape = tuple(
         dim for i, dim in enumerate(input_shape) if i not in dims_set
@@ -217,8 +262,6 @@ def _verify_reduce_results(
                 "Reduce result shape mismatch at index "
                 f"{idx}: expected {expected_shape}, got {res_type.get_shape()}"
             )
-
-        # (C8) element_type(results[i]) = Ei
         if get_element_type_or_self(res_type) != input_elem_types[idx]:
             raise VerifyException(
                 "Reduce result element types must match input element types "
@@ -231,7 +274,12 @@ def _verify_reduce_body(
     num_pairs: int,
     input_elem_types: Sequence[Attribute],
 ) -> None:
-    # (C6) body type: (tensor<Ei>..., tensor<Ei>...) -> tensor<Ei>...
+    """Verify the reducer region of the reduce operation to have the correct
+    body type according to the StableHLO specification. Specified as:
+    `(tensor<E0>, ..., tensor<EN-1>, tensor<E0>, ...,tensor<EN-1>)`
+    `-> (tensor<E0>, ..., tensor<EN-1>)`
+    where `Ei` is the element type of the input tensors.
+    """
     block = body.blocks[0]
     if len(block.args) != 2 * num_pairs:
         raise VerifyException(
