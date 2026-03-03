@@ -2,9 +2,16 @@
 Custom directives for the StableHLO dialect.
 """
 
+import re
 from typing import cast
 
-from xdsl.dialects.builtin import ComplexType, DenseIntOrFPElementsAttr, TensorType
+from xdsl.dialects.builtin import (
+    ComplexType,
+    DenseIntOrFPElementsAttr,
+    IntegerAttr,
+    TensorType,
+    i32,
+)
 from xdsl.ir import Attribute
 from xdsl.irdl import IRDLOperation
 from xdsl.irdl.declarative_assembly_format import (
@@ -191,3 +198,33 @@ class PairwiseOpType(CustomDirective):
         operand_types = self.operand_types.get(op)
         state.print_whitespace(printer)
         printer.print_list(operand_types, printer.print_attribute)
+
+
+@irdl_custom_directive
+class ExponentMantissa(CustomDirective):
+    """
+    Custom directive for stablehlo.reduce_precision that prints and parses the
+    exponent and mantissa attributes.
+    """
+
+    exponent: AttributeVariable
+    mantissa: AttributeVariable
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        exp_man = parser.parse_identifier()
+        if not (match := re.fullmatch(r"e([0-9]+)m([0-9]+)", exp_man)):
+            parser.raise_error(
+                f"expected exponent mantissa in format e#m#, saw {exp_man}"
+            )
+
+        exponent, mantissa = map(int, match.groups())
+        self.exponent.set(state, IntegerAttr(exponent, i32))
+        self.mantissa.set(state, IntegerAttr(mantissa, i32))
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        exponent_attr = cast(IntegerAttr, self.exponent.get(op))
+        mantissa_attr = cast(IntegerAttr, self.mantissa.get(op))
+
+        state.print_whitespace(printer)
+        printer.print_string(f"e{exponent_attr.value.data}m{mantissa_attr.value.data}")

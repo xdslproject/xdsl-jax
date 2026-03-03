@@ -4,6 +4,7 @@
 %pred = "test.op"() : () -> tensor<i1>
 %t0 = "test.op"() : () -> tensor<i32>
 %tf32 = "test.op"() : () -> tensor<f32>
+%tf64 = "test.op"() : () -> tensor<f64>
 %t5f32 = "test.op"() : () -> tensor<5xf32>
 %tcomplex = "test.op"() : () -> tensor<complex<f32>>
 
@@ -329,3 +330,8 @@ cond {
 }) {
   dimensions = array<i64: 0, 1>
 } : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
+
+
+// CHECK: %reduce_precision = stablehlo.reduce_precision %tf64, format = e5m10 : tensor<f64>
+// CHECK-GENERIC: %reduce_precision = "stablehlo.reduce_precision"(%tf64) {exponent_bits = 5 : i32, mantissa_bits = 10 : i32} : (tensor<f64>) -> tensor<f64>
+%reduce_precision = stablehlo.reduce_precision %tf64, format = e5m10 : tensor<f64>
