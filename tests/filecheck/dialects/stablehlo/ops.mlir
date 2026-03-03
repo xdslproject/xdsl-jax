@@ -350,3 +350,12 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
   %reduce_add = stablehlo.add %reduce_arg0, %reduce_arg1 : tensor<i64>
   stablehlo.return %reduce_add : tensor<i64>
 }
+
+// CHECK: %custom_call = stablehlo.custom_call @foo(%t5f32) {
+// CHECK-SAME: api_version = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
+// CHECK-SAME: output_operand_aliases = []} : (tensor<5xf32>) -> tensor<5xf32>
+// CHECK-GENERIC: %custom_call = "stablehlo.custom_call"(%t5f32) <{call_target_name = "foo", api_version = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>, output_operand_aliases = [], has_side_effect = false}> : (tensor<5xf32>) -> tensor<5xf32>
+%custom_call = stablehlo.custom_call @foo(%t5f32) {
+  api_version = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>,
+  output_operand_aliases = []
+} : (tensor<5xf32>) -> tensor<5xf32>

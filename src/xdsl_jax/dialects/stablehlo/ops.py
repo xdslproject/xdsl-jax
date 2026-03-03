@@ -11,18 +11,27 @@ from typing import cast
 
 from xdsl.dialects.builtin import (
     AnyTensorType,
+    ArrayAttr,
+    BoolAttr,
     DenseArrayBase,
+    DenseIntElementsAttr,
     DenseIntOrFPElementsAttr,
+    DictionaryAttr,
+    FlatSymbolRefAttr,
+    StringAttr,
     TensorType,
     i64,
 )
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
+    AnyAttr,
     IRDLOperation,
+    ParsePropInAttrDict,
     attr_def,
     irdl_op_definition,
     operand_def,
     opt_prop_def,
+    prop_def,
     result_def,
     traits_def,
     var_operand_def,
@@ -33,6 +42,7 @@ from xdsl.traits import (
     ConditionallySpeculatable,
     ConstantLike,
     IsTerminator,
+    MemoryEffect,
     NoMemoryEffect,
     Pure,
     RecursivelySpeculatable,
@@ -47,8 +57,19 @@ from xdsl_jax.xdsl_extras.traits import (
     SameOperandsAndResultShape,
 )
 
-from .attributes import ComparisonDirectionAttr, ComparisonTypeAttr, TokenType
-from .custom_directives import ConstantOpValue, SameOperandsAndResultType
+from .attributes import (
+    ComparisonDirectionAttr,
+    ComparisonTypeAttr,
+    CustomCallApiVersion,
+    CustomCallApiVersionAttr,
+    OutputOperandAlias,
+    TokenType,
+)
+from .custom_directives import (
+    ConstantOpValue,
+    CustomCallTarget,
+    SameOperandsAndResultType,
+)
 from .types import (
     PredTensorType,
     SI32TensorType,
@@ -247,6 +268,65 @@ class ConstantOp(IRDLOperation):
 
     def __init__(self, value: DenseIntOrFPElementsAttr):
         super().__init__(attributes={"value": value}, result_types=(value.type,))
+
+
+@irdl_op_definition
+class CustomCallOp(IRDLOperation):
+    """
+    Encapsulates an implementation-defined operation ``call_target_name`` that
+    takes ``inputs`` and ``called_computations`` and produces ``results``.
+
+    Depending on the API version there are two ways to pass extra bits of static
+    information to the external function:
+    1. Use ``API_VERSION_TYPED_FFI`` which allows passing a dictionary attribute.
+    2. Use a previous API version with a ``StringAttr`` to encode backend config.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#custom_call
+
+    Example:
+    ```mlir
+    %results = stablehlo.custom_call @foo(%input0) {
+      backend_config = {bar = 42 : i32},
+      api_version = 4 : i32,
+      called_computations = [@foo]
+    } : (tensor<f64>) -> tensor<f64>
+    ```
+    """
+
+    name = "stablehlo.custom_call"
+
+    inputs = var_operand_def(AnyAttr())
+    call_target_name = prop_def(StringAttr)
+    has_side_effect = prop_def(BoolAttr, default_value=BoolAttr.from_bool(False))
+    backend_config = opt_prop_def(DictionaryAttr | StringAttr)
+    api_version = prop_def(
+        CustomCallApiVersionAttr,
+        default_value=CustomCallApiVersionAttr(
+            CustomCallApiVersion.API_VERSION_ORIGINAL
+        ),
+    )
+    called_computations = opt_prop_def(
+        ArrayAttr[FlatSymbolRefAttr], default_value=ArrayAttr([])
+    )
+    operand_layouts = opt_prop_def(ArrayAttr[DenseIntElementsAttr])
+    result_layouts = opt_prop_def(ArrayAttr[DenseIntElementsAttr])
+    output_operand_aliases = prop_def(ArrayAttr[OutputOperandAlias])
+
+    result = var_result_def(AnyAttr())
+
+    traits = traits_def(
+        MemoryEffect(),
+    )
+
+    irdl_options = (ParsePropInAttrDict(),)
+
+    assembly_format = (
+        "custom<CustomCallTarget>($call_target_name) `(` $inputs `)`"
+        "attr-dict `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (CustomCallTarget,)
 
 
 @irdl_op_definition
