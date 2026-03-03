@@ -350,3 +350,7 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
   %reduce_add = stablehlo.add %reduce_arg0, %reduce_arg1 : tensor<i64>
   stablehlo.return %reduce_add : tensor<i64>
 }
+
+// CHECK: %select = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
+// CHECK-GENERIC: %select = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+%select = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>

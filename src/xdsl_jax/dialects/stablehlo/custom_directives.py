@@ -4,7 +4,12 @@ Custom directives for the StableHLO dialect.
 
 from typing import cast
 
-from xdsl.dialects.builtin import ComplexType, DenseIntOrFPElementsAttr, TensorType
+from xdsl.dialects.builtin import (
+    ComplexType,
+    DenseIntOrFPElementsAttr,
+    FunctionType,
+    TensorType,
+)
 from xdsl.ir import Attribute
 from xdsl.irdl import IRDLOperation
 from xdsl.irdl.declarative_assembly_format import (
@@ -191,3 +196,55 @@ class PairwiseOpType(CustomDirective):
         operand_types = self.operand_types.get(op)
         state.print_whitespace(printer)
         printer.print_list(operand_types, printer.print_attribute)
+
+
+@irdl_custom_directive
+class SelectOpType(CustomDirective):
+    """
+    Custom directive for stablehlo.select printing/parsing.
+
+    - Print: If on_true/on_false types match the result type, print `pred, result`.
+      Otherwise print a functional type `(pred, on_true, on_false) -> result`.
+    - Parse: Parse either a list of two types (`pred_type, op_and_result_type`)
+      or a functional type describing all operand/result types.
+    """
+
+    operand_types: TypeDirective
+    result_types: TypeDirective
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        types = parser.parse_comma_separated_list(
+            parser.Delimiter.NONE, parser.parse_type
+        )
+
+        if len(types) == 2:
+            pred_type, op_result_type = types
+            self.operand_types.set(state, (pred_type, op_result_type, op_result_type))
+            self.result_types.set(state, (op_result_type,))
+            return True
+
+        if len(types) == 1 and isa(types[0], FunctionType):
+            functional_type = FunctionalTypeDirective(
+                self.operand_types.inner, self.result_types.inner
+            )
+            if functional_type.parse(parser, state):
+                return True
+        parser.raise_error("expected functional type or list of two types")
+        return False
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        operand_types = self.operand_types.get(op)
+        result_types = self.result_types.get(op)
+
+        on_true_type, on_false_type = operand_types[1:]
+        result_type = result_types[0]
+
+        state.print_whitespace(printer)
+
+        if on_true_type != result_type or on_false_type != result_type:
+            printer.print_function_type(operand_types, result_types)
+            return
+
+        printer.print_attribute(operand_types[0])
+        printer.print_string(", ")
+        printer.print_attribute(result_type)

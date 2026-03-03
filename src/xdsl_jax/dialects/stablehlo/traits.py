@@ -28,3 +28,12 @@ class RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput(
             if result_dim != DYNAMIC_INDEX and input_shape[idx] == DYNAMIC_INDEX:
                 return False
         return RecursivelySpeculatable.is_speculatable(op)
+
+
+class SpeculatableIfAllInputsStatic(ConditionallySpeculatable):
+    @classmethod
+    def is_speculatable(cls, op: Operation):
+        return all(
+            isinstance(operand_type, TensorType) and operand_type.has_static_shape()
+            for operand_type in op.operand_types
+        )
