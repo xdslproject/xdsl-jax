@@ -23,6 +23,7 @@ from xdsl_jax.xdsl_extras import (
 )
 
 from .custom_directives import ComplexOpType, SameOperandsAndResultType
+from .traits import CompatibleOperandsAndResultType
 from .types import (
     ComplexTensorType,
     Float32Or64TensorType,
@@ -115,6 +116,7 @@ class AndOp(ElementwiseBinaryOperation[PredOrIntTensorType]):
 
     traits = traits_def(
         Commutative(),
+        CompatibleOperandsAndResultType(),
     )
 
 
@@ -132,6 +134,8 @@ class Atan2Op(ElementwiseBinaryOperation[FloatOrComplexTensorType]):
     """
 
     name = "stablehlo.atan2"
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -180,6 +184,8 @@ class DivideOp(ElementwiseBinaryOperation[IntOrFloatOrComplexTensorType]):
 
     name = "stablehlo.divide"
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class MaximumOp(ElementwiseBinaryOperation[AnyTensorType]):
@@ -200,6 +206,7 @@ class MaximumOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     traits = traits_def(
         Commutative(),
+        CompatibleOperandsAndResultType(),
     )
 
 
@@ -222,6 +229,7 @@ class MinimumOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     traits = traits_def(
         Commutative(),
+        CompatibleOperandsAndResultType(),
     )
 
 
@@ -245,6 +253,7 @@ class MultiplyOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     traits = traits_def(
         Commutative(),
+        CompatibleOperandsAndResultType(),
     )
 
 
@@ -264,6 +273,7 @@ class OrOp(ElementwiseBinaryOperation[IntegerTensorType]):
 
     traits = traits_def(
         Commutative(),
+        CompatibleOperandsAndResultType(),
     )
 
 
@@ -284,6 +294,10 @@ class PowerOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     name = "stablehlo.power"
 
+    traits = traits_def(
+        CompatibleOperandsAndResultType(),
+    )
+
 
 @irdl_op_definition
 class RemainderOp(ElementwiseBinaryOperation[AnyTensorType]):
@@ -302,6 +316,10 @@ class RemainderOp(ElementwiseBinaryOperation[AnyTensorType]):
 
     name = "stablehlo.remainder"
 
+    traits = traits_def(
+        CompatibleOperandsAndResultType(),
+    )
+
 
 @irdl_op_definition
 class ShiftLeftOp(ElementwiseBinaryOperation[IntegerTensorType]):
@@ -313,6 +331,10 @@ class ShiftLeftOp(ElementwiseBinaryOperation[IntegerTensorType]):
     """
 
     name = "stablehlo.shift_left"
+
+    traits = traits_def(
+        CompatibleOperandsAndResultType(),
+    )
 
 
 @irdl_op_definition
@@ -326,6 +348,10 @@ class ShiftRightArithmeticOp(ElementwiseBinaryOperation[IntegerTensorType]):
 
     name = "stablehlo.shift_right_arithmetic"
 
+    traits = traits_def(
+        CompatibleOperandsAndResultType(),
+    )
+
 
 @irdl_op_definition
 class ShiftRightLogicalOp(ElementwiseBinaryOperation[IntegerTensorType]):
@@ -337,6 +363,10 @@ class ShiftRightLogicalOp(ElementwiseBinaryOperation[IntegerTensorType]):
     """
 
     name = "stablehlo.shift_right_logical"
+
+    traits = traits_def(
+        CompatibleOperandsAndResultType(),
+    )
 
 
 @irdl_op_definition
@@ -356,6 +386,10 @@ class SubtractOp(ElementwiseBinaryOperation[IntOrFloatOrComplexTensorType]):
 
     name = "stablehlo.subtract"
 
+    traits = traits_def(
+        CompatibleOperandsAndResultType(),
+    )
+
 
 @irdl_op_definition
 class XorOp(ElementwiseBinaryOperation[IntegerTensorType]):
@@ -373,4 +407,5 @@ class XorOp(ElementwiseBinaryOperation[IntegerTensorType]):
 
     traits = traits_def(
         Commutative(),
+        CompatibleOperandsAndResultType(),
     )
