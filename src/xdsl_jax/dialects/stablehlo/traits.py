@@ -23,6 +23,24 @@ def _is_compatible(lhs: Attribute, rhs: Attribute) -> bool:
     return _is_compatible_element_type(lhs, rhs)
 
 
+def _static_output_dim_requires_static_input(op: Operation) -> bool:
+    """Verify that the static output dimension requires the static input dimension."""
+    if not op.operands or not op.results:
+        return False
+    input_type = cast(TensorType, op.operand_types[0])
+    result_type = cast(TensorType, op.result_types[0])
+
+    input_shape = input_type.get_shape()
+    result_shape = result_type.get_shape()
+    if len(input_shape) != len(result_shape):
+        return False
+
+    for idx, result_dim in enumerate(result_shape):
+        if result_dim != DYNAMIC_INDEX and input_shape[idx] == DYNAMIC_INDEX:
+            return False
+    return True
+
+
 class CompatibleOperandsAndResultType(OpTrait):
     def verify(self, op: Operation) -> None:
         """Verify that the operation has compatible types for all operands/results."""
@@ -50,17 +68,12 @@ class RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput(
 ):
     @classmethod
     def is_speculatable(cls, op: Operation):
-        if not op.operands or not op.results:
-            return False
-        input_type = cast(TensorType, op.operand_types[0])
-        result_type = cast(TensorType, op.result_types[0])
+        return _static_output_dim_requires_static_input(
+            op
+        ) and RecursivelySpeculatable.is_speculatable(op)
 
-        input_shape = input_type.get_shape()
-        result_shape = result_type.get_shape()
-        if len(input_shape) != len(result_shape):
-            return False
 
-        for idx, result_dim in enumerate(result_shape):
-            if result_dim != DYNAMIC_INDEX and input_shape[idx] == DYNAMIC_INDEX:
-                return False
-        return RecursivelySpeculatable.is_speculatable(op)
+class SpeculatableIfStaticDimInOutputIsStaticInInput(ConditionallySpeculatable):
+    @classmethod
+    def is_speculatable(cls, op: Operation):
+        return _static_output_dim_requires_static_input(op)
