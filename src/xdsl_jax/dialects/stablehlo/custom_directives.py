@@ -7,10 +7,13 @@ from typing import cast
 
 from xdsl.dialects.builtin import (
     ComplexType,
+    DenseArrayBase,
     DenseIntOrFPElementsAttr,
     IntegerAttr,
+    IntegerType,
     TensorType,
     i32,
+    i64,
 )
 from xdsl.ir import Attribute
 from xdsl.irdl import IRDLOperation
@@ -230,3 +233,73 @@ class ExponentMantissa(CustomDirective):
         printer.print_string(
             f"e{exponent_attr.value.data:d}m{mantissa_attr.value.data:d}"
         )
+
+
+@irdl_custom_directive
+class SliceRanges(CustomDirective):
+    """
+    Custom directive for stablehlo.slice that prints and parses the start indices,
+    limit indices and strides attributes.
+
+    Format: `[start:limit[:stride], ...]` — stride defaults to 1 if omitted.
+    """
+
+    start_indices: AttributeVariable
+    limit_indices: AttributeVariable
+    strides: AttributeVariable
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        def parse_range() -> tuple[int, int, int]:
+            start = parser.parse_integer()
+            parser.parse_punctuation(":")
+            limit = parser.parse_integer()
+            if parser.parse_optional_punctuation(":") is not None:
+                stride = parser.parse_integer()
+            else:
+                stride = 1
+            return start, limit, stride
+
+        ranges = parser.parse_comma_separated_list(parser.Delimiter.SQUARE, parse_range)
+        start, limit, stride = zip(*ranges) if ranges else ((), (), ())
+        self.start_indices.set(state, DenseArrayBase.from_list(i64, start))
+        self.limit_indices.set(state, DenseArrayBase.from_list(i64, limit))
+        self.strides.set(state, DenseArrayBase.from_list(i64, stride))
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        start_indices = cast(
+            DenseArrayBase[IntegerType], self.start_indices.get(op)
+        ).get_values()
+        limit_indices = cast(
+            DenseArrayBase[IntegerType], self.limit_indices.get(op)
+        ).get_values()
+        strides_vals = cast(
+            DenseArrayBase[IntegerType], self.strides.get(op)
+        ).get_values()
+        state.print_whitespace(printer)
+        with printer.in_square_brackets():
+            # If we're printing invalid IR, this can't be parsed back!
+            if len(start_indices) != len(limit_indices) or len(start_indices) != len(
+                strides_vals
+            ):
+                slice_ranges_string = ""
+                slice_ranges_string += "start_indices: " + ", ".join(
+                    str(x) for x in start_indices
+                )
+                slice_ranges_string += ", limit_indices: " + ", ".join(
+                    str(x) for x in limit_indices
+                )
+                slice_ranges_string += ", strides: " + ", ".join(
+                    str(x) for x in strides_vals
+                )
+                printer.print_string(slice_ranges_string)
+            else:
+
+                def print_range(values: tuple[int, int, int]) -> None:
+                    start, limit, stride = values
+                    suffix = "" if stride == 1 else f":{stride}"
+                    printer.print_string(f"{start}:{limit}{suffix}")
+
+                printer.print_list(
+                    list(zip(start_indices, limit_indices, strides_vals)), print_range
+                )
