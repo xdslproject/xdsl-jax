@@ -25,6 +25,7 @@ from xdsl_jax.xdsl_extras.traits import (
 
 from .attributes import ResultAccuracyMode, ResultAccuracyModeAttr
 from .custom_directives import SameOperandsAndResultType
+from .traits import CompatibleOperandsAndResultType
 from .types import (
     FloatOrComplexTensorType,
     FloatTensorType,
@@ -115,6 +116,8 @@ class CbrtOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class CeilOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
@@ -179,6 +182,8 @@ class CosineOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class CountLeadingZerosOp(
@@ -194,6 +199,8 @@ class CountLeadingZerosOp(
     """
 
     name = "stablehlo.count_leading_zeros"
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -221,6 +228,8 @@ class ExponentialMinusOneOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class ExponentialOp(
@@ -247,6 +256,8 @@ class ExponentialOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
@@ -264,6 +275,8 @@ class FloorOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorType]):
     """
 
     name = "stablehlo.floor"
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -327,6 +340,8 @@ class LogisticOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class LogOp(
@@ -352,6 +367,8 @@ class LogOp(
     )
 
     irdl_options = (ParsePropInAttrDict(),)
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -379,6 +396,8 @@ class LogPlusOneOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class NegateOp(
@@ -401,6 +420,8 @@ class NegateOp(
 
     name = "stablehlo.negate"
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class NotOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
@@ -416,6 +437,8 @@ class NotOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
 
     name = "stablehlo.not"
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class PopcntOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
@@ -427,6 +450,8 @@ class PopcntOp(ElementwiseUnaryOperation[IntegerTensorType, IntegerTensorType]):
     """
 
     name = "stablehlo.popcnt"
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -483,6 +508,8 @@ class RoundNearestEvenOp(ElementwiseUnaryOperation[FloatTensorType, FloatTensorT
 
     name = "stablehlo.round_nearest_even"
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class RsqrtOp(
@@ -510,6 +537,8 @@ class RsqrtOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class SignOp(
@@ -531,6 +560,8 @@ class SignOp(
     """
 
     name = "stablehlo.sign"
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -558,6 +589,8 @@ class SineOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class SqrtOp(
@@ -583,6 +616,8 @@ class SqrtOp(
     )
 
     irdl_options = (ParsePropInAttrDict(),)
+
+    traits = traits_def(CompatibleOperandsAndResultType())
 
 
 @irdl_op_definition
@@ -610,6 +645,8 @@ class TanOp(
 
     irdl_options = (ParsePropInAttrDict(),)
 
+    traits = traits_def(CompatibleOperandsAndResultType())
+
 
 @irdl_op_definition
 class TanhOp(
@@ -635,3 +672,5 @@ class TanhOp(
     )
 
     irdl_options = (ParsePropInAttrDict(),)
+
+    traits = traits_def(CompatibleOperandsAndResultType())
