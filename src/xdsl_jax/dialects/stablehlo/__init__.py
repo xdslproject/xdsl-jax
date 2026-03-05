@@ -68,6 +68,7 @@ from .ops import (
     ConstantOp,
     MapOp,
     PadOp,
+    ReducePrecisionOp,
     ReturnOp,
     TransposeOp,
 )
@@ -137,6 +138,7 @@ StableHLO = Dialect(
         ConstantOp,
         MapOp,
         PadOp,
+        ReducePrecisionOp,
         ReturnOp,
         TransposeOp,
     ],

@@ -13,7 +13,9 @@ from xdsl.dialects.builtin import (
     AnyTensorType,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
+    IntegerAttr,
     TensorType,
+    i32,
     i64,
 )
 from xdsl.ir import Attribute, Region, SSAValue
@@ -29,6 +31,8 @@ from xdsl.irdl import (
     var_region_def,
     var_result_def,
 )
+from xdsl.irdl.attributes import eq
+from xdsl.irdl.constraints import AtLeast
 from xdsl.traits import (
     ConditionallySpeculatable,
     ConstantLike,
@@ -47,16 +51,18 @@ from xdsl_jax.xdsl_extras.traits import (
     SameOperandsAndResultShape,
 )
 
-from .attributes import (
-    ComparisonDirectionAttr,
-    ComparisonTypeAttr,
-    TokenType,
-)
+from .attributes import ComparisonDirectionAttr, ComparisonTypeAttr, TokenType
 from .custom_directives import (
     ConstantOpValue,
+    ExponentMantissa,
     SameOperandsAndResultType,
 )
+from .traits import (
+    CompatibleOperandsAndResultType,
+    SpeculatableIfStaticDimInOutputIsStaticInInput,
+)
 from .types import (
+    FloatTensorType,
     PredTensorType,
     SI32TensorType,
     TensorOrTokenOrBufferType,
@@ -485,3 +491,43 @@ class PadOp(IRDLOperation):
                     f"with {pad_low}, {pad_high}, {inner_pad} "
                     f"as low, high and inner padding values"
                 )
+
+
+@irdl_op_definition
+class ReducePrecisionOp(IRDLOperation):
+    """
+    Performs element-wise conversion of `operand` to another floating-point type
+    that uses `exponent_bits` and `mantissa_bits` and back to the original
+    floating-point type and produces an `output` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#reduce_precision
+
+    Example:
+    ```mlir
+    %output = stablehlo.reduce_precision %operand, format = e5m10 : tensor<6xf64>
+    ```
+    """
+
+    name = "stablehlo.reduce_precision"
+
+    assembly_format = (
+        "$operand `,` `format` `=` "
+        "custom<ExponentMantissa>($exponent_bits, $mantissa_bits)"
+        "attr-dict `:` custom<SameOperandsAndResultType>(type($operand), type($result))"
+    )
+
+    custom_directives = (ExponentMantissa, SameOperandsAndResultType)
+
+    operand = operand_def(FloatTensorType)
+    result = result_def(FloatTensorType)
+
+    exponent_bits = attr_def(IntegerAttr.constr(type=eq(i32), value=AtLeast(1)))
+    mantissa_bits = attr_def(IntegerAttr.constr(type=eq(i32), value=AtLeast(0)))
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        Elementwise(),
+        CompatibleOperandsAndResultType(),
+        SpeculatableIfStaticDimInOutputIsStaticInInput(),
+    )
