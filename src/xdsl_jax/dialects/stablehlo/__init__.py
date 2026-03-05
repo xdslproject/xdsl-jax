@@ -3,7 +3,6 @@ from xdsl.ir import Dialect
 from .attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
-    CustomCallApiVersionAttr,
     DotAttr,
     GatherDimensionNumbers,
     OutputOperandAlias,
@@ -59,6 +58,7 @@ from .elementwise_unary_ops import (
     TanhOp,
     TanOp,
 )
+from .extensibility import CustomCallOp
 from .ops import (
     AfterAllOp,
     BitcastConvertOp,
@@ -66,7 +66,6 @@ from .ops import (
     ClampOp,
     CompareOp,
     ConstantOp,
-    CustomCallOp,
     MapOp,
     PadOp,
     ReturnOp,
@@ -127,6 +126,8 @@ StableHLO = Dialect(
         WhileOp,
         # Reduction operations
         ReduceOp,
+        # Extensibility operations
+        CustomCallOp,
         # Other operations
         AfterAllOp,
         BitcastConvertOp,
@@ -134,7 +135,6 @@ StableHLO = Dialect(
         ClampOp,
         CompareOp,
         ConstantOp,
-        CustomCallOp,
         MapOp,
         PadOp,
         ReturnOp,
@@ -143,7 +143,6 @@ StableHLO = Dialect(
     [
         ComparisonDirectionAttr,
         ComparisonTypeAttr,
-        CustomCallApiVersionAttr,
         DotAttr,
         GatherDimensionNumbers,
         OutputOperandAlias,
