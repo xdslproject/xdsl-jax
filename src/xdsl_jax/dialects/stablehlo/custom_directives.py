@@ -7,7 +7,6 @@ from typing import cast
 from xdsl.dialects.builtin import (
     ComplexType,
     DenseIntOrFPElementsAttr,
-    FunctionType,
     TensorType,
 )
 from xdsl.ir import Attribute
@@ -213,6 +212,12 @@ class SelectOpType(CustomDirective):
     result_types: TypeDirective
 
     def parse(self, parser: Parser, state: ParsingState) -> bool:
+        functional_type = FunctionalTypeDirective(
+            self.operand_types.inner, self.result_types.inner
+        )
+        if functional_type.parse(parser, state):
+            return True
+
         types = parser.parse_comma_separated_list(
             parser.Delimiter.NONE, parser.parse_type
         )
@@ -223,12 +228,6 @@ class SelectOpType(CustomDirective):
             self.result_types.set(state, (op_result_type,))
             return True
 
-        if len(types) == 1 and isa(types[0], FunctionType):
-            functional_type = FunctionalTypeDirective(
-                self.operand_types.inner, self.result_types.inner
-            )
-            if functional_type.parse(parser, state):
-                return True
         parser.raise_error("expected functional type or list of two types")
         return False
 
