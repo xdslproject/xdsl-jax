@@ -227,4 +227,6 @@ class ExponentMantissa(CustomDirective):
         mantissa_attr = cast(IntegerAttr, self.mantissa.get(op))
 
         state.print_whitespace(printer)
-        printer.print_string(f"e{exponent_attr.value.data:d}m{mantissa_attr.value.data:d}")
+        printer.print_string(
+            f"e{exponent_attr.value.data:d}m{mantissa_attr.value.data:d}"
+        )
