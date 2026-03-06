@@ -11,16 +11,16 @@ from xdsl.utils.exceptions import VerifyException
 from xdsl.utils.type import get_element_type_or_self, have_compatible_shape
 
 
-def _is_compatible_element_type(lhs: Attribute, rhs: Attribute) -> bool:
-    """Verify that the element types of the two types are compatible."""
+def _is_same_element_type(lhs: Attribute, rhs: Attribute) -> bool:
+    """Verify that the element types of the two types are the same."""
     return get_element_type_or_self(lhs) == get_element_type_or_self(rhs)
 
 
 def _is_compatible(lhs: Attribute, rhs: Attribute) -> bool:
     """Verify that the two types are compatible."""
     if isinstance(lhs, ShapedType) and isinstance(rhs, ShapedType):
-        return have_compatible_shape(lhs, rhs) and _is_compatible_element_type(lhs, rhs)
-    return _is_compatible_element_type(lhs, rhs)
+        return have_compatible_shape(lhs, rhs) and _is_same_element_type(lhs, rhs)
+    return _is_same_element_type(lhs, rhs)
 
 
 def _static_output_dim_requires_static_input(op: Operation) -> bool:
