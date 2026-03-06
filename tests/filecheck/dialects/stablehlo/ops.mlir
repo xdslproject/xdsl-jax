@@ -371,3 +371,9 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
 // CHECK: %select_mismatch = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+
+%input1 = "test.op"() : () -> tensor<3x2xi64>
+%input2 = "test.op"() : () -> tensor<1x2xi64>
+// CHECK: %concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+// CHECK-GENERIC: %concatenate = "stablehlo.concatenate"(%input1, %input2) <{dimension = 0 : i64}> : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+%concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>

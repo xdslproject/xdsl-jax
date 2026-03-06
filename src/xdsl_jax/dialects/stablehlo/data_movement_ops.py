@@ -2,14 +2,17 @@
 Data movement operations for the StableHLO dialect.
 """
 
-from xdsl.dialects.builtin import AnyTensorType, DenseArrayBase, i64
+from xdsl.dialects.builtin import AnyTensorType, DenseArrayBase, IntegerAttr, i64
 from xdsl.irdl import (
+    AtLeast,
     IRDLOperation,
+    eq,
     irdl_op_definition,
     operand_def,
     prop_def,
     result_def,
     traits_def,
+    var_operand_def,
 )
 from xdsl.traits import (
     ConditionallySpeculatable,
@@ -21,8 +24,45 @@ from xdsl_jax.xdsl_extras import (
     SameOperandsAndResultElementType,
 )
 
-from .custom_directives import SliceRanges
+from .custom_directives import SliceRanges, VariadicOperandWithAttribute
 from .traits import SpeculatableIfStaticDimInOutputIsStaticInInput
+
+
+@irdl_op_definition
+class ConcatenateOp(IRDLOperation):
+    """
+    Concatenates a variadic number of tensors in ``inputs`` along ``dimension``
+    dimension in the same order as the given arguments and produces a ``result``
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#concatenate
+
+    Example:
+    ```mlir
+    %result = stablehlo.concatenate %input0, %input1, dim = 0
+    : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+    ```
+    """
+
+    name = "stablehlo.concatenate"
+
+    inputs = var_operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+    dimension = prop_def(IntegerAttr.constr(type=eq(i64), value=AtLeast(0)))
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        ConditionallySpeculatable(),
+        SameOperandsAndResultElementType(),
+    )
+
+    assembly_format = (
+        "custom<VariadicOperandWithAttribute>($inputs) "
+        "`dim` `=` $dimension attr-dict `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (VariadicOperandWithAttribute,)
 
 
 @irdl_op_definition
