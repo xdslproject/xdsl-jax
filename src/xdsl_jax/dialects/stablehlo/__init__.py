@@ -13,6 +13,7 @@ from .attributes import (
     TokenType,
 )
 from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
+from .data_movement_ops import SliceOp
 from .elementwise_binary_ops import (
     AddOp,
     AndOp,
@@ -126,6 +127,8 @@ StableHLO = Dialect(
         IfOp,
         OptimizationBarrierOp,
         WhileOp,
+        # Data movement operations
+        SliceOp,
         # Reduction operations
         ReduceOp,
         # Other operations
