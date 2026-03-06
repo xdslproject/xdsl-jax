@@ -77,3 +77,12 @@ class SpeculatableIfStaticDimInOutputIsStaticInInput(ConditionallySpeculatable):
     @classmethod
     def is_speculatable(cls, op: Operation):
         return _static_output_dim_requires_static_input(op)
+
+
+class SpeculatableIfAllInputsStatic(ConditionallySpeculatable):
+    @classmethod
+    def is_speculatable(cls, op: Operation):
+        return all(
+            isinstance(operand_type, TensorType) and operand_type.has_static_shape()
+            for operand_type in op.operand_types
+        )
