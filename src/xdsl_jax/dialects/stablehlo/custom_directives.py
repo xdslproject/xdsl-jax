@@ -10,8 +10,8 @@ from xdsl.dialects.builtin import (
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
     IntegerAttr,
-    StringAttr
     IntegerType,
+    StringAttr,
     TensorType,
     i32,
     i64,

@@ -59,7 +59,7 @@ from .elementwise_unary_ops import (
     TanhOp,
     TanOp,
 )
-from .extensibility import CustomCallOp
+from .extensibility_ops import CustomCallOp
 from .ops import (
     AfterAllOp,
     BitcastConvertOp,
