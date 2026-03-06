@@ -56,7 +56,7 @@ from .custom_directives import (
     ConstantOpValue,
     ExponentMantissa,
     SameOperandsAndResultType,
-    SelectOpType
+    SelectOpType,
 )
 from .traits import (
     CompatibleOperandsAndResultType,

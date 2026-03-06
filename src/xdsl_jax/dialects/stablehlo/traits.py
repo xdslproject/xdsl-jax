@@ -85,3 +85,4 @@ class SpeculatableIfAllInputsStatic(ConditionallySpeculatable):
         return all(
             isinstance(operand_type, TensorType) and operand_type.has_static_shape()
             for operand_type in op.operand_types
+        )
