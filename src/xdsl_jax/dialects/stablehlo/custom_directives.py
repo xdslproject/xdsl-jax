@@ -7,11 +7,14 @@ from typing import cast
 
 from xdsl.dialects.builtin import (
     ComplexType,
+    DenseArrayBase,
     DenseIntOrFPElementsAttr,
     IntegerAttr,
     StringAttr
+    IntegerType,
     TensorType,
     i32,
+    i64,
 )
 from xdsl.ir import Attribute
 from xdsl.irdl import IRDLOperation
@@ -223,6 +226,58 @@ class PairwiseOpType(CustomDirective):
 
 
 @irdl_custom_directive
+class SelectOpType(CustomDirective):
+    """
+    Custom directive for stablehlo.select printing/parsing.
+
+    - Print: If on_true/on_false types match the result type, print `pred, result`.
+      Otherwise print a functional type `(pred, on_true, on_false) -> result`.
+    - Parse: Parse either a list of two types (`pred_type, op_and_result_type`)
+      or a functional type describing all operand/result types.
+    """
+
+    operand_types: TypeDirective
+    result_types: TypeDirective
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        functional_type = FunctionalTypeDirective(
+            self.operand_types.inner, self.result_types.inner
+        )
+        if functional_type.parse(parser, state):
+            return True
+
+        types = parser.parse_comma_separated_list(
+            parser.Delimiter.NONE, parser.parse_type
+        )
+
+        if len(types) == 2:
+            pred_type, op_result_type = types
+            self.operand_types.set(state, (pred_type, op_result_type, op_result_type))
+            self.result_types.set(state, (op_result_type,))
+            return True
+
+        parser.raise_error("expected functional type or list of two types")
+        return False
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        operand_types = self.operand_types.get(op)
+        result_types = self.result_types.get(op)
+
+        on_true_type, on_false_type = operand_types[1:]
+        result_type = result_types[0]
+
+        state.print_whitespace(printer)
+
+        if on_true_type != result_type or on_false_type != result_type:
+            printer.print_function_type(operand_types, result_types)
+            return
+
+        printer.print_attribute(operand_types[0])
+        printer.print_string(", ")
+        printer.print_attribute(result_type)
+
+
+@irdl_custom_directive
 class ExponentMantissa(CustomDirective):
     """
     Custom directive for stablehlo.reduce_precision that prints and parses the
@@ -252,3 +307,73 @@ class ExponentMantissa(CustomDirective):
         printer.print_string(
             f"e{exponent_attr.value.data:d}m{mantissa_attr.value.data:d}"
         )
+
+
+@irdl_custom_directive
+class SliceRanges(CustomDirective):
+    """
+    Custom directive for stablehlo.slice that prints and parses the start indices,
+    limit indices and strides attributes.
+
+    Format: `[start:limit[:stride], ...]` — stride defaults to 1 if omitted.
+    """
+
+    start_indices: AttributeVariable
+    limit_indices: AttributeVariable
+    strides: AttributeVariable
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        def parse_range() -> tuple[int, int, int]:
+            start = parser.parse_integer()
+            parser.parse_punctuation(":")
+            limit = parser.parse_integer()
+            if parser.parse_optional_punctuation(":") is not None:
+                stride = parser.parse_integer()
+            else:
+                stride = 1
+            return start, limit, stride
+
+        ranges = parser.parse_comma_separated_list(parser.Delimiter.SQUARE, parse_range)
+        start, limit, stride = zip(*ranges) if ranges else ((), (), ())
+        self.start_indices.set(state, DenseArrayBase.from_list(i64, start))
+        self.limit_indices.set(state, DenseArrayBase.from_list(i64, limit))
+        self.strides.set(state, DenseArrayBase.from_list(i64, stride))
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        start_indices = cast(
+            DenseArrayBase[IntegerType], self.start_indices.get(op)
+        ).get_values()
+        limit_indices = cast(
+            DenseArrayBase[IntegerType], self.limit_indices.get(op)
+        ).get_values()
+        strides_vals = cast(
+            DenseArrayBase[IntegerType], self.strides.get(op)
+        ).get_values()
+        state.print_whitespace(printer)
+        with printer.in_square_brackets():
+            # If we're printing invalid IR, this can't be parsed back!
+            if len(start_indices) != len(limit_indices) or len(start_indices) != len(
+                strides_vals
+            ):
+                slice_ranges_string = ""
+                slice_ranges_string += "start_indices: " + ", ".join(
+                    str(x) for x in start_indices
+                )
+                slice_ranges_string += ", limit_indices: " + ", ".join(
+                    str(x) for x in limit_indices
+                )
+                slice_ranges_string += ", strides: " + ", ".join(
+                    str(x) for x in strides_vals
+                )
+                printer.print_string(slice_ranges_string)
+            else:
+
+                def print_range(values: tuple[int, int, int]) -> None:
+                    start, limit, stride = values
+                    suffix = "" if stride == 1 else f":{stride}"
+                    printer.print_string(f"{start}:{limit}{suffix}")
+
+                printer.print_list(
+                    list(zip(start_indices, limit_indices, strides_vals)), print_range
+                )

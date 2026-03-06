@@ -56,9 +56,11 @@ from .custom_directives import (
     ConstantOpValue,
     ExponentMantissa,
     SameOperandsAndResultType,
+    SelectOpType,
 )
 from .traits import (
     CompatibleOperandsAndResultType,
+    SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
 from .types import (
@@ -491,6 +493,40 @@ class PadOp(IRDLOperation):
                     f"with {pad_low}, {pad_high}, {inner_pad} "
                     f"as low, high and inner padding values"
                 )
+
+
+@irdl_op_definition
+class SelectOp(IRDLOperation):
+    """
+    Produces a `result` tensor where each element is selected from `on_true` or
+    `on_false` tensor based on the value of the corresponding element of `pred`.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#select
+
+    Example:
+    ```mlir
+    %result = stablehlo.select %pred, %on_true, %on_false : tensor<2xi1>, tensor<2xi32>
+    ```
+    """
+
+    name = "stablehlo.select"
+
+    assembly_format = (
+        "operands attr-dict `:`  custom<SelectOpType>(type(operands), type(results))"
+    )
+
+    pred = operand_def(PredTensorType)
+    on_true = operand_def(AnyTensorType)
+    on_false = operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+
+    custom_directives = (SelectOpType,)
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        SpeculatableIfAllInputsStatic(),
+    )
 
 
 @irdl_op_definition

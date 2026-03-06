@@ -394,3 +394,18 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
                                operand_tuple_indices = [1]>
   ]
 } : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
+
+// CHECK: %[[slice_input:.*]] = "test.op"() : () -> tensor<3x8xi64>
+%slice_input = "test.op"() : () -> tensor<3x8xi64>
+
+// CHECK: %slice = stablehlo.slice %slice_input [1:3, 4:8:2] : (tensor<3x8xi64>) -> tensor<2x2xi64>
+// CHECK-GENERIC: %slice = "stablehlo.slice"(%slice_input) <{start_indices = array<i64: 1, 4>, limit_indices = array<i64: 3, 8>, strides = array<i64: 1, 2>}> : (tensor<3x8xi64>) -> tensor<2x2xi64>
+%slice = stablehlo.slice %slice_input [1:3, 4:8:2] : (tensor<3x8xi64>) -> tensor<2x2xi64>
+
+// CHECK: %select = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
+// CHECK-GENERIC: %select = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+%select = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
+
+// CHECK: %select_mismatch = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
+// CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+%select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
