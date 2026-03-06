@@ -71,6 +71,7 @@ from .ops import (
     PadOp,
     ReducePrecisionOp,
     ReturnOp,
+    SelectOp,
     TransposeOp,
 )
 from .reduction_ops import ReduceOp
@@ -141,6 +142,7 @@ StableHLO = Dialect(
         PadOp,
         ReducePrecisionOp,
         ReturnOp,
+        SelectOp,
         TransposeOp,
     ],
     [
