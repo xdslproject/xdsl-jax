@@ -27,7 +27,10 @@ from xdsl_jax.xdsl_extras import (
 )
 
 from .custom_directives import SliceRanges, VariadicOperandWithAttribute
-from .traits import SpeculatableIfStaticDimInOutputIsStaticInInput
+from .traits import (
+    SpeculatableConcatenate,
+    SpeculatableIfStaticDimInOutputIsStaticInInput,
+)
 from .types import ScalarIntTensorType
 
 
@@ -56,7 +59,7 @@ class ConcatenateOp(IRDLOperation):
 
     traits = traits_def(
         NoMemoryEffect(),
-        ConditionallySpeculatable(),
+        SpeculatableConcatenate(),
         SameOperandsAndResultElementType(),
     )
 
