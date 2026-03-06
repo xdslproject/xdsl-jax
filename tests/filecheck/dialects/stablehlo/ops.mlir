@@ -371,3 +371,16 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
 // CHECK: %select_mismatch = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+
+%input1 = "test.op"() : () -> tensor<3x2xi64>
+%input2 = "test.op"() : () -> tensor<1x2xi64>
+// CHECK: %concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+// CHECK-GENERIC: %concatenate = "stablehlo.concatenate"(%input1, %input2) <{dimension = 0 : i64}> : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+%concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+
+%dyn_operand = "test.op"() : () -> tensor<4x4xi32>
+%start0 = "test.op"() : () -> tensor<i64>
+%start1 = "test.op"() : () -> tensor<i64>
+// CHECK: %dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+// CHECK-GENERIC: %dynamic_slice = "stablehlo.dynamic_slice"(%dyn_operand, %start0, %start1) <{slice_sizes = array<i64: 2, 3>}> : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+%dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
