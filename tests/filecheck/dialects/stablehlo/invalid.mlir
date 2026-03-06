@@ -240,3 +240,27 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
   %val = "test.op"() : () -> tensor<i64>
   stablehlo.return %val : tensor<i64>
 }
+
+// -----
+
+%bcast_operand = "test.op"() : () -> tensor<1x3xi32>
+// CHECK: broadcast_dimensions size (1) does not match operand rank (2)
+%bad_bcast_size = stablehlo.broadcast_in_dim %bcast_operand, dims = [2] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+
+// -----
+
+%bcast_operand2 = "test.op"() : () -> tensor<1x3xi32>
+// CHECK: broadcast_dimensions should not have duplicates
+%bad_bcast_dups = stablehlo.broadcast_in_dim %bcast_operand2, dims = [2, 2] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+
+// -----
+
+%bcast_operand3 = "test.op"() : () -> tensor<1x3xi32>
+// CHECK: broadcast_dimensions contains invalid value 5 for result with rank 3
+%bad_bcast_invalid = stablehlo.broadcast_in_dim %bcast_operand3, dims = [2, 5] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+
+// -----
+
+%bcast_operand4 = "test.op"() : () -> tensor<2x3xi32>
+// CHECK: size of operand dimension 1 (3) is not equal to 1 or size of result dimension 1 (2)
+%bad_bcast_dim_size = stablehlo.broadcast_in_dim %bcast_operand4, dims = [0, 1] : (tensor<2x3xi32>) -> tensor<2x2x2xi32>
