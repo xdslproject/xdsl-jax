@@ -14,6 +14,7 @@ from .attributes import (
 )
 from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
 from .data_movement_ops import SliceOp
+from .dynamism_ops import DynamicBroadcastInDimOp
 from .elementwise_binary_ops import (
     AddOp,
     AndOp,
@@ -129,6 +130,8 @@ StableHLO = Dialect(
         WhileOp,
         # Data movement operations
         SliceOp,
+        # Dynamism operations
+        DynamicBroadcastInDimOp,
         # Reduction operations
         ReduceOp,
         # Other operations
