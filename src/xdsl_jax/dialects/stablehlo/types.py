@@ -12,6 +12,7 @@ from xdsl.dialects.builtin import (
     ComplexType,
     Float32Type,
     Float64Type,
+    IndexType,
     IntegerType,
     MemRefType,
     Signedness,
@@ -60,3 +61,4 @@ PredOrIntTensorType: TypeAlias = TensorType[PredOrIntType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
 TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
+IntegerOrIndexTensorType: TypeAlias = TensorType[IntegerType | IndexType]
