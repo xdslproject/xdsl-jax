@@ -71,11 +71,13 @@ IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
 TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
 DimensionValueType: TypeAlias = IntType | IndexType
-_range_length_constraint = RangeLengthConstraint(
-    constraint=RangeOf(IntAttrConstraint(AnyInt())),
-    length=EqIntConstraint(1),
-)
-_output_dimensions_shape = ArrayAttr.constr(_range_length_constraint)
+# DimensionTensorType is a 1D tensor of dimension values
 DimensionTensorType: IRDLAttrConstraint = TensorType.constr(
-    element_type=DimensionValueType, shape=_output_dimensions_shape
+    element_type=DimensionValueType,
+    shape=ArrayAttr.constr(
+        RangeLengthConstraint(
+            constraint=RangeOf(IntAttrConstraint(AnyInt())),
+            length=EqIntConstraint(1),
+        )
+    ),
 )
