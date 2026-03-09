@@ -22,7 +22,7 @@ from xdsl.dialects.builtin import (
 from xdsl.ir import Attribute
 from xdsl.irdl import (
     AnyInt,
-    IntSetConstraint,
+    EqIntConstraint,
     IRDLAttrConstraint,
     RangeLengthConstraint,
     RangeOf,
@@ -73,9 +73,8 @@ TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
 # ScalarIntTensorType is a 0D tensor of integer values
 _scalar_rank_constraint = RangeLengthConstraint(
     constraint=RangeOf(IntAttrConstraint(AnyInt())),
-    length=IntSetConstraint(frozenset({0})),
+    length=EqIntConstraint(0),
 )
-_scalar_shape = ArrayAttr.constr(_scalar_rank_constraint)
 ScalarIntTensorType: IRDLAttrConstraint = TensorType.constr(
-    element_type=IntType, shape=_scalar_shape
+    element_type=IntType, shape=ArrayAttr.constr(_scalar_rank_constraint)
 )
