@@ -6,6 +6,7 @@ from xdsl.dialects.builtin import (
     AnyTensorType,
     BoolAttr,
     DenseArrayBase,
+    TensorType,
     i64,
 )
 from xdsl.irdl import (
@@ -24,6 +25,7 @@ from xdsl.irdl import (
 from xdsl.traits import (
     ConditionallySpeculatable,
     NoMemoryEffect,
+    RecursivelySpeculatable,
     RecursiveMemoryEffect,
 )
 from xdsl.utils.type import get_element_type_or_self
@@ -36,8 +38,6 @@ from xdsl_jax.xdsl_extras import (
 from .attributes import GatherDimensionNumbers, ScatterDimensionNumbers
 from .custom_directives import SliceRanges
 from .traits import (
-    GatherSpeculatable,
-    ScatterSpeculatable,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
 from .types import IntegerOrIndexTensorType, IntegerTensorType
@@ -78,13 +78,20 @@ class GatherOp(IRDLOperation):
 
     traits = traits_def(
         NoMemoryEffect(),
-        GatherSpeculatable(),
         AllMatchSameOperatorTrait(
             ("operand", "result"),
             lambda x: get_element_type_or_self(x.type),
             "element type",
         ),
     )
+
+    def is_speculatable(self) -> bool:
+        if self.indices_are_sorted:
+            return False
+        return all(
+            isinstance(t, TensorType) and t.has_static_shape()
+            for t in self.operand_types
+        )
 
 
 @irdl_op_definition
@@ -130,10 +137,19 @@ class ScatterOp(IRDLOperation):
 
     traits = traits_def(
         RecursiveMemoryEffect(),
-        ScatterSpeculatable(),
     )
 
     irdl_options = (SameVariadicOperandSize(),)
+
+    def is_speculatable(self) -> bool:
+        if self.unique_indices.value.data or self.indices_are_sorted.value.data:
+            return False
+        if not all(
+            isinstance(t, TensorType) and t.has_static_shape()
+            for t in self.operand_types
+        ):
+            return False
+        return RecursivelySpeculatable.is_speculatable(self)
 
     # TODO: Implement custom verifier for the scatter operation.
 

@@ -4,7 +4,7 @@ Traits specific to the StableHLO dialect.
 
 from typing import cast
 
-from xdsl.dialects.builtin import DYNAMIC_INDEX, IntegerAttr, ShapedType, TensorType
+from xdsl.dialects.builtin import DYNAMIC_INDEX, ShapedType, TensorType
 from xdsl.ir import Attribute, Operation
 from xdsl.traits import ConditionallySpeculatable, OpTrait, RecursivelySpeculatable
 from xdsl.utils.exceptions import VerifyException
@@ -86,38 +86,3 @@ class SpeculatableIfAllInputsStatic(ConditionallySpeculatable):
             isinstance(operand_type, TensorType) and operand_type.has_static_shape()
             for operand_type in op.operand_types
         )
-
-
-class GatherSpeculatable(ConditionallySpeculatable):
-    """Not speculatable when indices_are_sorted is true (UB if indices
-    aren't actually sorted), otherwise speculatable iff all operands
-    have static shapes."""
-
-    @classmethod
-    def is_speculatable(cls, op: Operation):
-        sorted_ = op.properties.get("indices_are_sorted")
-        if isinstance(sorted_, IntegerAttr) and sorted_.value.data:
-            return False
-        return all(
-            isinstance(t, TensorType) and t.has_static_shape() for t in op.operand_types
-        )
-
-
-class ScatterSpeculatable(ConditionallySpeculatable):
-    """Not speculatable when unique_indices or indices_are_sorted is true
-    (UB if indices aren't actually unique/sorted), otherwise recursively
-    speculatable iff all operands have static shapes."""
-
-    @classmethod
-    def is_speculatable(cls, op: Operation):
-        unique = op.properties.get("unique_indices")
-        sorted_ = op.properties.get("indices_are_sorted")
-        assert isinstance(unique, IntegerAttr)
-        assert isinstance(sorted_, IntegerAttr)
-        if unique.value.data or sorted_.value.data:
-            return False
-        if not all(
-            isinstance(t, TensorType) and t.has_static_shape() for t in op.operand_types
-        ):
-            return False
-        return RecursivelySpeculatable.is_speculatable(op)
