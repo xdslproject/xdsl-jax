@@ -71,10 +71,12 @@ TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
 TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
 
 # ScalarIntTensorType is a 0D tensor of integer values
-_scalar_rank_constraint = RangeLengthConstraint(
-    constraint=RangeOf(IntAttrConstraint(AnyInt())),
-    length=EqIntConstraint(0),
-)
 ScalarIntTensorType: IRDLAttrConstraint = TensorType.constr(
-    element_type=IntType, shape=ArrayAttr.constr(_scalar_rank_constraint)
+    element_type=IntType,
+    shape=ArrayAttr.constr(
+        RangeLengthConstraint(
+            constraint=RangeOf(IntAttrConstraint(AnyInt())),
+            length=EqIntConstraint(0),
+        )
+    ),
 )
