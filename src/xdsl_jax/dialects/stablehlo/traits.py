@@ -4,7 +4,7 @@ Traits specific to the StableHLO dialect.
 
 from typing import cast
 
-from xdsl.dialects.builtin import DYNAMIC_INDEX, IntegerAttr, ShapedType, TensorType
+from xdsl.dialects.builtin import DYNAMIC_INDEX, ShapedType, TensorType
 from xdsl.ir import Attribute, Operation
 from xdsl.traits import ConditionallySpeculatable, OpTrait, RecursivelySpeculatable
 from xdsl.utils.exceptions import VerifyException
@@ -86,27 +86,3 @@ class SpeculatableIfAllInputsStatic(ConditionallySpeculatable):
             isinstance(operand_type, TensorType) and operand_type.has_static_shape()
             for operand_type in op.operand_types
         )
-
-
-class SpeculatableConcatenate(ConditionallySpeculatable):
-    @classmethod
-    def is_speculatable(cls, op: Operation):
-        if not op.operands or not op.results:
-            return False
-
-        dimension_attr = getattr(op, "dimension", None)
-        if not isinstance(dimension_attr, IntegerAttr):
-            return False
-
-        concat_dim = dimension_attr.value.data
-        result_shape = cast(TensorType, op.result_types[0]).get_shape()
-        concat_dim_dynamic = result_shape[concat_dim] == DYNAMIC_INDEX
-        for operand_type in op.operand_types:
-            operand_shape = cast(TensorType, operand_type).get_shape()
-            for idx, dim in enumerate(operand_shape):
-                if idx == concat_dim and concat_dim_dynamic:
-                    continue
-                if dim == DYNAMIC_INDEX:
-                    return False
-
-        return True

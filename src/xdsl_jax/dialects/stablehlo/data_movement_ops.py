@@ -2,7 +2,16 @@
 Data movement operations for the StableHLO dialect.
 """
 
-from xdsl.dialects.builtin import AnyTensorType, DenseArrayBase, IntegerAttr, i64
+from typing import cast
+
+from xdsl.dialects.builtin import (
+    DYNAMIC_INDEX,
+    AnyTensorType,
+    DenseArrayBase,
+    IntegerAttr,
+    TensorType,
+    i64,
+)
 from xdsl.irdl import (
     AtLeast,
     IRDLOperation,
@@ -28,7 +37,6 @@ from xdsl_jax.xdsl_extras import (
 
 from .custom_directives import SliceRanges, VariadicOperandWithAttribute
 from .traits import (
-    SpeculatableConcatenate,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
 from .types import ScalarIntTensorType
@@ -59,7 +67,6 @@ class ConcatenateOp(IRDLOperation):
 
     traits = traits_def(
         NoMemoryEffect(),
-        SpeculatableConcatenate(),
         SameOperandsAndResultElementType(),
     )
 
@@ -69,6 +76,24 @@ class ConcatenateOp(IRDLOperation):
     )
 
     custom_directives = (VariadicOperandWithAttribute,)
+
+    def is_speculatable(self) -> bool:
+        if not self.operands or not self.results:
+            return False
+
+        concat_dim = self.dimension.value.data
+        result_shape = cast(TensorType, self.result_types[0]).get_shape()
+
+        concat_dim_dynamic = result_shape[concat_dim] == DYNAMIC_INDEX
+        for operand_type in self.operand_types:
+            operand_shape = cast(TensorType, operand_type).get_shape()
+            for idx, dim in enumerate(operand_shape):
+                if idx == concat_dim and concat_dim_dynamic:
+                    continue
+                if dim == DYNAMIC_INDEX:
+                    return False
+
+        return True
 
 
 @irdl_op_definition
