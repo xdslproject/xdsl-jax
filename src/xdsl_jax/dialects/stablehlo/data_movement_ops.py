@@ -64,8 +64,12 @@ class ReshapeOp(IRDLOperation):
         o_type = cast(TensorType, self.operand_types[0])
         r_type = cast(TensorType, self.result_types[0])
 
-        # If o_type or r_type is dynamically shaped there is nothing to verify.
-        if not o_type.has_static_shape() or not r_type.has_static_shape():
+        # Reshape requires a statically shaped result type.
+        if not r_type.has_static_shape():
+            raise VerifyException("reshape output must have a static shape.")
+
+        # If the operand type is dynamically shaped there is nothing else to verify.
+        if not o_type.has_static_shape():
             return
 
         # If the operand type is statically shaped (not required) the number of
