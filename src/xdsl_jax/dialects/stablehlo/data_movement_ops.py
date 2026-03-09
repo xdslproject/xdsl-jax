@@ -75,6 +75,9 @@ class BroadcastInDimOp(IRDLOperation):
         assert isinstance(o_type, TensorType)
         assert isinstance(r_type, TensorType)
 
+        if not r_type.has_static_shape():
+            raise VerifyException("broadcast_in_dim output must have a static shape.")
+
         # (C2) broadcast_dimensions size == operand rank
         dims = tuple(self.broadcast_dimensions.get_values())
         operand_rank = o_type.get_num_dims()

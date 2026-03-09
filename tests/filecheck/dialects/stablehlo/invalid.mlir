@@ -264,3 +264,9 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 %bcast_operand4 = "test.op"() : () -> tensor<2x3xi32>
 // CHECK: size of operand dimension 1 (3) is not equal to 1 or size of result dimension 1 (2)
 %bad_bcast_dim_size = stablehlo.broadcast_in_dim %bcast_operand4, dims = [0, 1] : (tensor<2x3xi32>) -> tensor<2x2x2xi32>
+
+// -----
+
+%bcast_operand5 = "test.op"() : () -> tensor<1x3xi32>
+// CHECK: broadcast_in_dim output must have a static shape.
+%bad_bcast_dynamic_result = stablehlo.broadcast_in_dim %bcast_operand5, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<?x3x2xi32>
