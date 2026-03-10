@@ -296,3 +296,16 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 %dbc9_out_dims = "test.op"() : () -> tensor<3xi64>
 // CHECK: Operation does not verify: hint for expanding dimension 5 does not refer to a valid operand dimension
 %dbc9_result = "stablehlo.dynamic_broadcast_in_dim"(%dbc9_operand, %dbc9_out_dims) {broadcast_dimensions = array<i64: 2, 1>, known_expanding_dimensions = array<i64: 5>} : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+
+// CHECK: Operation does not verify: Iota output must have a static shape.
+%iota = stablehlo.iota dim = 0 : tensor<?x3xi32>
+
+// -----
+
+// CHECK: Operation does not verify: Iota does not support scalars.
+%iota = stablehlo.iota dim = 0 : tensor<i32>
+
+// -----
+
+// CHECK: Operation does not verify: Iota dimension cannot go beyond the output rank.
+%iota = stablehlo.iota dim = 3 : tensor<2x3xi32>
