@@ -240,3 +240,18 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
   %val = "test.op"() : () -> tensor<i64>
   stablehlo.return %val : tensor<i64>
 }
+
+// -----
+
+// CHECK: Operation does not verify: Iota output must have a static shape.
+%iota = stablehlo.iota dim = 0 : tensor<?x3xi32>
+
+// -----
+
+// CHECK: Operation does not verify: Iota does not support scalars.
+%iota = stablehlo.iota dim = 0 : tensor<i32>
+
+// -----
+
+// CHECK: Operation does not verify: Iota dimension cannot go beyond the output rank.
+%iota = stablehlo.iota dim = 3 : tensor<2x3xi32>
