@@ -427,3 +427,7 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
     %scatter_add = "stablehlo.add"(%arg_scatter_0, %arg_scatter_1) : (tensor<i64>, tensor<i64>) -> tensor<i64>
     "stablehlo.return"(%scatter_add) : (tensor<i64>) -> ()
 }) : (tensor<2x3x4x2xi64>, tensor<2x2x3x2xi64>, tensor<2x2x3x2x2xi64>) -> tensor<2x3x4x2xi64>
+
+// CHECK: %iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
+// CHECK-GENERIC: %iota = "stablehlo.iota"() <{iota_dimension = 0 : i64}> : () -> tensor<4x5xi32>
+%iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
