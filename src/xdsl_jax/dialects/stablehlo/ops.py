@@ -25,6 +25,7 @@ from xdsl.irdl import (
     irdl_op_definition,
     operand_def,
     opt_prop_def,
+    prop_def,
     result_def,
     traits_def,
     var_operand_def,
@@ -65,6 +66,7 @@ from .traits import (
 )
 from .types import (
     FloatTensorType,
+    IntOrFloatOrComplexTensorType,
     PredTensorType,
     SI32TensorType,
     TensorOrTokenOrBufferType,
@@ -262,6 +264,42 @@ class ConstantOp(IRDLOperation):
 
     def __init__(self, value: DenseIntOrFPElementsAttr):
         super().__init__(attributes={"value": value}, result_types=(value.type,))
+
+
+@irdl_op_definition
+class IotaOp(IRDLOperation):
+    """
+    Fills an `output` tensor with values in increasing order starting from zero
+    along the `iota_dimension` dimension.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#iota
+
+    Example:
+    ```mlir
+    %output = stablehlo.iota dim = 0 : tensor<4x5xi32>
+    """
+
+    name = "stablehlo.iota"
+
+    iota_dimension = prop_def(IntegerAttr.constr(type=eq(i64), value=AtLeast(0)))
+
+    output = result_def(IntOrFloatOrComplexTensorType)
+
+    traits = traits_def(Pure())
+
+    assembly_format = "`dim` `=` $iota_dimension attr-dict `:` type($output)"
+
+    def verify_(self) -> None:
+        output_type = cast(TensorType[Attribute], self.output.type)
+        if not output_type.has_static_shape():
+            raise VerifyException("Iota output must have a static shape.")
+
+        rank = len(output_type.get_shape())
+        if rank == 0:
+            raise VerifyException("Iota does not support scalars.")
+        if self.iota_dimension.value.data >= rank:
+            raise VerifyException("Iota dimension cannot go beyond the output rank.")
 
 
 @irdl_op_definition
