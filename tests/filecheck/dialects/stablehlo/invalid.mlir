@@ -240,3 +240,18 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
   %val = "test.op"() : () -> tensor<i64>
   stablehlo.return %val : tensor<i64>
 }
+
+// -----
+
+// CHECK: lhs component count must be positive
+"test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 0, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false>} : () -> ()
+
+// -----
+
+// CHECK: rhs component count must be positive
+"test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 0, num_primitive_operations = 1, allow_imprecise_accumulation = false>} : () -> ()
+
+// -----
+
+// CHECK: num primitive operations must be positive
+"test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 0, allow_imprecise_accumulation = false>} : () -> ()

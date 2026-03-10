@@ -227,3 +227,24 @@
     index_vector_dim = 2,
   >
 } : () -> ()
+
+// CHECK-NEXT:    "test.op"() {dot_algorithm = #stablehlo.dot_algorithm<
+// CHECK-NEXT:      lhs_precision_type = f32,
+// CHECK-NEXT:      rhs_precision_type = f32,
+// CHECK-NEXT:      accumulation_type = f32,
+// CHECK-NEXT:      lhs_component_count = 1,
+// CHECK-NEXT:      rhs_component_count = 1,
+// CHECK-NEXT:      num_primitive_operations = 1,
+// CHECK-NEXT:      allow_imprecise_accumulation = false
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  dot_algorithm = #stablehlo.dot_algorithm<
+    lhs_precision_type = f32,
+    rhs_precision_type = f32,
+    accumulation_type = f32,
+    lhs_component_count = 1,
+    rhs_component_count = 1,
+    num_primitive_operations = 1,
+    allow_imprecise_accumulation = false
+  >
+} : () -> ()
