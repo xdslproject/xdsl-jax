@@ -376,3 +376,7 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
 // CHECK: %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
 // CHECK-GENERIC: %reshape = "stablehlo.reshape"(%reshape_input) : (tensor<2xf32>) -> tensor<1x2xf32>
 %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+
+// CHECK: %iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
+// CHECK-GENERIC: %iota = "stablehlo.iota"() <{iota_dimension = 0 : i64}> : () -> tensor<4x5xi32>
+%iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
