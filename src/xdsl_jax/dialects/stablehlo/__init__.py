@@ -3,7 +3,6 @@ from xdsl.ir import Dialect
 from .attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
-    CustomCallApiVersionAttr,
     DotAttr,
     GatherDimensionNumbers,
     OutputOperandAlias,
@@ -13,7 +12,11 @@ from .attributes import (
     TokenType,
 )
 from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
+<<<<<<< add-scatter-gather-ops
 from .data_movement_ops import GatherOp, ScatterOp, SliceOp
+=======
+from .data_movement_ops import BroadcastInDimOp, SliceOp
+>>>>>>> main
 from .elementwise_binary_ops import (
     AddOp,
     AndOp,
@@ -60,6 +63,7 @@ from .elementwise_unary_ops import (
     TanhOp,
     TanOp,
 )
+from .extensibility_ops import CustomCallOp
 from .ops import (
     AfterAllOp,
     BitcastConvertOp,
@@ -129,11 +133,17 @@ StableHLO = Dialect(
         OptimizationBarrierOp,
         WhileOp,
         # Data movement operations
+<<<<<<< add-scatter-gather-ops
         GatherOp,
         ScatterOp,
+=======
+        BroadcastInDimOp,
+>>>>>>> main
         SliceOp,
         # Reduction operations
         ReduceOp,
+        # Extensibility operations
+        CustomCallOp,
         # Other operations
         AfterAllOp,
         BitcastConvertOp,
@@ -152,7 +162,6 @@ StableHLO = Dialect(
     [
         ComparisonDirectionAttr,
         ComparisonTypeAttr,
-        CustomCallApiVersionAttr,
         DotAttr,
         GatherDimensionNumbers,
         OutputOperandAlias,

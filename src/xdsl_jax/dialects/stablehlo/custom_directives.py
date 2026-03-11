@@ -11,6 +11,7 @@ from xdsl.dialects.builtin import (
     DenseIntOrFPElementsAttr,
     IntegerAttr,
     IntegerType,
+    StringAttr,
     TensorType,
     i32,
     i64,
@@ -172,6 +173,27 @@ class ConstantOpValue(CustomDirective):
         attr.print_without_type(printer)
         printer.print_string(" : ")
         printer.print_attribute(attr.type)
+
+
+@irdl_custom_directive
+class CustomCallTarget(CustomDirective):
+    """
+    Custom directive for stablehlo.custom_call call_target_name.
+
+    Prints/parses the target as a symbol name (e.g., `@foo`).
+    """
+
+    call_target_name: AttributeVariable
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        target = parser.parse_symbol_name()
+        self.call_target_name.set(state, target)
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        target = cast(StringAttr, self.call_target_name.get(op))
+        state.print_whitespace(printer)
+        printer.print_symbol_name(target.data)
 
 
 @irdl_custom_directive
