@@ -17,6 +17,7 @@ jobs:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+      COLLECT_COVERAGE: ${{ matrix.python-version == '3.13' }}
 
     steps:
       - uses: actions/checkout@v6
@@ -32,16 +33,28 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install the project
         run: make install
-      - name: Run the unit tests
-        run: make tests
+      - name: Run pytest
+        run: |
+          if [ "$COLLECT_COVERAGE" = "true" ]; then
+            COVERAGE_FILE=".coverage.coverage-tests" uv run pytest -W error --cov
+          else
+            uv run pytest -W error
+          fi
+      - name: Run filecheck tests
+        run: |
+          if [ "$COLLECT_COVERAGE" = "true" ]; then
+            COVERAGE_FILE=".coverage.coverage-filecheck-tests" uv run lit -v --order=smart tests/filecheck -DCOVERAGE
+          else
+            uv run lit -v --order=smart tests/filecheck
+          fi
       - name: Combine coverage data
-        if: matrix.python-version == '3.13'
+        if: env.COLLECT_COVERAGE == 'true'
         run: |
           uv run coverage combine --append
           uv run coverage report
           uv run coverage xml
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.13'
+        if: env.COLLECT_COVERAGE == 'true'
         uses: Wandalen/wretry.action@v3
         with:
           action: codecov/codecov-action@v4
