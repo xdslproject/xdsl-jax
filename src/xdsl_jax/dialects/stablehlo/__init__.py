@@ -75,7 +75,7 @@ from .ops import (
     SelectOp,
     TransposeOp,
 )
-from .reduction_ops import ReduceOp
+from .reduction_ops import DotGeneralOp, ReduceOp
 
 StableHLO = Dialect(
     "stablehlo",
@@ -131,6 +131,7 @@ StableHLO = Dialect(
         # Data movement operations
         SliceOp,
         # Reduction operations
+        DotGeneralOp,
         ReduceOp,
         # Other operations
         AfterAllOp,

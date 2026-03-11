@@ -357,6 +357,31 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
   stablehlo.return %reduce_add : tensor<i64>
 }
 
+%dot_lhs = "test.op"() : () -> tensor<2x3xi32>
+%dot_rhs = "test.op"() : () -> tensor<3x4xi32>
+// CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
+// CHECK: lhs_precision_type = f32,
+// CHECK: rhs_precision_type = f32,
+// CHECK: accumulation_type = f32,
+// CHECK: lhs_component_count = 1,
+// CHECK: rhs_component_count = 1,
+// CHECK: num_primitive_operations = 1,
+// CHECK: allow_imprecise_accumulation = false
+// CHECK: >: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC: %dot = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
+// CHECK-GENERIC: lhs_contracting_dimensions = [1],
+// CHECK-GENERIC: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC: lhs_precision_type = f32,
+// CHECK-GENERIC: rhs_precision_type = f32,
+// CHECK-GENERIC: accumulation_type = f32,
+// CHECK-GENERIC: lhs_component_count = 1,
+// CHECK-GENERIC: rhs_component_count = 1,
+// CHECK-GENERIC: num_primitive_operations = 1,
+// CHECK-GENERIC: allow_imprecise_accumulation = false
+// CHECK-GENERIC: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+%dot = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
 // CHECK: %[[slice_input:.*]] = "test.op"() : () -> tensor<3x8xi64>
 %slice_input = "test.op"() : () -> tensor<3x8xi64>
 

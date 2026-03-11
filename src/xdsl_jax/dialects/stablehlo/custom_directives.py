@@ -3,9 +3,12 @@ Custom directives for the StableHLO dialect.
 """
 
 import re
-from typing import cast
+from typing import Any, cast
 
 from xdsl.dialects.builtin import (
+    I64,
+    ArrayAttr,
+    BoolAttr,
     ComplexType,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
@@ -30,6 +33,8 @@ from xdsl.irdl.declarative_assembly_format import (
 from xdsl.parser import Parser
 from xdsl.printer import Printer
 from xdsl.utils.hints import isa
+
+from .attributes import DotAlgorithmAttr, DotAttr, Precision, PrecisionAttr
 
 
 def _create_real_type(shaped_type: TensorType[Attribute]) -> TensorType[Attribute]:
@@ -355,3 +360,176 @@ class SliceRanges(CustomDirective):
                 printer.print_list(
                     list(zip(start_indices, limit_indices, strides_vals)), print_range
                 )
+
+
+@irdl_custom_directive
+class DotDimensionNumbers(CustomDirective):
+    """
+    Custom directive for stablehlo.dot_general dimension numbers.
+
+    Format: `batching_dims = [..] x [..], contracting_dims = [..] x [..]`.
+    """
+
+    dimension_numbers: AttributeVariable
+
+    @staticmethod
+    def _parse_lhs_rhs_dims(
+        parser: Parser,
+    ) -> tuple[ArrayAttr[IntegerAttr], ArrayAttr[IntegerAttr]]:
+        """Parse `[...] x [...]` into two ArrayAttr[IntegerAttr] attributes."""
+        lhs_dims = parser.parse_comma_separated_list(
+            parser.Delimiter.SQUARE, lambda: IntegerAttr(parser.parse_integer(), i64)
+        )
+        parser.parse_keyword("x")
+        rhs_dims = parser.parse_comma_separated_list(
+            parser.Delimiter.SQUARE, lambda: IntegerAttr(parser.parse_integer(), i64)
+        )
+        return ArrayAttr(lhs_dims), ArrayAttr(rhs_dims)
+
+    @staticmethod
+    def _print_lhs_rhs_dims(
+        printer: Printer,
+        lhs_dims: ArrayAttr[IntegerAttr],
+        rhs_dims: ArrayAttr[IntegerAttr],
+    ) -> None:
+        """Print two ArrayAttr[IntegerAttr] as `[...] x [...]`."""
+        with printer.in_square_brackets():
+            printer.print_list(
+                lhs_dims.data, lambda dim: printer.print_int(dim.value.data)
+            )
+        printer.print_string(" x ")
+        with printer.in_square_brackets():
+            printer.print_list(
+                rhs_dims.data, lambda dim: printer.print_int(dim.value.data)
+            )
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        """Parse `batching_dims = [..] x [..], contracting_dims = [..] x [..]`."""
+        # Optional `batching_dims = [..] x [..]`.
+        lhs_batching, rhs_batching = ArrayAttr(()), ArrayAttr(())
+        if parser.parse_optional_keyword("batching_dims") is not None:
+            parser.parse_punctuation("=")
+            lhs_batching, rhs_batching = self._parse_lhs_rhs_dims(parser)
+            parser.parse_punctuation(",")
+        # Required `contracting_dims = [..] x [..]`.
+        parser.parse_keyword("contracting_dims")
+        parser.parse_punctuation("=")
+        lhs_contracting, rhs_contracting = self._parse_lhs_rhs_dims(parser)
+        self.dimension_numbers.set(
+            state,
+            DotAttr(
+                cast(ArrayAttr[IntegerAttr[I64]], lhs_batching),
+                cast(ArrayAttr[IntegerAttr[I64]], rhs_batching),
+                cast(ArrayAttr[IntegerAttr[I64]], lhs_contracting),
+                cast(ArrayAttr[IntegerAttr[I64]], rhs_contracting),
+            ),
+        )
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        dims = cast(DotAttr, self.dimension_numbers.get(op))
+        state.print_whitespace(printer)
+        if dims.lhs_batching_dimensions.data or dims.rhs_batching_dimensions.data:
+            printer.print_string("batching_dims = ")
+            self._print_lhs_rhs_dims(
+                printer, dims.lhs_batching_dimensions, dims.rhs_batching_dimensions
+            )
+            printer.print_string(", ")
+        printer.print_string("contracting_dims = ")
+        self._print_lhs_rhs_dims(
+            printer, dims.lhs_contracting_dimensions, dims.rhs_contracting_dimensions
+        )
+
+
+@irdl_custom_directive
+class PrecisionConfigAndAlgorithm(CustomDirective):
+    """
+    Custom directive for optional `precision` and `algorithm` clauses of
+    stablehlo.dot_general.
+    """
+
+    precision_config: AttributeVariable
+    algorithm: AttributeVariable
+
+    @staticmethod
+    def _parse_precision_config(parser: Parser) -> ArrayAttr[PrecisionAttr]:
+        """Parse the precision config as `precision = [...]`."""
+        parser.parse_keyword("precision")
+        parser.parse_punctuation("=")
+        precision_tokens = parser.parse_comma_separated_list(
+            parser.Delimiter.SQUARE, parser.parse_identifier
+        )
+        precision_attrs: list[PrecisionAttr] = []
+        for token in precision_tokens:
+            try:
+                precision_attrs.append(PrecisionAttr(Precision(token)))
+            except ValueError:
+                parser.raise_error(f"unknown precision enum '{token}'")
+        return ArrayAttr(precision_attrs)
+
+    @staticmethod
+    def _print_precision_config(
+        printer: Printer, precision_config: ArrayAttr[PrecisionAttr]
+    ) -> None:
+        """Print precision config as `precision = [..]`."""
+        printer.print_string(", precision = [")
+        printer.print_list(
+            precision_config.data,
+            lambda attr: printer.print_string(attr.data.value),
+        )
+        printer.print_string("]")
+
+    @staticmethod
+    def _parse_algorithm_payload(parser: Parser) -> DotAlgorithmAttr:
+        """Parse the algorithm payload as `algorithm = {..}`."""
+        (
+            lhs_precision_type,
+            rhs_precision_type,
+            accumulation_type,
+            lhs_component_count,
+            rhs_component_count,
+            num_primitive_operations,
+            allow_imprecise_accumulation,
+        ) = DotAlgorithmAttr.parse_parameters(cast(Any, parser))
+        return DotAlgorithmAttr(
+            lhs_precision_type,
+            rhs_precision_type,
+            accumulation_type,
+            cast(IntegerAttr[I64], lhs_component_count),
+            cast(IntegerAttr[I64], rhs_component_count),
+            cast(IntegerAttr[I64], num_primitive_operations),
+            cast(BoolAttr, allow_imprecise_accumulation),
+        )
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        if parser.parse_optional_punctuation(",") is None:
+            return True
+
+        # `algorithm = ...` can appear by itself.
+        if parser.parse_optional_keyword("algorithm") is not None:
+            parser.parse_punctuation("=")
+            self.algorithm.set(state, self._parse_algorithm_payload(parser))
+            return True
+
+        # Otherwise parse `precision = [...]` first.
+        self.precision_config.set(state, self._parse_precision_config(parser))
+
+        # A trailing algorithm clause is optional.
+        if parser.parse_optional_punctuation(",") is None:
+            return True
+
+        parser.parse_keyword("algorithm")
+        parser.parse_punctuation("=")
+        self.algorithm.set(state, self._parse_algorithm_payload(parser))
+        return True
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        precision_config = cast(
+            ArrayAttr[PrecisionAttr] | None, self.precision_config.get(op)
+        )
+        algorithm = cast(DotAlgorithmAttr | None, self.algorithm.get(op))
+        if precision_config is not None:
+            self._print_precision_config(printer, precision_config)
+        if algorithm is not None:
+            printer.print_string(", algorithm = ")
+            algorithm.print_parameters(printer)
