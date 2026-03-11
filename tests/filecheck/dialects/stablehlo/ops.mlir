@@ -409,6 +409,11 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 
+%broadcast_input = "test.op"() : () -> tensor<1x3xi32>
+// CHECK: %broadcast = stablehlo.broadcast_in_dim %broadcast_input, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+// CHECK-GENERIC: %broadcast = "stablehlo.broadcast_in_dim"(%broadcast_input) <{broadcast_dimensions = array<i64: 2, 1>}> : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+%broadcast = stablehlo.broadcast_in_dim %broadcast_input, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+
 // CHECK: %iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
 // CHECK-GENERIC: %iota = "stablehlo.iota"() <{iota_dimension = 0 : i64}> : () -> tensor<4x5xi32>
 %iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
