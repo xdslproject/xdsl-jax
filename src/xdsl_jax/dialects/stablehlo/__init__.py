@@ -12,11 +12,7 @@ from .attributes import (
     TokenType,
 )
 from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
-<<<<<<< add-scatter-gather-ops
-from .data_movement_ops import GatherOp, ScatterOp, SliceOp
-=======
-from .data_movement_ops import BroadcastInDimOp, SliceOp
->>>>>>> main
+from .data_movement_ops import BroadcastInDimOp, GatherOp, ScatterOp, SliceOp
 from .elementwise_binary_ops import (
     AddOp,
     AndOp,
@@ -133,12 +129,9 @@ StableHLO = Dialect(
         OptimizationBarrierOp,
         WhileOp,
         # Data movement operations
-<<<<<<< add-scatter-gather-ops
+        BroadcastInDimOp,
         GatherOp,
         ScatterOp,
-=======
-        BroadcastInDimOp,
->>>>>>> main
         SliceOp,
         # Reduction operations
         ReduceOp,

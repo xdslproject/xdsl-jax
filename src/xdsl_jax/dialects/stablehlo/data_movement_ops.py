@@ -3,13 +3,9 @@ Data movement operations for the StableHLO dialect.
 """
 
 from xdsl.dialects.builtin import (
-<<<<<<< add-scatter-gather-ops
-    AnyTensorType,
-    BoolAttr,
-=======
     DYNAMIC_INDEX,
     AnyTensorType,
->>>>>>> main
+    BoolAttr,
     DenseArrayBase,
     TensorType,
     i64,
@@ -33,11 +29,8 @@ from xdsl.traits import (
     RecursivelySpeculatable,
     RecursiveMemoryEffect,
 )
-<<<<<<< add-scatter-gather-ops
-from xdsl.utils.type import get_element_type_or_self
-=======
 from xdsl.utils.exceptions import VerifyException
->>>>>>> main
+from xdsl.utils.type import get_element_type_or_self
 
 from xdsl_jax.xdsl_extras import (
     AllMatchSameOperatorTrait,
@@ -47,7 +40,7 @@ from xdsl_jax.xdsl_extras import (
 from .attributes import GatherDimensionNumbers, ScatterDimensionNumbers
 from .custom_directives import SliceRanges
 from .traits import (
-<<<<<<< add-scatter-gather-ops
+    SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
 from .types import IntegerOrIndexTensorType, IntegerTensorType
@@ -162,10 +155,6 @@ class ScatterOp(IRDLOperation):
         return RecursivelySpeculatable.is_speculatable(self)
 
     # TODO: Implement custom verifier for the scatter operation.
-=======
-    SpeculatableIfAllInputsStatic,
-    SpeculatableIfStaticDimInOutputIsStaticInInput,
-)
 
 
 @irdl_op_definition
@@ -252,7 +241,6 @@ class BroadcastInDimOp(IRDLOperation):
                         "is not equal to 1 or size of result dimension "
                         f"{dim_index} ({result_dim_size})"
                     )
->>>>>>> main
 
 
 @irdl_op_definition
