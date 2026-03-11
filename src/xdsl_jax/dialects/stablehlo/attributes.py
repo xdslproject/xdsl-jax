@@ -602,15 +602,3 @@ class CustomCallApiVersion(StrEnum):
     API_VERSION_STATUS_RETURNING = "API_VERSION_STATUS_RETURNING"
     API_VERSION_STATUS_RETURNING_UNIFIED = "API_VERSION_STATUS_RETURNING_UNIFIED"
     API_VERSION_TYPED_FFI = "API_VERSION_TYPED_FFI"
-
-
-@irdl_attr_definition
-class CustomCallApiVersionAttr(
-    EnumAttribute[CustomCallApiVersion], SpacedOpaqueSyntaxAttribute
-):
-    """StableHLO custom call API version attribute.
-
-    Mirrors StableHLO enum for CustomCall API versions.
-    """
-
-    name = "stablehlo.custom_call_api_version"
