@@ -33,26 +33,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install the project
         run: make install
-      - name: Run pytest
+      - name: Run tests
         run: |
           if [ "$COLLECT_COVERAGE" = "true" ]; then
-            COVERAGE_FILE=".coverage.coverage-tests" uv run pytest -W error --cov
+            make coverage-ci
           else
-            uv run pytest -W error
+            make tests
           fi
-      - name: Run filecheck tests
-        run: |
-          if [ "$COLLECT_COVERAGE" = "true" ]; then
-            COVERAGE_FILE=".coverage.coverage-filecheck-tests" uv run lit -v --order=smart tests/filecheck -DCOVERAGE
-          else
-            uv run lit -v --order=smart tests/filecheck
-          fi
-      - name: Combine coverage data
-        if: env.COLLECT_COVERAGE == 'true'
-        run: |
-          uv run coverage combine --append
-          uv run coverage report
-          uv run coverage xml
       - name: Upload coverage to Codecov
         if: env.COLLECT_COVERAGE == 'true'
         uses: Wandalen/wretry.action@v3
