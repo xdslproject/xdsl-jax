@@ -20,6 +20,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
@@ -32,6 +34,25 @@ jobs:
         run: make install
       - name: Run the unit tests
         run: make tests
+      - name: Combine coverage data
+        if: matrix.python-version == '3.13'
+        run: |
+          uv run coverage combine --append
+          uv run coverage report
+          uv run coverage xml
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.13'
+        uses: Wandalen/wretry.action@v3
+        with:
+          action: codecov/codecov-action@v4
+          attempt_delay: 10000
+          attempt_limit: 10
+          with: |
+            fail_ci_if_error: true
+            verbose: true
+            files: coverage.xml
+            codecov_yml_path: codecov.yml
+            token: ${{ secrets.CODECOV_TOKEN }}
 
   check:
     runs-on: ubuntu-latest
