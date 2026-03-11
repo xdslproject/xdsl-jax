@@ -69,8 +69,8 @@ class BroadcastInDimOp(IRDLOperation):
 
     def verify_(self) -> None:
         """Verify non-quantized broadcast_in_dim constraints."""
-        o_type = self.operand_types[0]
-        r_type = self.result_types[0]
+        o_type = self.operands[0].type
+        r_type = self.result.type
 
         assert isinstance(o_type, TensorType)
         assert isinstance(r_type, TensorType)
