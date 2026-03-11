@@ -54,7 +54,7 @@ class ReshapeOp(IRDLOperation):
         SameOperandsAndResultElementType(),
     )
 
-    def is_speculatable(cls, op: Operation) -> bool:
+    def is_speculatable(self, op: Operation) -> bool:
         operand_type = op.operand_types[0]
         return isinstance(operand_type, TensorType) and operand_type.has_static_shape()
 
