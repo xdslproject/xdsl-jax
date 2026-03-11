@@ -357,6 +357,43 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
   stablehlo.return %reduce_add : tensor<i64>
 }
 
+// CHECK: %custom_call_layouts = stablehlo.custom_call @bar(%constant) {
+// CHECK-SAME: api_version = 4 : i32,
+// CHECK-SAME: backend_config = {bar = 42 : i32},
+// CHECK-SAME: operand_layouts = [dense<[1, 0]> : tensor<2xindex>],
+// CHECK-SAME: result_layouts = [dense<[1, 0]> : tensor<2xindex>]} : (tensor<2x2xf32>) -> tensor<2x2xf32>
+// CHECK-GENERIC: %custom_call_layouts = "stablehlo.custom_call"(%constant) <{call_target_name = "bar", api_version = 4 : i32, backend_config = {bar = 42 : i32}, operand_layouts = [dense<[1, 0]> : tensor<2xindex>], result_layouts = [dense<[1, 0]> : tensor<2xindex>], output_operand_aliases = [], has_side_effect = false}> : (tensor<2x2xf32>) -> tensor<2x2xf32>
+%custom_call_layouts = stablehlo.custom_call @bar(%constant) {
+  api_version = 4 : i32,
+  backend_config = {bar = 42 : i32},
+  operand_layouts = [dense<[1, 0]> : tensor<2xindex>],
+  result_layouts = [dense<[1, 0]> : tensor<2xindex>],
+  output_operand_aliases = [],
+  has_side_effect = false
+} : (tensor<2x2xf32>) -> tensor<2x2xf32>
+
+
+%custom_call_alias = "test.op"() : () -> tuple<tensor<1x1xf32>, tensor<2x3xf32>>
+%custom_call_alias_1 = "test.op"() : () -> tensor<5x5xf32>
+
+// CHECK: %custom_call_result = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {output_operand_aliases = [#stablehlo.output_operand_alias<
+// CHECK-NEXT:     output_tuple_indices = [0],
+// CHECK-NEXT:     operand_index = 0,
+// CHECK-NEXT:     operand_tuple_indices = [1]
+// CHECK-NEXT:   >]} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
+// CHECK-GENERIC: %custom_call_result = "stablehlo.custom_call"(%custom_call_alias, %custom_call_alias_1) <{call_target_name = "foo", output_operand_aliases = [#stablehlo.output_operand_alias<
+// CHECK-GENERIC-NEXT:     output_tuple_indices = [0],
+// CHECK-GENERIC-NEXT:     operand_index = 0,
+// CHECK-GENERIC-NEXT:     operand_tuple_indices = [1]
+// CHECK-GENERIC-NEXT:   >], has_side_effect = false, api_version = 1 : i32}> : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
+%custom_call_result = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {
+  output_operand_aliases = [
+    #stablehlo.output_operand_alias<output_tuple_indices = [0],
+                               operand_index = 0,
+                               operand_tuple_indices = [1]>
+  ]
+} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
+
 // CHECK: %[[slice_input:.*]] = "test.op"() : () -> tensor<3x8xi64>
 %slice_input = "test.op"() : () -> tensor<3x8xi64>
 
