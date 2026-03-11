@@ -271,6 +271,8 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 // CHECK: broadcast_in_dim output must have a static shape.
 %bad_bcast_dynamic_result = stablehlo.broadcast_in_dim %bcast_operand5, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<?x3x2xi32>
 
+// -----
+
 // CHECK: Operation does not verify: Iota output must have a static shape.
 %iota = stablehlo.iota dim = 0 : tensor<?x3xi32>
 
