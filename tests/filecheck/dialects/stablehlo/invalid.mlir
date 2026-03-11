@@ -359,6 +359,8 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
   output_operand_aliases = []
 } : (tensor<2x3xi32>) -> tensor<2x3xi32>
 
+// -----
+
 // CHECK: Operation does not verify: Iota output must have a static shape.
 %iota = stablehlo.iota dim = 0 : tensor<?x3xi32>
 
