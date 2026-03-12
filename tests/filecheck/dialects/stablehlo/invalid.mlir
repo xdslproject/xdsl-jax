@@ -338,6 +338,26 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+// CHECK: Operation does not verify: Tuple types are not fully supported with layout constraints yet
+%tuple_arg = "test.op"() : () -> tuple<tensor<2x3xi32>>
+%custom_call_tuple_layout = stablehlo.custom_call @foo(%tuple_arg) {
+  operand_layouts = [dense<[0, 1]> : tensor<2xindex>],
+  result_layouts = [dense<[0, 1]> : tensor<2xindex>],
+  output_operand_aliases = []
+} : (tuple<tensor<2x3xi32>>) -> tensor<2x3xi32>
+
+// -----
+
+// CHECK: Operation does not verify: output_tuple_indices in the output_operand_alias attribute out of bounds
+%arg_tuple_result = "test.op"() : () -> tensor<2x3xi32>
+%custom_call_alias_tuple_output_bounds = stablehlo.custom_call @foo(%arg_tuple_result) {
+  output_operand_aliases = [
+    #stablehlo.output_operand_alias<output_tuple_indices = [1], operand_index = 0, operand_tuple_indices = []>
+  ]
+} : (tensor<2x3xi32>) -> tuple<tensor<2x3xi32>>
+
+// -----
+
 // CHECK: Operation does not verify: output_tuple_indices in the output_operand_alias attribute out of bounds
 %arg2 = "test.op"() : () -> tensor<2x3xi32>
 %custom_call_alias_output_bounds = stablehlo.custom_call @foo(%arg2) {
@@ -418,3 +438,57 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // CHECK: Operation does not verify: Iota dimension cannot go beyond the output rank.
 %iota = stablehlo.iota dim = 3 : tensor<2x3xi32>
+
+// -----
+
+%pred = "test.op"() : () -> tensor<i1>
+%on_true = "test.op"() : () -> tensor<i32>
+%on_false = "test.op"() : () -> tensor<i32>
+// CHECK: expected functional type or list of two types
+%bad_select_type = stablehlo.select %pred, %on_true, %on_false : tensor<i1>, tensor<i32>, tensor<i32>
+
+// -----
+
+%arg_reduce_precision = "test.op"() : () -> tensor<2xf32>
+// CHECK: expected exponent mantissa in format e#m#, saw nope
+%bad_reduce_precision = stablehlo.reduce_precision %arg_reduce_precision, format = nope : tensor<2xf32>
+
+// -----
+
+%pad_operand = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_rank1 = "test.op"() : () -> tensor<1xi32>
+// CHECK: Operation does not verify: Expect padding_value is an 0-dimensional tensor
+%bad_pad_value_rank = stablehlo.pad %pad_operand, %pad_value_rank1,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<1xi32>) -> tensor<5x9xi32>
+
+// -----
+
+%pad_operand_rank = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_rank = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: Pad operation rank mismatch while the operand has 2 dimension(s) and result shape has 1 dimension(s)
+%bad_pad_rank = stablehlo.pad %pad_operand_rank, %pad_value_rank,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5xi32>
+
+// -----
+
+%pad_operand_negative = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_negative = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: The interior_padding value must be equal or larger than 0, found -1
+%bad_pad_negative_interior = stablehlo.pad %pad_operand_negative, %pad_value_negative,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, -1] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x1xi32>
+
+// -----
+
+%pad_operand_shape = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_shape = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: Pad operation at 1 dimension  mismatch
+%bad_pad_shape = stablehlo.pad %pad_operand_shape, %pad_value_shape,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x8xi32>
