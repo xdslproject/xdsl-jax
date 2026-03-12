@@ -28,9 +28,9 @@ class CompatOp(IRDLOperation):
     name = "test.compat"
     traits = traits_def(CompatibleOperandsAndResultType())
 
-    lhs = operand_def(AnyAttr())
-    rhs = operand_def(AnyAttr())
-    res = result_def(AnyAttr())
+    lhs = operand_def()
+    rhs = operand_def()
+    res = result_def()
 
 
 @irdl_op_definition
