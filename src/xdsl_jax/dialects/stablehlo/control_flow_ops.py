@@ -33,13 +33,7 @@ from .ops import ReturnOp
 from .traits import have_compatible_type_sequences
 from .types import PredTensorType, TensorOrTokenType
 
-
-def _is_zero_rank_i1_tensor(attr: Attribute) -> bool:
-    """Verify that the attribute is a zero-ranked tensor of i1."""
-    if not isinstance(attr, TensorType):
-        return False
-    tensor_attr = cast(TensorType[Attribute], attr)
-    return tensor_attr.get_num_dims() == 0 and tensor_attr.element_type == i1
+_ZERO_RANK_I1_TENSOR_TYPE = TensorType(i1, ())
 
 
 @irdl_op_definition
@@ -158,7 +152,7 @@ class WhileOp(IRDLOperation):
             )
 
         cond_return_type = cond_return_types[0]
-        if not _is_zero_rank_i1_tensor(cond_return_type):
+        if cond_return_type != _ZERO_RANK_I1_TENSOR_TYPE:
             raise VerifyException(
                 "expect condition block return a zero-ranked tensor of i1 but got "
                 f"{cond_return_type}"
