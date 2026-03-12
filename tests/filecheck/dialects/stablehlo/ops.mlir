@@ -326,13 +326,13 @@ cond {
 // CHECK:   ^bb0(%arg0 : tensor<f32>, %arg1 : tensor<f32>):
 // CHECK:     %result = stablehlo.multiply %arg0, %arg1 : tensor<f32>
 // CHECK:     stablehlo.return %result : tensor<f32>
-// CHECK: }) {dimensions = array<i64: 0, 1>} : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK: }) {dimensions = array<i64: 0>} : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
 %map = "stablehlo.map"(%t5f32, %t5f32) ({
   ^bb0(%arg0: tensor<f32>, %arg1: tensor<f32>):
     %result = stablehlo.multiply %arg0, %arg1 : tensor<f32>
     stablehlo.return %result : tensor<f32>
 }) {
-  dimensions = array<i64: 0, 1>
+  dimensions = array<i64: 0>
 } : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
 
 

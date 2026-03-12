@@ -243,6 +243,43 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+%map_input = "test.op"() : () -> tensor<5xf32>
+// CHECK: Operation does not verify: expects number of operands to match the arity of map computation, but got: 1 and 2
+%map_arity = "stablehlo.map"(%map_input) ({
+  ^bb0(%arg0: tensor<f32>, %arg1: tensor<f32>):
+    stablehlo.return %arg0 : tensor<f32>
+}) {dimensions = array<i64: 0>} : (tensor<5xf32>) -> tensor<5xf32>
+
+// -----
+
+%map_input = "test.op"() : () -> tensor<5xf32>
+// CHECK: Operation does not verify: computation arguments must be 0-rank tensor, but got: arg #0 of type tensor<1xf32>
+%map_arg_rank = "stablehlo.map"(%map_input) ({
+  ^bb0(%arg0: tensor<1xf32>):
+    %0 = "test.op"() : () -> tensor<f32>
+    stablehlo.return %0 : tensor<f32>
+}) {dimensions = array<i64: 0>} : (tensor<5xf32>) -> tensor<5xf32>
+
+// -----
+
+%map_input = "test.op"() : () -> tensor<5xf32>
+// CHECK: Operation does not verify: computation must return single output, but got: 2
+%map_return_count = "stablehlo.map"(%map_input) ({
+  ^bb0(%arg0: tensor<f32>):
+    stablehlo.return %arg0, %arg0 : tensor<f32>, tensor<f32>
+}) {dimensions = array<i64: 0>} : (tensor<5xf32>) -> tensor<5xf32>
+
+// -----
+
+%map_input = "test.op"() : () -> tensor<5xf32>
+// CHECK: Operation does not verify: requires monotonically increasing dimension numbers, but got: (1,)
+%map_dims_order = "stablehlo.map"(%map_input) ({
+  ^bb0(%arg0: tensor<f32>):
+    stablehlo.return %arg0 : tensor<f32>
+}) {dimensions = array<i64: 1>} : (tensor<5xf32>) -> tensor<5xf32>
+
+// -----
+
 // CHECK: lhs component count must be positive
 "test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 0, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false>} : () -> ()
 
