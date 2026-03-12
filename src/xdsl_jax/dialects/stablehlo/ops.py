@@ -336,11 +336,15 @@ class MapOp(IRDLOperation):
         SingleBlockImplicitTerminator(ReturnOp),
     )
 
-    def _verify_computation(self, block: Block) -> None:
-        """Verify the computation."""
+    def _verify_computation_block(self, block: Block) -> None:
+        """Verify that computation block has the correct arguments and return type.
+        it checks the following:
+        - The number of operands and arguments match.
+        - The arguments are 0-rank tensors
+        - The element types of the arguments match the operand element types.
+        - The return value is a single 0-rank tensor.
+        """
         block_args = block.args
-        # (C4) computation has type (tensor<E0>, ..., tensor<EN-1>) -> tensor<E'>
-        # where Ei = element_type(inputs[i]) and E' = element_type(result)
         if len(self.inputs) != len(block_args):
             raise VerifyException(
                 "expects number of operands to match the arity of map computation, "
@@ -378,8 +382,8 @@ class MapOp(IRDLOperation):
             )
 
     def _verify_dimensions(self, dimensions: tuple[int, ...]) -> None:
-        """Verify the dimensions."""
-        # (C3) dimensions = range(rank(inputs[0]))
+        """Verify the dimensions are monotonically increasing and
+        the operand dimensions are a subset of the map dimensions."""
         for idx, dim in enumerate(dimensions):
             if dim != idx:
                 raise VerifyException(
@@ -398,7 +402,7 @@ class MapOp(IRDLOperation):
     def verify_(self) -> None:
         computation = self.computation[0]
         dimensions = self.dimensions.get_values()
-        self._verify_computation(computation.block)
+        self._verify_computation_block(computation.block)
         self._verify_dimensions(dimensions)
 
 
