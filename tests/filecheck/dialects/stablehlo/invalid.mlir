@@ -438,3 +438,43 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // CHECK: Operation does not verify: Iota dimension cannot go beyond the output rank.
 %iota = stablehlo.iota dim = 3 : tensor<2x3xi32>
+
+// -----
+
+%pad_operand = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_rank1 = "test.op"() : () -> tensor<1xi32>
+// CHECK: Operation does not verify: Expect padding_value is an 0-dimensional tensor
+%bad_pad_value_rank = stablehlo.pad %pad_operand, %pad_value_rank1,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<1xi32>) -> tensor<5x9xi32>
+
+// -----
+
+%pad_operand_rank = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_rank = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: Pad operation rank mismatch while the operand has 2 dimension(s) and result shape has 1 dimension(s)
+%bad_pad_rank = stablehlo.pad %pad_operand_rank, %pad_value_rank,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5xi32>
+
+// -----
+
+%pad_operand_negative = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_negative = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: The interior_padding value must be equal or larger than 0, found -1
+%bad_pad_negative_interior = stablehlo.pad %pad_operand_negative, %pad_value_negative,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, -1] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x1xi32>
+
+// -----
+
+%pad_operand_shape = "test.op"() : () -> tensor<2x3xi32>
+%pad_value_shape = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: Pad operation at 1 dimension  mismatch
+%bad_pad_shape = stablehlo.pad %pad_operand_shape, %pad_value_shape,
+  low = [0, 1],
+  high = [2, 1],
+  interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x8xi32>
