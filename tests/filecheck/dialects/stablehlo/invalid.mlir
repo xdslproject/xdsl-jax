@@ -500,3 +500,9 @@ cond {
 } do {
   stablehlo.return %arg0 : tensor<i64>
 }
+
+// -----
+
+%arg = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: requires the same number of operands and results (got 1 operands and 2 results)
+%bad0, %bad1 = "stablehlo.optimization_barrier"(%arg) : (tensor<i32>) -> (tensor<i32>, tensor<i32>)
