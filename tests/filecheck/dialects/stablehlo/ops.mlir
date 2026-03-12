@@ -144,6 +144,10 @@
 // CHECK-GENERIC: %complex2 = "stablehlo.complex"(%t5f32, %t5f32) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 %complex2 = stablehlo.complex %t5f32, %t5f32 : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 
+// CHECK: %complex_fallback = stablehlo.complex %tf32, %tf32 : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+// CHECK-GENERIC: %complex_fallback = "stablehlo.complex"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+%complex_fallback = stablehlo.complex %tf32, %tf32 : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+
 // CHECK: %divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
 // CHECK-GENERIC: %divide = "stablehlo.divide"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
 %divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
@@ -433,6 +437,10 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK: %select_mismatch = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+
+// CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+// CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+%select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 
 %broadcast_input = "test.op"() : () -> tensor<1x3xi32>
 // CHECK: %broadcast = stablehlo.broadcast_in_dim %broadcast_input, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>

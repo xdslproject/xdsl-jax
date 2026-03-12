@@ -441,6 +441,20 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+%pred = "test.op"() : () -> tensor<i1>
+%on_true = "test.op"() : () -> tensor<i32>
+%on_false = "test.op"() : () -> tensor<i32>
+// CHECK: expected functional type or list of two types
+%bad_select_type = stablehlo.select %pred, %on_true, %on_false : tensor<i1>, tensor<i32>, tensor<i32>
+
+// -----
+
+%arg_reduce_precision = "test.op"() : () -> tensor<2xf32>
+// CHECK: expected exponent mantissa in format e#m#, saw nope
+%bad_reduce_precision = stablehlo.reduce_precision %arg_reduce_precision, format = nope : tensor<2xf32>
+
+// -----
+
 %pad_operand = "test.op"() : () -> tensor<2x3xi32>
 %pad_value_rank1 = "test.op"() : () -> tensor<1xi32>
 // CHECK: Operation does not verify: Expect padding_value is an 0-dimensional tensor
