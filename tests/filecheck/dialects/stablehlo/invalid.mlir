@@ -488,3 +488,15 @@ cond {
 } do {
   stablehlo.return %arg0 : tensor<i64>
 }
+
+// -----
+
+%while_init = "test.op"() : () -> tensor<i64>
+// CHECK: Operation does not verify: expect condition block return a zero-ranked tensor of i1 but got !stablehlo.token
+%while_bad_cond_return_token = stablehlo.while(%arg0 = %while_init) : tensor<i64>
+cond {
+  %tok = "test.op"() : () -> !stablehlo.token
+  stablehlo.return %tok : !stablehlo.token
+} do {
+  stablehlo.return %arg0 : tensor<i64>
+}
