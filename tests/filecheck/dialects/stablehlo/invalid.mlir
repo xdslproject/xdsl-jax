@@ -338,6 +338,26 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+// CHECK: Operation does not verify: Tuple types are not fully supported with layout constraints yet
+%tuple_arg = "test.op"() : () -> tuple<tensor<2x3xi32>>
+%custom_call_tuple_layout = stablehlo.custom_call @foo(%tuple_arg) {
+  operand_layouts = [dense<[0, 1]> : tensor<2xindex>],
+  result_layouts = [dense<[0, 1]> : tensor<2xindex>],
+  output_operand_aliases = []
+} : (tuple<tensor<2x3xi32>>) -> tensor<2x3xi32>
+
+// -----
+
+// CHECK: Operation does not verify: output_tuple_indices in the output_operand_alias attribute out of bounds
+%arg_tuple_result = "test.op"() : () -> tensor<2x3xi32>
+%custom_call_alias_tuple_output_bounds = stablehlo.custom_call @foo(%arg_tuple_result) {
+  output_operand_aliases = [
+    #stablehlo.output_operand_alias<output_tuple_indices = [1], operand_index = 0, operand_tuple_indices = []>
+  ]
+} : (tensor<2x3xi32>) -> tuple<tensor<2x3xi32>>
+
+// -----
+
 // CHECK: Operation does not verify: output_tuple_indices in the output_operand_alias attribute out of bounds
 %arg2 = "test.op"() : () -> tensor<2x3xi32>
 %custom_call_alias_output_bounds = stablehlo.custom_call @foo(%arg2) {
