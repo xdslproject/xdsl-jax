@@ -8,7 +8,7 @@ from xdsl.irdl import BaseAttr, TypeVarConstraint
 from xdsl.irdl.constraints import AnyOf, ConstraintContext
 from xdsl.utils.exceptions import VerifyException
 
-from xdsl_jax.dialects.stablehlo import TokenType
+from xdsl_jax.dialects.stablehlo.attributes import TokenType
 from xdsl_jax.xdsl_extras import NestedTupleOfConstraint
 
 
@@ -33,6 +33,11 @@ class TestNestedTupleOfConstraint:
         inner = TupleType((tensor1,))
         outer = TupleType((tensor2, inner))
         self.single_constraint.verify(outer, ConstraintContext())
+
+    def test_single_constraint_rejects_non_tuple_input(self):
+        """Test that non-tuple inputs are rejected."""
+        with pytest.raises(VerifyException, match="expected TupleType"):
+            self.single_constraint.verify(TensorType(i32, [2]), ConstraintContext())
 
     def test_single_constraint_rejects_disallowed_type(self):
         """Test that a tuple with non-TensorType elements raises a VerifyException."""
