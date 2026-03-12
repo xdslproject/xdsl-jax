@@ -295,10 +295,7 @@ class DotAlgorithmAttr(ParametrizedAttribute):
     def _print_field(printer: Printer, field_name: str, field: Attribute) -> None:
         printer.print_string(f"\n{field_name} = ")
         if isinstance(field, IntegerAttr):
-            if field_name in DotAlgorithmAttr._BOOLEAN_FIELDS:
-                printer.print_string("true" if field.value.data else "false")
-            else:
-                printer.print_int(field.value.data)
+            field.print_without_type(printer)
             return
         printer.print_attribute(field)
 
