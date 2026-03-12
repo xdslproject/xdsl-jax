@@ -243,6 +243,21 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+// CHECK: lhs component count must be positive
+"test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 0, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false>} : () -> ()
+
+// -----
+
+// CHECK: rhs component count must be positive
+"test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 0, num_primitive_operations = 1, allow_imprecise_accumulation = false>} : () -> ()
+
+// -----
+
+// CHECK: num primitive operations must be positive
+"test.op"() {algorithm = #stablehlo.dot_algorithm<lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 0, allow_imprecise_accumulation = false>} : () -> ()
+
+// -----
+
 %bcast_operand = "test.op"() : () -> tensor<1x3xi32>
 // CHECK: broadcast_dimensions size (1) does not match operand rank (2)
 %bad_bcast_size = stablehlo.broadcast_in_dim %bcast_operand, dims = [2] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
