@@ -137,10 +137,8 @@ class WhileOp(IRDLOperation):
         """Verify that the body block has a return op and
         the return types are compatible with the operand types."""
         body_block = self.body.block
-        if not isinstance(body_block.last_op, ReturnOp):
-            raise VerifyException("The while body-region expected to have a terminator")
-
-        body_return_types = tuple(operand.type for operand in body_block.last_op.input)
+        body_block_last_op = cast(ReturnOp, body_block.last_op)
+        body_return_types = tuple(operand.type for operand in body_block_last_op.input)
         if not have_compatible_type_sequences(operand_types, body_return_types):
             raise VerifyException(
                 "expect operands to be compatible with body block return types "
@@ -151,13 +149,8 @@ class WhileOp(IRDLOperation):
         """Verify that the condition block has a single return op and
         the return type is a zero-ranked tensor of i1."""
         cond_block = self.cond.block
-        if not isinstance(cond_block.last_op, ReturnOp):
-            raise VerifyException(
-                "The while condition-region expected to have a "
-                "`stablehlo.return` terminator"
-            )
-
-        cond_return_types = tuple(operand.type for operand in cond_block.last_op.input)
+        cond_block_last_op = cast(ReturnOp, cond_block.last_op)
+        cond_return_types = tuple(operand.type for operand in cond_block_last_op.input)
         if len(cond_return_types) != 1:
             raise VerifyException(
                 "expect condition body returns a single value "
