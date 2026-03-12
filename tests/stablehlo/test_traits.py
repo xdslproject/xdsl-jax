@@ -6,7 +6,6 @@ import pytest
 from xdsl.dialects.builtin import DYNAMIC_INDEX, TensorType, f32, i32
 from xdsl.ir import Attribute
 from xdsl.irdl import (
-    AnyAttr,
     IRDLOperation,
     irdl_op_definition,
     operand_def,
