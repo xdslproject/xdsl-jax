@@ -5,7 +5,7 @@ This module provides attribute definitions based on the StableHLO specification
 
 from abc import ABC
 from collections.abc import Sequence
-from typing import ClassVar, TypeAlias, get_origin
+from typing import TypeAlias, get_origin
 
 from xdsl.dialects.builtin import (
     I64,
@@ -274,21 +274,10 @@ class DotAlgorithmAttr(ParametrizedAttribute):
     num_primitive_operations: IntegerAttr[I64]
     allow_imprecise_accumulation: BoolAttr
 
-    _BOOLEAN_FIELDS: ClassVar[tuple[str, ...]] = ("allow_imprecise_accumulation",)
-    _INTEGER_FIELDS: ClassVar[tuple[str, ...]] = (
-        "lhs_component_count",
-        "rhs_component_count",
-        "num_primitive_operations",
-    )
-
     @classmethod
     def _parse_field(cls, parser: AttrParser, field_name: str) -> Attribute:
         parser.parse_characters(field_name)
         parser.parse_punctuation("=")
-        if field_name in cls._BOOLEAN_FIELDS:
-            return BoolAttr.from_bool(parser.parse_boolean())
-        if field_name in cls._INTEGER_FIELDS:
-            return IntegerAttr(parser.parse_integer(), i64)
         return parser.parse_attribute()
 
     @staticmethod
