@@ -3,6 +3,7 @@ from xdsl.ir import Dialect
 from .attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
+    DotAlgorithmAttr,
     DotAttr,
     GatherDimensionNumbers,
     OutputOperandAlias,
@@ -155,6 +156,7 @@ StableHLO = Dialect(
     [
         ComparisonDirectionAttr,
         ComparisonTypeAttr,
+        DotAlgorithmAttr,
         DotAttr,
         GatherDimensionNumbers,
         OutputOperandAlias,

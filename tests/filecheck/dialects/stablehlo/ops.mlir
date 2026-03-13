@@ -144,6 +144,10 @@
 // CHECK-GENERIC: %complex2 = "stablehlo.complex"(%t5f32, %t5f32) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 %complex2 = stablehlo.complex %t5f32, %t5f32 : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 
+// CHECK: %complex_fallback = stablehlo.complex %tf32, %tf32 : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+// CHECK-GENERIC: %complex_fallback = "stablehlo.complex"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+%complex_fallback = stablehlo.complex %tf32, %tf32 : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+
 // CHECK: %divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
 // CHECK-GENERIC: %divide = "stablehlo.divide"(%tf32, %tf32) : (tensor<f32>, tensor<f32>) -> tensor<f32>
 %divide = stablehlo.divide %tf32, %tf32 : tensor<f32>
@@ -212,24 +216,55 @@
 
 %init_i = "test.op"() : () -> tensor<i64>
 %init_sum = "test.op"() : () -> tensor<i64>
-// CHECK: %{{.*}}, %{{.*}} = stablehlo.while(%{{.*}} = %init_i, %{{.*}} = %init_sum) : tensor<i64>, tensor<i64>
+// CHECK: %{{.*}}, %{{.*}} = stablehlo.while(%{{.*}} = %init_i, %{{.*}} = %init_sum) : tensor<i64>, tensor<i64> attributes {tag = "loop"}
 // CHECK: cond {
-// CHECK:   stablehlo.return %{{.*}} : tensor<i64>
+// CHECK:   stablehlo.return %{{.*}} : tensor<i1>
 // CHECK: } do {
 // CHECK:   stablehlo.return %{{.*}}, %{{.*}} : tensor<i64>, tensor<i64>
 // CHECK: }
 // CHECK-GENERIC: %{{.*}}, %{{.*}} = "stablehlo.while"(%init_i, %init_sum) ({
 // CHECK-GENERIC: ^{{.*}}(%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>):
-// CHECK-GENERIC:   "stablehlo.return"(%{{.*}}) : (tensor<i64>) -> ()
+// CHECK-GENERIC:   "stablehlo.return"(%{{.*}}) : (tensor<i1>) -> ()
 // CHECK-GENERIC: }, {
 // CHECK-GENERIC: ^{{.*}}(%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>):
 // CHECK-GENERIC:   "stablehlo.return"(%{{.*}}, %{{.*}}) : (tensor<i64>, tensor<i64>) -> ()
-// CHECK-GENERIC: }) : (tensor<i64>, tensor<i64>) -> (tensor<i64>, tensor<i64>)
-%while_r0, %while_r1 = stablehlo.while(%while_arg0 = %init_i, %while_arg1 = %init_sum) : tensor<i64>, tensor<i64>
+// CHECK-GENERIC: }) {tag = "loop"} : (tensor<i64>, tensor<i64>) -> (tensor<i64>, tensor<i64>)
+%while_r0, %while_r1 = stablehlo.while(%while_arg0 = %init_i, %while_arg1 = %init_sum) : tensor<i64>, tensor<i64> attributes {tag = "loop"}
 cond {
-  stablehlo.return %while_arg0 : tensor<i64>
+  stablehlo.return %pred : tensor<i1>
 } do {
   stablehlo.return %while_arg0, %while_arg1 : tensor<i64>, tensor<i64>
+}
+
+// CHECK: %while_attr = stablehlo.while(%{{.*}} = %init_i) : tensor<i64> attributes {tag = "loop"}
+// CHECK: cond {
+// CHECK:   stablehlo.return %pred : tensor<i1>
+// CHECK: } do {
+// CHECK:   stablehlo.return %{{.*}} : tensor<i64>
+// CHECK: }
+%while_attr = stablehlo.while(%while_arg = %init_i) : tensor<i64> attributes {tag = "loop"}
+cond {
+  stablehlo.return %pred : tensor<i1>
+} do {
+  stablehlo.return %while_arg : tensor<i64>
+}
+
+// CHECK: stablehlo.while()
+// CHECK: cond {
+// CHECK:   stablehlo.return %pred : tensor<i1>
+// CHECK: } do {
+// CHECK:   stablehlo.return
+// CHECK: }
+// CHECK-GENERIC: "stablehlo.while"() ({
+// CHECK-GENERIC:   "stablehlo.return"(%pred) : (tensor<i1>) -> ()
+// CHECK-GENERIC: }, {
+// CHECK-GENERIC:   "stablehlo.return"() : () -> ()
+// CHECK-GENERIC: }) : () -> ()
+stablehlo.while()
+cond {
+  stablehlo.return %pred : tensor<i1>
+} do {
+  stablehlo.return
 }
 
 // CHECK: %ob0, %ob1 = stablehlo.optimization_barrier %t0, %t0 : tensor<i32>, tensor<i32>
@@ -322,39 +357,36 @@ cond {
 // CHECK:   ^bb0(%arg0 : tensor<f32>, %arg1 : tensor<f32>):
 // CHECK:     %result = stablehlo.multiply %arg0, %arg1 : tensor<f32>
 // CHECK:     stablehlo.return %result : tensor<f32>
-// CHECK: }) {dimensions = array<i64: 0, 1>} : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK: }) {dimensions = array<i64: 0>} : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
 %map = "stablehlo.map"(%t5f32, %t5f32) ({
   ^bb0(%arg0: tensor<f32>, %arg1: tensor<f32>):
     %result = stablehlo.multiply %arg0, %arg1 : tensor<f32>
     stablehlo.return %result : tensor<f32>
 }) {
-  dimensions = array<i64: 0, 1>
+  dimensions = array<i64: 0>
 } : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
 
 
 // CHECK: %reduce_precision = stablehlo.reduce_precision %tf64, format = e5m10 : tensor<f64>
 // CHECK-GENERIC: %reduce_precision = "stablehlo.reduce_precision"(%tf64) {exponent_bits = 5 : i32, mantissa_bits = 10 : i32} : (tensor<f64>) -> tensor<f64>
 %reduce_precision = stablehlo.reduce_precision %tf64, format = e5m10 : tensor<f64>
+%reduce_input0 = "test.op"() : () -> tensor<2x3xi64>
+%reduce_input1 = "test.op"() : () -> tensor<2x3xi64>
+%reduce_init0 = "test.op"() : () -> tensor<i64>
+%reduce_init1 = "test.op"() : () -> tensor<i64>
 
-// CHECK: %[[input:.*]] = "test.op"() : () -> tensor<1x6xi64>
-%input = "test.op"() : () -> tensor<1x6xi64>
-// CHECK: %[[init:.*]] = "test.op"() : () -> tensor<i64>
-%init = "test.op"() : () -> tensor<i64>
-
-// CHECK: %reduce = stablehlo.reduce(%[[input]] init: %[[init]]) across dimensions = [1] : (tensor<1x6xi64>, tensor<i64>) -> tensor<1xi64>
-// CHECK-NEXT: reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
-// CHECK:     %reduce_add = stablehlo.add %reduce_arg0, %reduce_arg1 : tensor<i64>
-// CHECK:     stablehlo.return %reduce_add : tensor<i64>
+// CHECK: %{{.*}}, %{{.*}} = stablehlo.reduce(%reduce_input0 init: %reduce_init0), (%reduce_input1 init: %reduce_init1)
+// CHECK-SAME: across dimensions = [1] : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
+// CHECK-NEXT: reducer (%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>) (%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>) {
+// CHECK:   stablehlo.return %{{.*}}, %{{.*}} : tensor<i64>, tensor<i64>
 // CHECK: }
-// CHECK-GENERIC: %reduce = "stablehlo.reduce"(%input, %init) <{dimensions = array<i64: 1>}> ({
-// CHECK-GENERIC:   ^bb[[REDUCE_BB:[0-9]+]](%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>):
-// CHECK-GENERIC:     %reduce_add = "stablehlo.add"(%reduce_arg0, %reduce_arg1) : (tensor<i64>, tensor<i64>) -> tensor<i64>
-// CHECK-GENERIC:     "stablehlo.return"(%reduce_add) : (tensor<i64>) -> ()
-// CHECK-GENERIC: }) : (tensor<1x6xi64>, tensor<i64>) -> tensor<1xi64>
-%reduce = stablehlo.reduce (%input init: %init) across dimensions = [1] : (tensor<1x6xi64>, tensor<i64>) -> tensor<1xi64>
-reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
-  %reduce_add = stablehlo.add %reduce_arg0, %reduce_arg1 : tensor<i64>
-  stablehlo.return %reduce_add : tensor<i64>
+// CHECK-GENERIC: %{{.*}}, %{{.*}} = "stablehlo.reduce"(%reduce_input0, %reduce_input1, %reduce_init0, %reduce_init1) <{dimensions = array<i64: 1>}> ({
+// CHECK-GENERIC:   ^bb[[REDUCE_MULTI_BB:[0-9]+]](%{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>, %{{.*}} : tensor<i64>):
+// CHECK-GENERIC:     "stablehlo.return"(%{{.*}}, %{{.*}}) : (tensor<i64>, tensor<i64>) -> ()
+// CHECK-GENERIC: }) : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
+%reduce_multi_0, %reduce_multi_1 = stablehlo.reduce (%reduce_input0 init: %reduce_init0), (%reduce_input1 init: %reduce_init1) across dimensions = [1] : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
+reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 : tensor<i64>, %reduce_arg3 : tensor<i64>) {
+  stablehlo.return %reduce_arg0, %reduce_arg2 : tensor<i64>, tensor<i64>
 }
 
 // CHECK: %custom_call_layouts = stablehlo.custom_call @bar(%constant) {
@@ -372,27 +404,55 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
   has_side_effect = false
 } : (tensor<2x2xf32>) -> tensor<2x2xf32>
 
+%token_input = "test.op"() : () -> !stablehlo.token
+// CHECK: %custom_call_token_layout = stablehlo.custom_call @token_passthrough(%token_input) {
+// CHECK-SAME: backend_config = "opaque-config",
+// CHECK-SAME: operand_layouts = [dense<> : tensor<0xindex>],
+// CHECK-SAME: result_layouts = [dense<> : tensor<0xindex>]} : (!stablehlo.token) -> !stablehlo.token
+// CHECK-GENERIC: %custom_call_token_layout = "stablehlo.custom_call"(%token_input) <{call_target_name = "token_passthrough", backend_config = "opaque-config", operand_layouts = [dense<> : tensor<0xindex>], result_layouts = [dense<> : tensor<0xindex>], output_operand_aliases = [], has_side_effect = false, api_version = 1 : i32}> : (!stablehlo.token) -> !stablehlo.token
+%custom_call_token_layout = stablehlo.custom_call @token_passthrough(%token_input) {
+  backend_config = "opaque-config",
+  operand_layouts = [dense<> : tensor<0xindex>],
+  result_layouts = [dense<> : tensor<0xindex>],
+  output_operand_aliases = []
+} : (!stablehlo.token) -> !stablehlo.token
+
+// CHECK: %custom_call_tuple_result_layouts = stablehlo.custom_call @tuple_result(%constant) {
+// CHECK-SAME: api_version = 4 : i32,
+// CHECK-SAME: backend_config = {bar = 42 : i32},
+// CHECK-SAME: operand_layouts = [dense<[1, 0]> : tensor<2xindex>],
+// CHECK-SAME: result_layouts = [dense<[1, 0]> : tensor<2xindex>, dense<[0, 1]> : tensor<2xindex>]} : (tensor<2x2xf32>) -> tuple<tensor<2x2xf32>, tensor<2x2xf32>>
+// CHECK-GENERIC: %custom_call_tuple_result_layouts = "stablehlo.custom_call"(%constant) <{call_target_name = "tuple_result", api_version = 4 : i32, backend_config = {bar = 42 : i32}, operand_layouts = [dense<[1, 0]> : tensor<2xindex>], result_layouts = [dense<[1, 0]> : tensor<2xindex>, dense<[0, 1]> : tensor<2xindex>], output_operand_aliases = [], has_side_effect = false}> : (tensor<2x2xf32>) -> tuple<tensor<2x2xf32>, tensor<2x2xf32>>
+%custom_call_tuple_result_layouts = stablehlo.custom_call @tuple_result(%constant) {
+  api_version = 4 : i32,
+  backend_config = {bar = 42 : i32},
+  operand_layouts = [dense<[1, 0]> : tensor<2xindex>],
+  result_layouts = [dense<[1, 0]> : tensor<2xindex>, dense<[0, 1]> : tensor<2xindex>],
+  output_operand_aliases = [],
+  has_side_effect = false
+} : (tensor<2x2xf32>) -> tuple<tensor<2x2xf32>, tensor<2x2xf32>>
+
 
 %custom_call_alias = "test.op"() : () -> tuple<tensor<1x1xf32>, tensor<2x3xf32>>
 %custom_call_alias_1 = "test.op"() : () -> tensor<5x5xf32>
 
-// CHECK: %custom_call_result = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {output_operand_aliases = [#stablehlo.output_operand_alias<
+// CHECK: %{{.*}}, %{{.*}} = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {output_operand_aliases = [#stablehlo.output_operand_alias<
 // CHECK-NEXT:     output_tuple_indices = [0],
 // CHECK-NEXT:     operand_index = 0,
 // CHECK-NEXT:     operand_tuple_indices = [1]
-// CHECK-NEXT:   >]} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
-// CHECK-GENERIC: %custom_call_result = "stablehlo.custom_call"(%custom_call_alias, %custom_call_alias_1) <{call_target_name = "foo", output_operand_aliases = [#stablehlo.output_operand_alias<
+// CHECK-NEXT:   >]} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
+// CHECK-GENERIC: %{{.*}}, %{{.*}} = "stablehlo.custom_call"(%custom_call_alias, %custom_call_alias_1) <{call_target_name = "foo", output_operand_aliases = [#stablehlo.output_operand_alias<
 // CHECK-GENERIC-NEXT:     output_tuple_indices = [0],
 // CHECK-GENERIC-NEXT:     operand_index = 0,
 // CHECK-GENERIC-NEXT:     operand_tuple_indices = [1]
-// CHECK-GENERIC-NEXT:   >], has_side_effect = false, api_version = 1 : i32}> : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
-%custom_call_result = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {
+// CHECK-GENERIC-NEXT:   >], has_side_effect = false, api_version = 1 : i32}> : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
+%custom_call_result_0, %custom_call_result_1 = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {
   output_operand_aliases = [
     #stablehlo.output_operand_alias<output_tuple_indices = [0],
                                operand_index = 0,
                                operand_tuple_indices = [1]>
   ]
-} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> tuple<tensor<2x3xf32>>
+} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
 
 // CHECK: %[[slice_input:.*]] = "test.op"() : () -> tensor<3x8xi64>
 %slice_input = "test.op"() : () -> tensor<3x8xi64>
@@ -465,10 +525,19 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) {
     "stablehlo.return"(%scatter_add) : (tensor<i64>) -> ()
 }) : (tensor<2x3x4x2xi64>, tensor<2x2x3x2xi64>, tensor<2x2x3x2x2xi64>) -> tensor<2x3x4x2xi64>
 
+// CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+// CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+%select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+
 %broadcast_input = "test.op"() : () -> tensor<1x3xi32>
 // CHECK: %broadcast = stablehlo.broadcast_in_dim %broadcast_input, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
 // CHECK-GENERIC: %broadcast = "stablehlo.broadcast_in_dim"(%broadcast_input) <{broadcast_dimensions = array<i64: 2, 1>}> : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
 %broadcast = stablehlo.broadcast_in_dim %broadcast_input, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
+
+%broadcast_dynamic_input = "test.op"() : () -> tensor<?x3xi32>
+// CHECK: %broadcast_dynamic = stablehlo.broadcast_in_dim %broadcast_dynamic_input, dims = [2, 1] : (tensor<?x3xi32>) -> tensor<2x3x2xi32>
+// CHECK-GENERIC: %broadcast_dynamic = "stablehlo.broadcast_in_dim"(%broadcast_dynamic_input) <{broadcast_dimensions = array<i64: 2, 1>}> : (tensor<?x3xi32>) -> tensor<2x3x2xi32>
+%broadcast_dynamic = stablehlo.broadcast_in_dim %broadcast_dynamic_input, dims = [2, 1] : (tensor<?x3xi32>) -> tensor<2x3x2xi32>
 
 // CHECK: %iota = stablehlo.iota dim = 0 : tensor<4x5xi32>
 // CHECK-GENERIC: %iota = "stablehlo.iota"() <{iota_dimension = 0 : i64}> : () -> tensor<4x5xi32>

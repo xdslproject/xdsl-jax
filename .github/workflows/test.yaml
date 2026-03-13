@@ -17,9 +17,12 @@ jobs:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     env:
       UV_PYTHON: ${{ matrix.python-version }}
+      COLLECT_COVERAGE: ${{ matrix.python-version == '3.13' }}
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
@@ -30,8 +33,26 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install the project
         run: make install
-      - name: Run the unit tests
-        run: make tests
+      - name: Run tests
+        run: |
+          if [ "$COLLECT_COVERAGE" = "true" ]; then
+            make coverage-ci
+          else
+            make tests
+          fi
+      - name: Upload coverage to Codecov
+        if: env.COLLECT_COVERAGE == 'true'
+        uses: Wandalen/wretry.action@v3
+        with:
+          action: codecov/codecov-action@v4
+          attempt_delay: 10000
+          attempt_limit: 10
+          with: |
+            fail_ci_if_error: true
+            verbose: true
+            files: coverage.xml
+            codecov_yml_path: codecov.yml
+            token: ${{ secrets.CODECOV_TOKEN }}
 
   check:
     runs-on: ubuntu-latest
