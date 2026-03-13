@@ -18,13 +18,14 @@ from xdsl.dialects.builtin import (
     i32,
     i64,
 )
-from xdsl.ir import Attribute, Region, SSAValue
+from xdsl.ir import Attribute, Block, Region, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
     attr_def,
     irdl_op_definition,
     operand_def,
     opt_prop_def,
+    prop_def,
     result_def,
     traits_def,
     var_operand_def,
@@ -65,6 +66,7 @@ from .traits import (
 )
 from .types import (
     FloatTensorType,
+    IntOrFloatOrComplexTensorType,
     PredTensorType,
     SI32TensorType,
     TensorOrTokenOrBufferType,
@@ -265,6 +267,42 @@ class ConstantOp(IRDLOperation):
 
 
 @irdl_op_definition
+class IotaOp(IRDLOperation):
+    """
+    Fills an `output` tensor with values in increasing order starting from zero
+    along the `iota_dimension` dimension.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#iota
+
+    Example:
+    ```mlir
+    %output = stablehlo.iota dim = 0 : tensor<4x5xi32>
+    """
+
+    name = "stablehlo.iota"
+
+    iota_dimension = prop_def(IntegerAttr.constr(type=eq(i64), value=AtLeast(0)))
+
+    output = result_def(IntOrFloatOrComplexTensorType)
+
+    traits = traits_def(Pure())
+
+    assembly_format = "`dim` `=` $iota_dimension attr-dict `:` type($output)"
+
+    def verify_(self) -> None:
+        output_type = cast(TensorType[Attribute], self.output.type)
+        if not output_type.has_static_shape():
+            raise VerifyException("Iota output must have a static shape.")
+
+        rank = len(output_type.get_shape())
+        if rank == 0:
+            raise VerifyException("Iota does not support scalars.")
+        if self.iota_dimension.value.data >= rank:
+            raise VerifyException("Iota dimension cannot go beyond the output rank.")
+
+
+@irdl_op_definition
 class MapOp(IRDLOperation):
     """
     Applies a map function `computation` to `inputs` along the `dimensions` and
@@ -297,6 +335,75 @@ class MapOp(IRDLOperation):
         SameOperandsAndResultShape(),
         SingleBlockImplicitTerminator(ReturnOp),
     )
+
+    def _verify_computation_block(self, block: Block) -> None:
+        """Verify that computation block has the correct arguments and return type.
+        it checks the following:
+        - The number of operands and arguments match.
+        - The arguments are 0-rank tensors
+        - The element types of the arguments match the operand element types.
+        - The return value is a single 0-rank tensor.
+        """
+        block_args = block.args
+        if len(self.inputs) != len(block_args):
+            raise VerifyException(
+                "expects number of operands to match the arity of map computation, "
+                f"but got: {len(self.inputs)} and {len(block_args)}"
+            )
+
+        for idx, arg in enumerate(block_args):
+            arg_type = cast(TensorType[Attribute], arg.type)
+            if arg_type.get_num_dims() != 0:
+                raise VerifyException(
+                    "computation arguments must be 0-rank tensor, but got: "
+                    f"arg #{idx} of type {arg.type}"
+                )
+            operand_elem_type = cast(
+                TensorType[Attribute], self.inputs[idx].type
+            ).element_type
+            if arg_type.element_type != operand_elem_type:
+                raise VerifyException(
+                    "element type of operands and computation arguments must match, "
+                    f"but got: {operand_elem_type} and {arg_type.element_type}"
+                )
+
+        terminator = cast(ReturnOp, block.last_op)
+        if len(terminator.input) != 1:
+            raise VerifyException(
+                "computation must return single output, "
+                f"but got: {len(terminator.input)}"
+            )
+
+        computation_output_type = cast(TensorType[Attribute], terminator.input[0].type)
+        if computation_output_type.get_num_dims() != 0:
+            raise VerifyException(
+                "computation must return 0-rank tensor, but got: "
+                f"{terminator.input[0].type}"
+            )
+
+    def _verify_dimensions(self, dimensions: tuple[int, ...]) -> None:
+        """Verify the dimensions are monotonically increasing and
+        the operand dimensions are a subset of the map dimensions."""
+        for idx, dim in enumerate(dimensions):
+            if dim != idx:
+                raise VerifyException(
+                    "requires monotonically increasing dimension numbers, "
+                    f"but got: {dimensions}"
+                )
+        for operand in self.inputs:
+            operand_type = cast(TensorType[Attribute], operand.type)
+            if len(dimensions) != len(operand_type.get_shape()):
+                raise VerifyException(
+                    "applied to a subset of dimensions currently not supported: "
+                    f"operand dimensions = {len(operand_type.get_shape())}, "
+                    f"requested map dimensions size = {len(dimensions)}"
+                )
+
+    def verify_(self) -> None:
+        computation = self.computation[0]
+        dimensions = self.dimensions.get_values()
+        self._verify_computation_block(computation.block)
+        self._verify_dimensions(dimensions)
 
 
 @irdl_op_definition
