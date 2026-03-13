@@ -1,6 +1,9 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL := bash
 
+# use a default prefix for coverage data files
+COVERAGE_FILE ?= .coverage
+
 # allow overriding which dependency groups are installed
 VENV_GROUPS ?= --group dev --group docs
 
@@ -37,6 +40,29 @@ pytest: .venv/
 filecheck: .venv/
 	uv run lit $(LIT_OPTIONS) tests/filecheck
 
+.PHONY: coverage
+coverage: coverage-tests coverage-filecheck-tests
+	uv run coverage combine --append
+	uv run coverage report
+
+.PHONY: coverage-ci
+coverage-ci: coverage-tests coverage-filecheck-tests
+	uv run coverage combine --append
+	uv run coverage report
+	uv run coverage xml
+
+.PHONY: coverage-tests
+coverage-tests: .venv/
+	COVERAGE_FILE="${COVERAGE_FILE}.$@" uv run pytest -W error --cov
+
+.PHONY: coverage-filecheck-tests
+coverage-filecheck-tests: .venv/
+	COVERAGE_FILE="${COVERAGE_FILE}.$@" uv run lit $(LIT_OPTIONS) tests/filecheck -DCOVERAGE
+
+.PHONY: coverage-clean
+coverage-clean: .venv/
+	uv run coverage erase
+
 .PHONY: docs
 docs: .venv/
 	uv run mkdocs serve
@@ -44,7 +70,7 @@ docs: .venv/
 
 .PHONY: clean-caches
 clean-caches:
-	rm -rf .mypy_cache/ .pytest_cache/ .ruff_cache/ .coverage
+	rm -rf .mypy_cache/ .pytest_cache/ .ruff_cache/ .coverage*
 	find . -not -path "./.venv/*" | \
 		grep -E "(/__pycache__$$|\.pyc$$|\.pyo$$)" | \
 		xargs rm -rf

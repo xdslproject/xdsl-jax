@@ -13,6 +13,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
+from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.ir import Attribute, BlockArgument, Region, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
@@ -113,7 +114,7 @@ def _infer_dot_general_shape(
 
 
 @irdl_op_definition
-class DotGeneralOp(IRDLOperation):
+class DotGeneralOp(IRDLOperation, ConditionallySpeculatableInterface):
     """
     Computes dot products between slices of ``lhs`` and slices of ``rhs`` and
     produces a ``result`` tensor.
@@ -261,7 +262,7 @@ class DotGeneralOp(IRDLOperation):
     def is_speculatable(self) -> bool:
         lhs_type = cast(TensorType[Attribute], self.lhs.type)
         rhs_type = cast(TensorType[Attribute], self.rhs.type)
-        result_type = cast(TensorType[Attribute], self.result_types[0])
+        result_type = cast(TensorType[Attribute], self.results[0].type)
 
         dimensions = self.dot_dimension_numbers
         lhs_batching_dimensions = tuple(
@@ -388,10 +389,7 @@ def _print_reduce_dimensions_and_attrs(
     `across dimensions = [dim0, dim1, ...]`
     """
     printer.print_string(" across dimensions = [")
-    if dimensions is None:
-        dims: tuple[int, ...] = ()
-    else:
-        dims = cast(tuple[int, ...], cast(Any, dimensions).get_values())
+    dims = cast(tuple[int, ...], cast(Any, dimensions).get_values())
     printer.print_list(dims, lambda d: printer.print_string(str(d)))
     printer.print_string("]")
     if attributes:
