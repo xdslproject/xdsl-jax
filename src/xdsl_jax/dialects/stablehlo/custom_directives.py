@@ -257,7 +257,6 @@ class SelectOpType(CustomDirective):
             return True
 
         parser.raise_error("expected functional type or list of two types")
-        return False
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         operand_types = self.operand_types.get(op)

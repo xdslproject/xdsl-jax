@@ -54,6 +54,18 @@ def test_same_operands_and_result_shape_trait():
         op.verify()
 
 
+def test_same_operands_and_result_shape_requires_one_op_or_result():
+    @irdl_op_definition
+    class ShapeTestOp(IRDLOperation):
+        name = "test.shape_guard"
+        traits = traits_def(SameOperandsAndResultShape())
+
+    with pytest.raises(
+        VerifyException, match="requires at least one result or operand"
+    ):
+        ShapeTestOp.create().verify()
+
+
 # Test the SameOperandsElementType trait
 def test_same_operands_element_type_trait():
     """Test the SameOperandsElementType trait."""
@@ -89,6 +101,22 @@ def test_same_operands_element_type_trait():
         op.verify()
 
 
+def test_same_operands_element_type_allows_single_operand():
+    @irdl_op_definition
+    class ShapeTestOp(IRDLOperation):
+        name = "test.single_operand_element_type"
+        traits = traits_def(SameOperandsElementType())
+
+        operand = operand_def(AnyTensorType)
+        result = result_def(AnyTensorType)
+
+    op = ShapeTestOp.create(
+        operands=[create_ssa_value(TensorType(i32, [2, 3]))],
+        result_types=[TensorType(f32, [2, 3])],
+    )
+    op.verify()
+
+
 # Test the SameOperandsAndResultElementType trait
 def test_same_operands_and_result_element_type_trait():
     """Test the SameOperandsAndResultElementType trait."""
@@ -120,6 +148,18 @@ def test_same_operands_and_result_element_type_trait():
         match="requires the same element type for all operands and results",
     ):
         op.verify()
+
+
+def test_same_operands_and_result_element_type_requires_one_op_or_result():
+    @irdl_op_definition
+    class ElementTypeTestOp(IRDLOperation):
+        name = "test.element_type_guard"
+        traits = traits_def(SameOperandsAndResultElementType())
+
+    with pytest.raises(
+        VerifyException, match="requires at least one result or operand"
+    ):
+        ElementTypeTestOp.create().verify()
 
 
 # Test the Elementwise trait
@@ -344,3 +384,29 @@ def test_operator_cannot_compute_raises_verifyexception():
 
     with pytest.raises(VerifyException, match=r"cannot compute shape for \{a, b\}:"):
         trait.verify(op)
+
+
+def test_all_match_same_operator_trait_ignores_single_attr_name():
+    @irdl_op_definition
+    class SingleAttrMockOp(IRDLOperation):
+        name = "test.single_attr"
+        traits = traits_def()
+        a = attr_def(AnyAttr())
+
+    op = SingleAttrMockOp.create(attributes={"a": TensorType(i64, [2, 3])})
+    trait = AllMatchSameOperatorTrait(("a",), lambda a: a.get_shape(), "shape")
+    trait.verify(op)
+
+
+def test_all_match_same_operator_trait_ignores_missing_attribute():
+    @irdl_op_definition
+    class MissingAttrMockOp(IRDLOperation):
+        name = "test.missing_attr"
+        traits = traits_def()
+        a = attr_def(AnyAttr())
+
+    op = MissingAttrMockOp.create(attributes={"a": TensorType(i64, [2, 3])})
+    trait = AllMatchSameOperatorTrait(
+        ("a", "missing"), lambda a: a.get_shape(), "shape"
+    )
+    trait.verify(op)
