@@ -85,6 +85,12 @@
 // -----
 
 %input = "test.op"() : () -> tensor<2x3xi32>
+// CHECK: Operation does not verify: number of output elements (5) doesn't match expected number of elements (6)
+%reshape = stablehlo.reshape %input : (tensor<2x3xi32>) -> tensor<5xi32>
+
+// -----
+
+%input = "test.op"() : () -> tensor<2x3xi32>
 %init = "test.op"() : () -> tensor<i32>
 // CHECK: Operation does not verify: Reduce op requires the same number of inputs, init_values, and results
 %reduce0, %reduce1 = stablehlo.reduce (%input init: %init) across dimensions = [1] : (tensor<2x3xi32>, tensor<i32>) -> (tensor<2xi32>, tensor<2xi32>)

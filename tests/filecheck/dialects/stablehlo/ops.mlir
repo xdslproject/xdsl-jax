@@ -474,6 +474,11 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-GENERIC: %reshape = "stablehlo.reshape"(%reshape_input) : (tensor<2xf32>) -> tensor<1x2xf32>
 %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
 
+%reshape_dynamic_input = "test.op"() : () -> tensor<?x3xi32>
+// CHECK: %reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+// CHECK-GENERIC: %reshape_dynamic = "stablehlo.reshape"(%reshape_dynamic_input) : (tensor<?x3xi32>) -> tensor<6xi32>
+%reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+
 // CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 // CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
