@@ -23,6 +23,15 @@ def _is_compatible(lhs: Attribute, rhs: Attribute) -> bool:
     return _is_same_element_type(lhs, rhs)
 
 
+def have_compatible_type_sequences(
+    lhs: tuple[Attribute, ...], rhs: tuple[Attribute, ...]
+) -> bool:
+    """Verify that two StableHLO type sequences are pairwise compatible."""
+    return len(lhs) == len(rhs) and all(
+        _is_compatible(lhs_type, rhs_type) for lhs_type, rhs_type in zip(lhs, rhs)
+    )
+
+
 def _static_output_dim_requires_static_input(op: Operation) -> bool:
     """Verify that the static output dimension requires the static input dimension."""
     if not op.operands or not op.results:

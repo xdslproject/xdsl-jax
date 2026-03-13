@@ -117,10 +117,7 @@ def _print_reduce_dimensions_and_attrs(
     `across dimensions = [dim0, dim1, ...]`
     """
     printer.print_string(" across dimensions = [")
-    if dimensions is None:
-        dims: tuple[int, ...] = ()
-    else:
-        dims = cast(tuple[int, ...], cast(Any, dimensions).get_values())
+    dims = cast(tuple[int, ...], cast(Any, dimensions).get_values())
     printer.print_list(dims, lambda d: printer.print_string(str(d)))
     printer.print_string("]")
     if attributes:

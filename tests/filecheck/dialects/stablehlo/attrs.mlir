@@ -87,22 +87,6 @@
   highest = #stablehlo<result_accuracy_mode TOLERANCE>
 } : () -> ()
 
-// === Custom Call API Version ===
-// CHECK-NEXT:    "test.op"() {
-// CHECK-SAME:      unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
-// CHECK-SAME:      original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
-// CHECK-SAME:      status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
-// CHECK-SAME:      status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
-// CHECK-SAME:      typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
-// CHECK-SAME:    } : () -> ()
-"test.op"() {
-  unspecified = #stablehlo<custom_call_api_version API_VERSION_UNSPECIFIED>,
-  original = #stablehlo<custom_call_api_version API_VERSION_ORIGINAL>,
-  status_returning = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING>,
-  status_returning_unified = #stablehlo<custom_call_api_version API_VERSION_STATUS_RETURNING_UNIFIED>,
-  typed_ffi = #stablehlo<custom_call_api_version API_VERSION_TYPED_FFI>
-} : () -> ()
-
 // === Output Operand Alias ===
 // CHECK-NEXT:    "test.op"() {alias = #stablehlo.output_operand_alias<
 // CHECK-NEXT:      output_tuple_indices = [0],
@@ -225,5 +209,26 @@
     offset_dims = [0],
     start_index_map = [1],
     index_vector_dim = 2,
+  >
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {dot_algorithm = #stablehlo.dot_algorithm<
+// CHECK-NEXT:      lhs_precision_type = f32,
+// CHECK-NEXT:      rhs_precision_type = f32,
+// CHECK-NEXT:      accumulation_type = f32,
+// CHECK-NEXT:      lhs_component_count = 1,
+// CHECK-NEXT:      rhs_component_count = 1,
+// CHECK-NEXT:      num_primitive_operations = 1,
+// CHECK-NEXT:      allow_imprecise_accumulation = false
+// CHECK-NEXT:    >} : () -> ()
+"test.op"() {
+  dot_algorithm = #stablehlo.dot_algorithm<
+    lhs_precision_type = f32,
+    rhs_precision_type = f32,
+    accumulation_type = f32,
+    lhs_component_count = 1,
+    rhs_component_count = 1,
+    num_primitive_operations = 1,
+    allow_imprecise_accumulation = false
   >
 } : () -> ()
