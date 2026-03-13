@@ -7,7 +7,7 @@ from xdsl_jax.dialects.stablehlo.data_movement_ops import ConcatenateOp
 
 
 def _create_concatenate_op(
-    operand_shapes: list[list[int]], result_shape: list[int], *, dimension: int
+    operand_shapes: list[list[int]], result_shape: list[int], dimension: int
 ) -> ConcatenateOp:
     operands = [create_ssa_value(TensorType(i32, shape)) for shape in operand_shapes]
     return ConcatenateOp.create(
