@@ -130,7 +130,7 @@ StableHLO = Dialect(
         OptimizationBarrierOp,
         WhileOp,
         # Data movement operations
-        BroadcastInDimOp
+        BroadcastInDimOp,
         ConcatenateOp,
         DynamicSliceOp,
         SliceOp,
