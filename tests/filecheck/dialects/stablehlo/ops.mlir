@@ -391,7 +391,7 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 
 %dot_lhs = "test.op"() : () -> tensor<2x3xi32>
 %dot_rhs = "test.op"() : () -> tensor<3x4xi32>
-// CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
+// CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
 // CHECK: lhs_precision_type = f32,
 // CHECK: rhs_precision_type = f32,
 // CHECK: accumulation_type = f32,
