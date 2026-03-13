@@ -10,6 +10,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
+from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.irdl import (
     IRDLOperation,
     SameVariadicOperandSize,
@@ -24,7 +25,6 @@ from xdsl.irdl import (
     var_result_def,
 )
 from xdsl.traits import (
-    ConditionallySpeculatable,
     NoMemoryEffect,
     RecursivelySpeculatable,
     RecursiveMemoryEffect,
@@ -47,7 +47,7 @@ from .types import IntegerOrIndexTensorType, IntegerTensorType
 
 
 @irdl_op_definition
-class GatherOp(IRDLOperation):
+class GatherOp(IRDLOperation, ConditionallySpeculatableInterface):
     """
     Gathers slices from ``operand`` tensor from offsets specified in
     ``start_indices`` and produces a ``result`` tensor.
@@ -98,7 +98,7 @@ class GatherOp(IRDLOperation):
 
 
 @irdl_op_definition
-class ScatterOp(IRDLOperation):
+class ScatterOp(IRDLOperation, ConditionallySpeculatableInterface):
     """
      Produces ``results`` tensors which are equal to ``inputs`` tensors except that
      several slices specified by ``scatter_indices`` are updated with the values
@@ -286,7 +286,6 @@ class SliceOp(IRDLOperation):
 
     traits = traits_def(
         NoMemoryEffect(),
-        ConditionallySpeculatable(),
         SpeculatableIfStaticDimInOutputIsStaticInInput(),
         AllMatchSameOperatorTrait(
             ("start_indices", "limit_indices", "strides"), len, "size"
