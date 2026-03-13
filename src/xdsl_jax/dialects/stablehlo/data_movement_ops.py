@@ -25,8 +25,8 @@ from xdsl.irdl import (
     var_operand_def,
 )
 from xdsl.traits import NoMemoryEffect, Pure
-from xdsl.utils.type import get_element_type_or_self
 from xdsl.utils.exceptions import VerifyException
+from xdsl.utils.type import get_element_type_or_self
 
 from xdsl_jax.xdsl_extras import (
     AllMatchSameOperatorTrait,
