@@ -12,6 +12,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
+from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.irdl import (
     AtLeast,
     IRDLOperation,
@@ -23,11 +24,7 @@ from xdsl.irdl import (
     traits_def,
     var_operand_def,
 )
-from xdsl.traits import (
-    ConditionallySpeculatable,
-    NoMemoryEffect,
-    Pure,
-)
+from xdsl.traits import NoMemoryEffect, Pure
 from xdsl.utils.type import get_element_type_or_self
 
 from xdsl_jax.xdsl_extras import (
@@ -43,7 +40,7 @@ from .types import ScalarIntTensorType
 
 
 @irdl_op_definition
-class ConcatenateOp(IRDLOperation):
+class ConcatenateOp(IRDLOperation, ConditionallySpeculatableInterface):
     """
     Concatenates a variadic number of tensors in ``inputs`` along ``dimension``
     dimension in the same order as the given arguments and produces a ``result``
@@ -83,7 +80,6 @@ class ConcatenateOp(IRDLOperation):
 
         concat_dim = self.dimension.value.data
         result_shape = cast(TensorType, self.result_types[0]).get_shape()
-
         concat_dim_dynamic = result_shape[concat_dim] == DYNAMIC_INDEX
         for operand_type in self.operand_types:
             operand_shape = cast(TensorType, operand_type).get_shape()
@@ -178,7 +174,6 @@ class SliceOp(IRDLOperation):
 
     traits = traits_def(
         NoMemoryEffect(),
-        ConditionallySpeculatable(),
         SpeculatableIfStaticDimInOutputIsStaticInInput(),
         AllMatchSameOperatorTrait(
             ("start_indices", "limit_indices", "strides"), len, "size"
