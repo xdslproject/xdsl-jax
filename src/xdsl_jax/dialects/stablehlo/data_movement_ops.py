@@ -9,7 +9,8 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
-from xdsl.ir import Operation, cast
+from xdsl.interfaces import ConditionallySpeculatableInterface
+from xdsl.ir import cast
 from xdsl.irdl import (
     IRDLOperation,
     irdl_op_definition,
@@ -123,7 +124,7 @@ class BroadcastInDimOp(IRDLOperation):
 
 
 @irdl_op_definition
-class ReshapeOp(IRDLOperation):
+class ReshapeOp(IRDLOperation, ConditionallySpeculatableInterface):
     """
     Performs reshape of ``operand`` tensor to a ``result`` tensor.
 
@@ -149,14 +150,14 @@ class ReshapeOp(IRDLOperation):
         SameOperandsAndResultElementType(),
     )
 
-    def is_speculatable(self, op: Operation) -> bool:
-        operand_type = op.operand_types[0]
-        return isinstance(operand_type, TensorType) and operand_type.has_static_shape()
+    def is_speculatable(self) -> bool:
+        operand_type = cast(TensorType, self.operand.type)
+        return operand_type.has_static_shape()
 
     def verify_(self) -> None:
         """Verify that the operation has the same shape for all operands and results."""
-        o_type = cast(TensorType, self.operand_types[0])
-        r_type = cast(TensorType, self.result_types[0])
+        o_type = cast(TensorType, self.operands[0].type)
+        r_type = self.result.type
 
         # Reshape requires a statically shaped result type.
         if not r_type.has_static_shape():
