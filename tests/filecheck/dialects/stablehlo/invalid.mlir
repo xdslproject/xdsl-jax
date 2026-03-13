@@ -358,6 +358,13 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+%dot_lhs_bad_precision = "test.op"() : () -> tensor<2x3xi32>
+%dot_rhs_bad_precision = "test.op"() : () -> tensor<3x4xi32>
+// CHECK: unknown precision enum 'FOO'
+%dot_bad_precision = stablehlo.dot_general %dot_lhs_bad_precision, %dot_rhs_bad_precision, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [FOO] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
+// -----
+
 %bcast_operand = "test.op"() : () -> tensor<1x3xi32>
 // CHECK: broadcast_dimensions size (1) does not match operand rank (2)
 %bad_bcast_size = stablehlo.broadcast_in_dim %bcast_operand, dims = [2] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
