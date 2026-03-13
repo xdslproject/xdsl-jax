@@ -7,7 +7,13 @@ from abc import ABC
 from collections.abc import Sequence
 from typing import TypeAlias, get_origin
 
-from xdsl.dialects.builtin import I64, ArrayAttr, IntegerAttr, i64
+from xdsl.dialects.builtin import (
+    I64,
+    ArrayAttr,
+    BoolAttr,
+    IntegerAttr,
+    i64,
+)
 from xdsl.ir import (
     Attribute,
     EnumAttribute,
@@ -19,6 +25,7 @@ from xdsl.ir import (
 from xdsl.irdl import irdl_attr_definition
 from xdsl.parser import AttrParser
 from xdsl.printer import Printer
+from xdsl.utils.exceptions import VerifyException
 
 # Type aliases for dimension values
 Dims: TypeAlias = ArrayAttr[IntegerAttr[I64]]
@@ -247,6 +254,72 @@ class PrecisionAttr(EnumAttribute[Precision], SpacedOpaqueSyntaxAttribute):
     """
 
     name = "stablehlo.precision"
+
+
+@irdl_attr_definition
+class DotAlgorithmAttr(ParametrizedAttribute):
+    """
+    Attribute that models the algorithm constraints to use for computing dot.
+
+    Mirrors StableHLO's `dot_algorithm` attribute.
+    """
+
+    name = "stablehlo.dot_algorithm"
+
+    lhs_precision_type: Attribute
+    rhs_precision_type: Attribute
+    accumulation_type: Attribute
+    lhs_component_count: IntegerAttr[I64]
+    rhs_component_count: IntegerAttr[I64]
+    num_primitive_operations: IntegerAttr[I64]
+    allow_imprecise_accumulation: BoolAttr
+
+    @classmethod
+    def _parse_field(cls, parser: AttrParser, field_name: str) -> Attribute:
+        parser.parse_characters(field_name)
+        parser.parse_punctuation("=")
+        return parser.parse_attribute()
+
+    @staticmethod
+    def _print_field(printer: Printer, field_name: str, field: Attribute) -> None:
+        printer.print_string(f"\n{field_name} = ")
+        if isinstance(field, IntegerAttr):
+            field.print_without_type(printer)
+            return
+        printer.print_attribute(field)
+
+    def print_parameters(self, printer: Printer) -> None:
+        with printer.in_angle_brackets():
+            with printer.indented():
+                printer.print_list(
+                    self.get_irdl_definition().parameters,
+                    lambda item: self._print_field(
+                        printer, item[0], getattr(self, item[0])
+                    ),
+                    delimiter=",",
+                )
+            printer.print_string("\n")
+
+    @classmethod
+    def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
+        with parser.in_angle_brackets():
+            field_names = tuple(
+                name for name, _ in cls.get_irdl_definition().parameters
+            )
+            fields: list[Attribute] = []
+            for i, field_name in enumerate(field_names):
+                fields.append(cls._parse_field(parser, field_name))
+                if i < len(field_names) - 1:
+                    parser.parse_punctuation(",")
+            return tuple(fields)
+
+    def verify(self) -> None:
+        if self.lhs_component_count.value.data < 1:
+            raise VerifyException("lhs component count must be positive")
+        if self.rhs_component_count.value.data < 1:
+            raise VerifyException("rhs component count must be positive")
+        if self.num_primitive_operations.value.data < 1:
+            raise VerifyException("num primitive operations must be positive")
 
 
 @irdl_attr_definition
@@ -515,15 +588,3 @@ class CustomCallApiVersion(StrEnum):
     API_VERSION_STATUS_RETURNING = "API_VERSION_STATUS_RETURNING"
     API_VERSION_STATUS_RETURNING_UNIFIED = "API_VERSION_STATUS_RETURNING_UNIFIED"
     API_VERSION_TYPED_FFI = "API_VERSION_TYPED_FFI"
-
-
-@irdl_attr_definition
-class CustomCallApiVersionAttr(
-    EnumAttribute[CustomCallApiVersion], SpacedOpaqueSyntaxAttribute
-):
-    """StableHLO custom call API version attribute.
-
-    Mirrors StableHLO enum for CustomCall API versions.
-    """
-
-    name = "stablehlo.custom_call_api_version"

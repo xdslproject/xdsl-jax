@@ -25,7 +25,7 @@ class SameOperandsAndResultShape(OpTrait):
 
         if not op.results or not op.operands:
             raise VerifyException(
-                f"'{op.name}' requires at least one result and operand"
+                f"'{op.name}' requires at least one result or operand"
             )
 
         # Get all types (operands and results) to check for compatible shapes
@@ -74,7 +74,7 @@ class SameOperandsAndResultElementType(OpTrait):
 
         if not op.results or not op.operands:
             raise VerifyException(
-                f"'{op.name}' requires at least one result and operand"
+                f"'{op.name}' requires at least one result or operand"
             )
 
         # Get the element type of the first operand
