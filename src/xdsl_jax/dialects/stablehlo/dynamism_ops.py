@@ -11,6 +11,7 @@ from xdsl.dialects.builtin import (
     TensorType,
     i64,
 )
+from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.ir import Attribute, Operation
 from xdsl.irdl import (
     IRDLOperation,
@@ -33,7 +34,7 @@ from .types import DimensionTensorType
 
 
 @irdl_op_definition
-class DynamicBroadcastInDimOp(IRDLOperation):
+class DynamicBroadcastInDimOp(IRDLOperation, ConditionallySpeculatableInterface):
     """
     This operation is functionally identical to
     [broadcast_in_dim](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#broadcast_in_dim)
