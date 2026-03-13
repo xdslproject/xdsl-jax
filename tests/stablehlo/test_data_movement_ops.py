@@ -1,5 +1,6 @@
 """Tests for StableHLO data movement operations."""
 
+import pytest
 from xdsl.dialects.builtin import DYNAMIC_INDEX, TensorType, i32
 from xdsl.utils.test_value import create_ssa_value
 
@@ -14,13 +15,14 @@ def _create_reshape_op(operand_shape: list[int], result_shape: list[int]) -> Res
     )
 
 
-def test_reshape_is_speculatable_with_static_operand():
-    op = _create_reshape_op([2, 3], [6])
+@pytest.mark.parametrize(
+    ("operand_shape", "expected"),
+    [
+        pytest.param([2, 3], True, id="static-operand"),
+        pytest.param([DYNAMIC_INDEX, 3], False, id="dynamic-operand"),
+    ],
+)
+def test_reshape_is_speculatable(operand_shape: list[int], expected: bool):
+    op = _create_reshape_op(operand_shape, [6])
 
-    assert op.is_speculatable()
-
-
-def test_reshape_is_not_speculatable_with_dynamic_operand():
-    op = _create_reshape_op([DYNAMIC_INDEX, 3], [6])
-
-    assert not op.is_speculatable()
+    assert op.is_speculatable() is expected
