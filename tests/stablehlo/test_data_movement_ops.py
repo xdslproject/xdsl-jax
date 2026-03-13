@@ -87,7 +87,10 @@ def _create_scatter_op(
 
 @pytest.mark.parametrize(
     ("indices_are_sorted", "expected"),
-    [(False, True), (True, False)],
+    [
+        pytest.param(False, True, id="unsorted-indices"),
+        pytest.param(True, False, id="sorted-indices"),
+    ],
 )
 def test_gather_is_speculatable(indices_are_sorted: bool, expected: bool):
     op = _create_gather_op(operand_shape=[2], indices_are_sorted=indices_are_sorted)
@@ -98,9 +101,15 @@ def test_gather_is_speculatable(indices_are_sorted: bool, expected: bool):
 @pytest.mark.parametrize(
     ("input_shape", "indices_are_sorted", "unique_indices", "expected"),
     [
-        ([2], False, True, False),
-        ([DYNAMIC_INDEX], False, False, False),
-        ([2], False, False, True),
+        pytest.param([2], False, True, False, id="unique-indices"),
+        pytest.param(
+            [DYNAMIC_INDEX],
+            False,
+            False,
+            False,
+            id="dynamic-input-shape",
+        ),
+        pytest.param([2], False, False, True, id="static-inputs"),
     ],
 )
 def test_scatter_is_speculatable(
