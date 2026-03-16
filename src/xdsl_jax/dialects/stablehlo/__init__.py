@@ -13,7 +13,15 @@ from .attributes import (
     TokenType,
 )
 from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
-from .data_movement_ops import BroadcastInDimOp, SliceOp
+from .data_movement_ops import (
+    BroadcastInDimOp,
+    ConcatenateOp,
+    DynamicSliceOp,
+    GatherOp,
+    ReshapeOp,
+    ScatterOp,
+    SliceOp,
+)
 from .dynamism_ops import DynamicBroadcastInDimOp
 from .elementwise_binary_ops import (
     AddOp,
@@ -132,6 +140,11 @@ StableHLO = Dialect(
         WhileOp,
         # Data movement operations
         BroadcastInDimOp,
+        ConcatenateOp,
+        DynamicSliceOp,
+        GatherOp,
+        ReshapeOp,
+        ScatterOp,
         SliceOp,
         # Dynamism operations
         DynamicBroadcastInDimOp,

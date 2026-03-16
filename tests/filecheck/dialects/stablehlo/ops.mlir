@@ -479,6 +479,85 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 %out_dims = "test.op"() : () -> tensor<3xi64>
 %dynamic_bcast = stablehlo.dynamic_broadcast_in_dim %operand, %out_dims, dims = [2, 1] : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
 
+%gather_input = "test.op"() : () -> tensor<2x3x4x2xi32>
+%start_indices = "test.op"() : () -> tensor<2x2x3x2xi64>
+// CHECK: %gather = "stablehlo.gather"(%gather_input, %start_indices)
+// CHECK-SAME: dimension_numbers = #stablehlo.gather<
+// CHECK-NEXT:   offset_dims = [3, 4],
+// CHECK-NEXT:   collapsed_slice_dims = [1],
+// CHECK-NEXT:   operand_batching_dims = [0],
+// CHECK-NEXT:   start_indices_batching_dims = [1],
+// CHECK-NEXT:   start_index_map = [2, 1],
+// CHECK-NEXT:   index_vector_dim = 3
+// CHECK-NEXT: slice_sizes = array<i64: 1, 1, 2, 2>, indices_are_sorted = false
+%gather = "stablehlo.gather"(%gather_input, %start_indices) <{
+  dimension_numbers = #stablehlo.gather<
+    offset_dims = [3, 4],
+    collapsed_slice_dims = [1],
+    operand_batching_dims = [0],
+    start_indices_batching_dims = [1],
+    start_index_map = [2, 1],
+    index_vector_dim = 3>,
+  slice_sizes = array<i64: 1, 1, 2, 2>,
+  indices_are_sorted = false
+}> : (tensor<2x3x4x2xi32>, tensor<2x2x3x2xi64>) -> tensor<2x2x3x2x2xi32>
+
+
+
+%scatter_input = "test.op"() : () -> tensor<2x3x4x2xi64>
+%scatter_indices = "test.op"() : () -> tensor<2x2x3x2xi64>
+%scatter_updates = "test.op"() : () -> tensor<2x2x3x2x2xi64>
+// CHECK: %scatter = "stablehlo.scatter"(%scatter_input, %scatter_indices, %scatter_updates)
+// CHECK-SAME: scatter_dimension_numbers = #stablehlo.scatter<
+// CHECK-NEXT:   update_window_dims = [3, 4],
+// CHECK-NEXT:   inserted_window_dims = [1],
+// CHECK-NEXT:   input_batching_dims = [0],
+// CHECK-NEXT:   scatter_indices_batching_dims = [1],
+// CHECK-NEXT:   scatter_dims_to_operand_dims = [2, 1],
+// CHECK-NEXT:   index_vector_dim = 3
+// CHECK-NEXT: indices_are_sorted = false, unique_indices = false
+// CHECK-NEXT: ^bb[[BB:[0-9]+]](%arg_scatter : tensor<i64>, %arg_scatter_1 : tensor<i64>):
+// CHECK-NEXT:   %scatter_add = stablehlo.add %arg_scatter, %arg_scatter_1 : tensor<i64>
+// CHECK-NEXT:   stablehlo.return %scatter_add : tensor<i64>
+%scatter = "stablehlo.scatter"(%scatter_input, %scatter_indices, %scatter_updates) <{
+  scatter_dimension_numbers = #stablehlo.scatter<
+    update_window_dims = [3, 4],
+    inserted_window_dims = [1],
+    input_batching_dims = [0],
+    scatter_indices_batching_dims = [1],
+    scatter_dims_to_operand_dims = [2, 1],
+    index_vector_dim = 3>,
+  indices_are_sorted = false,
+  unique_indices = false
+}> ({
+  ^bb0(%arg_scatter_0: tensor<i64>, %arg_scatter_1: tensor<i64>):
+    %scatter_add = "stablehlo.add"(%arg_scatter_0, %arg_scatter_1) : (tensor<i64>, tensor<i64>) -> tensor<i64>
+    "stablehlo.return"(%scatter_add) : (tensor<i64>) -> ()
+}) : (tensor<2x3x4x2xi64>, tensor<2x2x3x2xi64>, tensor<2x2x3x2x2xi64>) -> tensor<2x3x4x2xi64>
+
+%reshape_input = "test.op"() : () -> tensor<2xf32>
+// CHECK: %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+// CHECK-GENERIC: %reshape = "stablehlo.reshape"(%reshape_input) : (tensor<2xf32>) -> tensor<1x2xf32>
+%reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+
+%reshape_dynamic_input = "test.op"() : () -> tensor<?x3xi32>
+// CHECK: %reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+// CHECK-GENERIC: %reshape_dynamic = "stablehlo.reshape"(%reshape_dynamic_input) : (tensor<?x3xi32>) -> tensor<6xi32>
+%reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+
+%input1 = "test.op"() : () -> tensor<3x2xi64>
+%input2 = "test.op"() : () -> tensor<1x2xi64>
+// CHECK: %concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+// CHECK-GENERIC: %concatenate = "stablehlo.concatenate"(%input1, %input2) <{dimension = 0 : i64}> : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+%concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+
+%dyn_operand = "test.op"() : () -> tensor<4x4xi32>
+%start0 = "test.op"() : () -> tensor<i64>
+%start1 = "test.op"() : () -> tensor<i64>
+// CHECK: %dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+// CHECK-GENERIC: %dynamic_slice = "stablehlo.dynamic_slice"(%dyn_operand, %start0, %start1) <{slice_sizes = array<i64: 2, 3>}> : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+%dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+
 // CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 // CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
