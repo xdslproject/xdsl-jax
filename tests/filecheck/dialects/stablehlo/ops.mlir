@@ -389,6 +389,65 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
   stablehlo.return %reduce_arg0, %reduce_arg2 : tensor<i64>, tensor<i64>
 }
 
+%dot_lhs = "test.op"() : () -> tensor<2x3xi32>
+%dot_rhs = "test.op"() : () -> tensor<3x4xi32>
+// CHECK: %dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0]: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC: %dot_no_algorithm = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
+// CHECK-GENERIC: lhs_contracting_dimensions = [1],
+// CHECK-GENERIC: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+%dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
+// CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
+// CHECK-NEXT: lhs_precision_type = f32,
+// CHECK-NEXT: rhs_precision_type = f32,
+// CHECK-NEXT: accumulation_type = f32,
+// CHECK-NEXT: lhs_component_count = 1,
+// CHECK-NEXT: rhs_component_count = 1,
+// CHECK-NEXT: num_primitive_operations = 1,
+// CHECK-NEXT: allow_imprecise_accumulation = false
+// CHECK-NEXT: >: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC: %dot = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
+// CHECK-GENERIC-NEXT: lhs_contracting_dimensions = [1],
+// CHECK-GENERIC-NEXT: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC-NEXT: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC-NEXT: lhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: rhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: accumulation_type = f32,
+// CHECK-GENERIC-NEXT: lhs_component_count = 1,
+// CHECK-GENERIC-NEXT: rhs_component_count = 1,
+// CHECK-GENERIC-NEXT: num_primitive_operations = 1,
+// CHECK-GENERIC-NEXT: allow_imprecise_accumulation = false
+// CHECK-GENERIC-NEXT: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+%dot = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
+%dot_batch_lhs = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_batch_rhs = "test.op"() : () -> tensor<2x4x5xi32>
+// CHECK: %dot_with_batching_and_algorithm = stablehlo.dot_general %dot_batch_lhs, %dot_batch_rhs, batching_dims = [0] x [0], contracting_dims = [2] x [1], algorithm = <
+// CHECK-NEXT: lhs_precision_type = f32,
+// CHECK-NEXT: rhs_precision_type = f32,
+// CHECK-NEXT: accumulation_type = f32,
+// CHECK-NEXT: lhs_component_count = 1,
+// CHECK-NEXT: rhs_component_count = 1,
+// CHECK-NEXT: num_primitive_operations = 1,
+// CHECK-NEXT: allow_imprecise_accumulation = false
+// CHECK-NEXT: >: (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+// CHECK-GENERIC: %dot_with_batching_and_algorithm = "stablehlo.dot_general"(%dot_batch_lhs, %dot_batch_rhs) <{dot_dimension_numbers = #stablehlo.dot<
+// CHECK-GENERIC-NEXT: lhs_batching_dimensions = [0],
+// CHECK-GENERIC-NEXT: rhs_batching_dimensions = [0],
+// CHECK-GENERIC-NEXT: lhs_contracting_dimensions = [2],
+// CHECK-GENERIC-NEXT: rhs_contracting_dimensions = [1]
+// CHECK-GENERIC-NEXT: >, algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC-NEXT: lhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: rhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: accumulation_type = f32,
+// CHECK-GENERIC-NEXT: lhs_component_count = 1,
+// CHECK-GENERIC-NEXT: rhs_component_count = 1,
+// CHECK-GENERIC-NEXT: num_primitive_operations = 1,
+// CHECK-GENERIC-NEXT: allow_imprecise_accumulation = false
+// CHECK-GENERIC-NEXT: >}> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+%dot_with_batching_and_algorithm = stablehlo.dot_general %dot_batch_lhs, %dot_batch_rhs, batching_dims = [0] x [0], contracting_dims = [2] x [1], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+
 // CHECK: %custom_call_layouts = stablehlo.custom_call @bar(%constant) {
 // CHECK-SAME: api_version = 4 : i32,
 // CHECK-SAME: backend_config = {bar = 42 : i32},

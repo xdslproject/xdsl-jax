@@ -6,15 +6,20 @@ from collections.abc import Mapping, Sequence
 from typing import Any, cast
 
 from xdsl.dialects.builtin import (
+    DYNAMIC_INDEX,
     AnyTensorType,
+    ArrayAttr,
     DenseArrayBase,
     TensorType,
     i64,
 )
+from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.ir import Attribute, BlockArgument, Region, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
     irdl_op_definition,
+    operand_def,
+    opt_prop_def,
     prop_def,
     region_def,
     traits_def,
@@ -25,14 +30,281 @@ from xdsl.irdl.operations import SameVariadicOperandSize
 from xdsl.parser import Parser, UnresolvedOperand
 from xdsl.printer import Printer
 from xdsl.traits import (
+    ConditionallySpeculatable,
+    NoMemoryEffect,
     RecursiveMemoryEffect,
     SingleBlockImplicitTerminator,
 )
 from xdsl.utils.exceptions import VerifyException
 from xdsl.utils.type import get_element_type_or_self, have_compatible_shape
 
+from .attributes import DotAlgorithmAttr, DotAttr, Precision, PrecisionAttr
+from .custom_directives import DotDimensionNumbers, PrecisionConfigAndAlgorithm
 from .ops import ReturnOp
 from .traits import RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput
+
+
+def _verify_precision_config(precision_config: ArrayAttr[PrecisionAttr] | None) -> None:
+    """Verify that the precision config is empty or has <= 2 elements."""
+    if precision_config is not None and len(precision_config.data) > 2:
+        raise VerifyException(
+            "expects precision config to be empty or have <= 2 elements."
+        )
+
+
+def _verify_dims_distinct(
+    lhs_dims: Sequence[int],
+    rhs_dims: Sequence[int],
+    lhs_name: str,
+    rhs_name: str,
+) -> None:
+    """Verify that the dimensions are distinct."""
+    dim_set: set[int] = set()
+    for dim in tuple(lhs_dims) + tuple(rhs_dims):
+        if dim in dim_set:
+            raise VerifyException(
+                f"has duplicated dimension from {lhs_name} and {rhs_name}: {dim}"
+            )
+        dim_set.add(dim)
+
+
+def _verify_dims_in_range(rank: int, dims: Sequence[int], dim_name: str) -> None:
+    """Verify that the dimensions are in range."""
+    for dim in dims:
+        if dim < 0 or dim >= rank:
+            raise VerifyException(
+                f"{dim_name} value: {dim} is out of range: [0, {rank})"
+            )
+
+
+def _verify_compatible_dims(lhs_dim: int, rhs_dim: int) -> bool:
+    """Verify that the dimensions are compatible."""
+    return lhs_dim == DYNAMIC_INDEX or rhs_dim == DYNAMIC_INDEX or lhs_dim == rhs_dim
+
+
+def _verify_compatible_shape(shape1: Sequence[int], shape2: Sequence[int]) -> bool:
+    """Verify that the shapes are compatible."""
+    if len(shape1) != len(shape2):
+        return False
+    for dim1, dim2 in zip(shape1, shape2, strict=True):
+        if not _verify_compatible_dims(dim1, dim2):
+            return False
+    return True
+
+
+def _infer_dot_general_shape(
+    lhs_shape: Sequence[int],
+    rhs_shape: Sequence[int],
+    lhs_batching_dimensions: Sequence[int],
+    rhs_batching_dimensions: Sequence[int],
+    lhs_contracting_dimensions: Sequence[int],
+    rhs_contracting_dimensions: Sequence[int],
+) -> tuple[int, ...]:
+    """Infer the output shape of the dot general operation."""
+    dimensions: list[int] = []
+    for lhs_batching_dim in lhs_batching_dimensions:
+        dimensions.append(lhs_shape[lhs_batching_dim])
+    for i, dim in enumerate(lhs_shape):
+        if i not in lhs_batching_dimensions and i not in lhs_contracting_dimensions:
+            dimensions.append(dim)
+    for i, dim in enumerate(rhs_shape):
+        if i not in rhs_batching_dimensions and i not in rhs_contracting_dimensions:
+            dimensions.append(dim)
+    return tuple(dimensions)
+
+
+@irdl_op_definition
+class DotGeneralOp(IRDLOperation, ConditionallySpeculatableInterface):
+    """
+    Computes dot products between slices of ``lhs`` and slices of ``rhs`` and
+    produces a ``result`` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#dot_general
+
+    Example:
+    ```mlir
+    %result = stablehlo.dot_general %lhs, %rhs,
+      batching_dims = [0] x [0],
+      contracting_dims = [2] x [1],
+      precision = [DEFAULT, DEFAULT],
+      algorithm = <lhs_precision_type = tf32,
+                  rhs_precision_type = tf32,
+                  accumulation_type = f32,
+                  lhs_component_count = 1,
+                  rhs_component_count = 1,
+                  num_primitive_operations = 1,
+                  allow_imprecise_accumulation = false>
+      : (tensor<2x2x2xi64>, tensor<2x2x2xi64>) -> tensor<2x2x2xi64>
+    ```
+    """
+
+    name = "stablehlo.dot_general"
+
+    lhs = operand_def(AnyTensorType)
+    rhs = operand_def(AnyTensorType)
+    dot_dimension_numbers = prop_def(DotAttr)
+    precision_config = opt_prop_def(ArrayAttr[PrecisionAttr])
+    algorithm = opt_prop_def(DotAlgorithmAttr)
+    result = var_result_def(AnyTensorType)
+
+    assembly_format = (
+        "$lhs `,` $rhs `,` custom<DotDimensionNumbers>($dot_dimension_numbers) `` "
+        "custom<PrecisionConfigAndAlgorithm>($precision_config, $algorithm) attr-dict"
+        " `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (DotDimensionNumbers, PrecisionConfigAndAlgorithm)
+
+    traits = traits_def(ConditionallySpeculatable(), NoMemoryEffect())
+
+    def verify_(self) -> None:
+        lhs_type = cast(TensorType[Attribute], self.lhs.type)
+        rhs_type = cast(TensorType[Attribute], self.rhs.type)
+        result_type = cast(TensorType[Attribute], self.result_types[0])
+
+        dimensions = self.dot_dimension_numbers
+        lhs_batching_dimensions = tuple(
+            dim.value.data for dim in dimensions.lhs_batching_dimensions.data
+        )
+        rhs_batching_dimensions = tuple(
+            dim.value.data for dim in dimensions.rhs_batching_dimensions.data
+        )
+        lhs_contracting_dimensions = tuple(
+            dim.value.data for dim in dimensions.lhs_contracting_dimensions.data
+        )
+        rhs_contracting_dimensions = tuple(
+            dim.value.data for dim in dimensions.rhs_contracting_dimensions.data
+        )
+        _verify_precision_config(self.precision_config)
+        if len(lhs_batching_dimensions) != len(rhs_batching_dimensions):
+            raise VerifyException(
+                "lhs and rhs should have the same number of batching dimensions"
+            )
+        if len(lhs_contracting_dimensions) != len(rhs_contracting_dimensions):
+            raise VerifyException(
+                "lhs and rhs should have the same number of contracting dimensions"
+            )
+        _verify_dims_distinct(
+            lhs_batching_dimensions,
+            lhs_contracting_dimensions,
+            "lhs_batching_dimensions",
+            "lhs_contracting_dimensions",
+        )
+        _verify_dims_distinct(
+            rhs_batching_dimensions,
+            rhs_contracting_dimensions,
+            "rhs_batching_dimensions",
+            "rhs_contracting_dimensions",
+        )
+
+        lhs_rank = lhs_type.get_num_dims()
+        rhs_rank = rhs_type.get_num_dims()
+        _verify_dims_in_range(
+            lhs_rank, lhs_batching_dimensions, "lhs_batching_dimensions"
+        )
+        _verify_dims_in_range(
+            lhs_rank,
+            lhs_contracting_dimensions,
+            "lhs_contracting_dimensions",
+        )
+        _verify_dims_in_range(
+            rhs_rank, rhs_batching_dimensions, "rhs_batching_dimensions"
+        )
+        _verify_dims_in_range(
+            rhs_rank,
+            rhs_contracting_dimensions,
+            "rhs_contracting_dimensions",
+        )
+
+        lhs_shape = lhs_type.get_shape()
+        rhs_shape = rhs_type.get_shape()
+        for lhs_dim, rhs_dim in zip(
+            lhs_batching_dimensions, rhs_batching_dimensions, strict=True
+        ):
+            if not _verify_compatible_dims(lhs_shape[lhs_dim], rhs_shape[rhs_dim]):
+                raise VerifyException("batching dimension sizes must match for lhs/rhs")
+        for lhs_dim, rhs_dim in zip(
+            lhs_contracting_dimensions, rhs_contracting_dimensions, strict=True
+        ):
+            if not _verify_compatible_dims(lhs_shape[lhs_dim], rhs_shape[rhs_dim]):
+                raise VerifyException(
+                    "contracting dimension sizes must match for lhs/rhs"
+                )
+
+        inferred_shape = _infer_dot_general_shape(
+            lhs_shape,
+            rhs_shape,
+            lhs_batching_dimensions,
+            rhs_batching_dimensions,
+            lhs_contracting_dimensions,
+            rhs_contracting_dimensions,
+        )
+        if not _verify_compatible_shape(inferred_shape, result_type.get_shape()):
+            raise VerifyException(
+                f"inferred shape '{inferred_shape}' is incompatible "
+                f"with return type of operation {result_type}"
+            )
+
+        is_default_precision_config = self.precision_config is None or all(
+            attr.data == Precision.DEFAULT for attr in self.precision_config.data
+        )
+        has_algorithm_specified = self.algorithm is not None
+        if has_algorithm_specified:
+            algorithm = cast(DotAlgorithmAttr, self.algorithm)
+            algorithm.verify()
+
+        if not is_default_precision_config and has_algorithm_specified:
+            raise VerifyException(
+                "must specify DEFAULT precision config when algorithm is set."
+            )
+
+    def is_speculatable(self) -> bool:
+        lhs_type = cast(TensorType[Attribute], self.lhs.type)
+        rhs_type = cast(TensorType[Attribute], self.rhs.type)
+        result_type = cast(TensorType[Attribute], self.results[0].type)
+
+        dimensions = self.dot_dimension_numbers
+        lhs_batching_dimensions = tuple(
+            dim.value.data for dim in dimensions.lhs_batching_dimensions.data
+        )
+        rhs_batching_dimensions = tuple(
+            dim.value.data for dim in dimensions.rhs_batching_dimensions.data
+        )
+        lhs_contracting_dimensions = tuple(
+            dim.value.data for dim in dimensions.lhs_contracting_dimensions.data
+        )
+        rhs_contracting_dimensions = tuple(
+            dim.value.data for dim in dimensions.rhs_contracting_dimensions.data
+        )
+        lhs_special_dimensions = lhs_batching_dimensions + lhs_contracting_dimensions
+        rhs_special_dimensions = rhs_batching_dimensions + rhs_contracting_dimensions
+
+        lhs_shape = lhs_type.get_shape()
+        rhs_shape = rhs_type.get_shape()
+        result_shape = result_type.get_shape()
+
+        if any(lhs_shape[i] == DYNAMIC_INDEX for i in lhs_special_dimensions):
+            return False
+        if any(rhs_shape[i] == DYNAMIC_INDEX for i in rhs_special_dimensions):
+            return False
+
+        result_index = len(lhs_batching_dimensions)
+        for i, lhs_dim in enumerate(lhs_shape):
+            if i in lhs_special_dimensions:
+                continue
+            if result_shape[result_index] != DYNAMIC_INDEX and lhs_dim == DYNAMIC_INDEX:
+                return False
+            result_index += 1
+
+        for i, rhs_dim in enumerate(rhs_shape):
+            if i in rhs_special_dimensions:
+                continue
+            if result_shape[result_index] != DYNAMIC_INDEX and rhs_dim == DYNAMIC_INDEX:
+                return False
+            result_index += 1
+
+        return True
 
 
 def _parse_reduce_operand_pairs(

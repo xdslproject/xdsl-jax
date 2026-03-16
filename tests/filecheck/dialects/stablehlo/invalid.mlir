@@ -363,6 +363,76 @@ reducer (%arg0 : tensor<i32>, %arg1 : tensor<i32>) {
 
 // -----
 
+%dot_lhs3 = "test.op"() : () -> tensor<2x3xi32>
+%dot_rhs3 = "test.op"() : () -> tensor<3x4xi32>
+// CHECK: Operation does not verify: must specify DEFAULT precision config when algorithm is set.
+%dot3 = stablehlo.dot_general %dot_lhs3, %dot_rhs3, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, HIGH], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
+// -----
+
+%dot_lhs4 = "test.op"() : () -> tensor<2x3xi32>
+%dot_rhs4 = "test.op"() : () -> tensor<3x4xi32>
+// CHECK: Operation does not verify: expects precision config to be empty or have <= 2 elements.
+%dot4 = stablehlo.dot_general %dot_lhs4, %dot_rhs4, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT, HIGH] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
+// -----
+
+%dot_lhs5 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs5 = "test.op"() : () -> tensor<2x4x5xi32>
+// CHECK: Operation does not verify: lhs and rhs should have the same number of batching dimensions
+%dot5 = stablehlo.dot_general %dot_lhs5, %dot_rhs5, batching_dims = [0] x [], contracting_dims = [2] x [1] : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+
+// -----
+
+%dot_lhs6 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs6 = "test.op"() : () -> tensor<2x4x5xi32>
+// CHECK: Operation does not verify: lhs and rhs should have the same number of contracting dimensions
+%dot6 = stablehlo.dot_general %dot_lhs6, %dot_rhs6, batching_dims = [0] x [0], contracting_dims = [1, 2] x [1] : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x5xi32>
+
+// -----
+
+%dot_lhs7 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs7 = "test.op"() : () -> tensor<2x4x5xi32>
+// CHECK: Operation does not verify: has duplicated dimension from lhs_batching_dimensions and lhs_contracting_dimensions: 0
+%dot7 = stablehlo.dot_general %dot_lhs7, %dot_rhs7, batching_dims = [0] x [0], contracting_dims = [0] x [1] : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<3x5xi32>
+
+// -----
+
+%dot_lhs8 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs8 = "test.op"() : () -> tensor<2x4x5xi32>
+// CHECK: Operation does not verify: lhs_batching_dimensions value: 3 is out of range: [0, 3)
+%dot8 = stablehlo.dot_general %dot_lhs8, %dot_rhs8, batching_dims = [3] x [0], contracting_dims = [2] x [1] : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<3x5xi32>
+
+// -----
+
+%dot_lhs9 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs9 = "test.op"() : () -> tensor<5x4x6xi32>
+// CHECK: Operation does not verify: batching dimension sizes must match for lhs/rhs
+%dot9 = stablehlo.dot_general %dot_lhs9, %dot_rhs9, batching_dims = [0] x [0], contracting_dims = [2] x [1] : (tensor<2x3x4xi32>, tensor<5x4x6xi32>) -> tensor<2x3x6xi32>
+
+// -----
+
+%dot_lhs10 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs10 = "test.op"() : () -> tensor<2x5x6xi32>
+// CHECK: Operation does not verify: contracting dimension sizes must match for lhs/rhs
+%dot10 = stablehlo.dot_general %dot_lhs10, %dot_rhs10, batching_dims = [0] x [0], contracting_dims = [2] x [1] : (tensor<2x3x4xi32>, tensor<2x5x6xi32>) -> tensor<2x3x6xi32>
+
+// -----
+
+%dot_lhs11 = "test.op"() : () -> tensor<2x3x4xi32>
+%dot_rhs11 = "test.op"() : () -> tensor<2x4x6xi32>
+// CHECK: Operation does not verify: inferred shape '(2, 3, 6)' is incompatible with return type of operation tensor<2x6xi32>
+%dot11 = stablehlo.dot_general %dot_lhs11, %dot_rhs11, batching_dims = [0] x [0], contracting_dims = [2] x [1] : (tensor<2x3x4xi32>, tensor<2x4x6xi32>) -> tensor<2x6xi32>
+
+// -----
+
+%dot_lhs_bad_precision = "test.op"() : () -> tensor<2x3xi32>
+%dot_rhs_bad_precision = "test.op"() : () -> tensor<3x4xi32>
+// CHECK: unknown precision enum 'FOO'
+%dot_bad_precision = stablehlo.dot_general %dot_lhs_bad_precision, %dot_rhs_bad_precision, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [FOO] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+
+// -----
+
 %bcast_operand = "test.op"() : () -> tensor<1x3xi32>
 // CHECK: broadcast_dimensions size (1) does not match operand rank (2)
 %bad_bcast_size = stablehlo.broadcast_in_dim %bcast_operand, dims = [2] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>

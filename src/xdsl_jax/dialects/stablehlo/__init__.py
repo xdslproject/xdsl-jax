@@ -85,7 +85,7 @@ from .ops import (
     SelectOp,
     TransposeOp,
 )
-from .reduction_ops import ReduceOp
+from .reduction_ops import DotGeneralOp, ReduceOp
 
 StableHLO = Dialect(
     "stablehlo",
@@ -149,6 +149,7 @@ StableHLO = Dialect(
         # Dynamism operations
         DynamicBroadcastInDimOp,
         # Reduction operations
+        DotGeneralOp,
         ReduceOp,
         # Extensibility operations
         CustomCallOp,
