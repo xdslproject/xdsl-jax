@@ -49,11 +49,7 @@ from .traits import (
     SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
-from .types import (
-    IntegerOrIndexTensorType, 
-    IntegerTensorType, 
-    ScalarIntTensorType
-)
+from .types import IntegerOrIndexTensorType, IntegerTensorType, ScalarIntTensorType
 
 
 @irdl_op_definition

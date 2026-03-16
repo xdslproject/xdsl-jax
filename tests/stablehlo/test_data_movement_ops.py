@@ -20,10 +20,10 @@ from xdsl_jax.dialects.stablehlo.attributes import (
     ScatterDimensionNumbers,
 )
 from xdsl_jax.dialects.stablehlo.data_movement_ops import (
-    ConcatenateOp, 
+    ConcatenateOp,
     GatherOp,
     ReshapeOp,
-    ScatterOp
+    ScatterOp,
 )
 from xdsl_jax.dialects.stablehlo.ops import ReturnOp
 
@@ -87,6 +87,7 @@ def _create_scatter_op(
             "unique_indices": BoolAttr.from_bool(unique_indices),
         },
         regions=[Region(block)],
+    )
 
 
 def _create_reshape_op(operand_shape: list[int], result_shape: list[int]) -> ReshapeOp:
