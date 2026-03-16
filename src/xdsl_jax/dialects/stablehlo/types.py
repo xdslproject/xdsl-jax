@@ -25,9 +25,9 @@ from xdsl.irdl import (
     AnyInt,
     EqIntConstraint,
     IRDLAttrConstraint,
-    eq,
     RangeLengthConstraint,
     RangeOf,
+    eq,
 )
 
 from .attributes import TokenType
@@ -81,6 +81,7 @@ DimensionTensorType: IRDLAttrConstraint = TensorType.constr(
             length=EqIntConstraint(1),
         )
     ),
+)
 IntegerOrIndexTensorType: TypeAlias = TensorType[IntegerType | IndexType]
 
 # ScalarIntTensorType is a 0D tensor of integer values
