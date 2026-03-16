@@ -25,6 +25,8 @@ def _create_reshape_op(operand_shape: list[int], result_shape: list[int]) -> Res
 def test_reshape_is_speculatable(operand_shape: list[int], expected: bool):
     op = _create_reshape_op(operand_shape, [6])
 
+    assert op.is_speculatable() is expected
+
 
 def _create_concatenate_op(
     operand_shapes: list[list[int]], result_shape: list[int]

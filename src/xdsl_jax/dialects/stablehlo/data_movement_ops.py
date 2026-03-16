@@ -13,7 +13,6 @@ from xdsl.dialects.builtin import (
     i64,
 )
 from xdsl.interfaces import ConditionallySpeculatableInterface
-from xdsl.ir import cast
 from xdsl.irdl import (
     AtLeast,
     IRDLOperation,
