@@ -169,6 +169,13 @@ class MapOp(IRDLOperation):
     )
 
     def _verify_computation_block(self, block: Block) -> None:
+        """Verify that computation block has the correct arguments and return type.
+        it checks the following:
+        - The number of operands and arguments match.
+        - The arguments are 0-rank tensors
+        - The element types of the arguments match the operand element types.
+        - The return value is a single 0-rank tensor.
+        """
         block_args = block.args
         if len(self.inputs) != len(block_args):
             raise VerifyException(
