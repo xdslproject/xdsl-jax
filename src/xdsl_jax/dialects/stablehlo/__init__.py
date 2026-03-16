@@ -17,7 +17,9 @@ from .data_movement_ops import (
     BroadcastInDimOp,
     ConcatenateOp,
     DynamicSliceOp,
+    GatherOp,
     ReshapeOp,
+    ScatterOp,
     SliceOp,
 )
 from .elementwise_binary_ops import (
@@ -139,7 +141,9 @@ StableHLO = Dialect(
         BroadcastInDimOp,
         ConcatenateOp,
         DynamicSliceOp,
+        GatherOp,
         ReshapeOp,
+        ScatterOp,
         SliceOp,
         # Reduction operations
         ReduceOp,
