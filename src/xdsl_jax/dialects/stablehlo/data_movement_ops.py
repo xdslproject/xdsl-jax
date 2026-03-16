@@ -2,18 +2,23 @@
 Data movement operations for the StableHLO dialect.
 """
 
+from typing import cast
+
 from xdsl.dialects.builtin import (
     DYNAMIC_INDEX,
     AnyTensorType,
     BoolAttr,
     DenseArrayBase,
+    IntegerAttr,
     TensorType,
     i64,
 )
 from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.irdl import (
+    AtLeast,
     IRDLOperation,
     SameVariadicOperandSize,
+    eq,
     irdl_op_definition,
     operand_def,
     opt_prop_def,
@@ -26,6 +31,7 @@ from xdsl.irdl import (
 )
 from xdsl.traits import (
     NoMemoryEffect,
+    Pure,
     RecursivelySpeculatable,
     RecursiveMemoryEffect,
 )
@@ -38,12 +44,16 @@ from xdsl_jax.xdsl_extras import (
 )
 
 from .attributes import GatherDimensionNumbers, ScatterDimensionNumbers
-from .custom_directives import SliceRanges
+from .custom_directives import SliceRanges, VariadicOperandWithAttribute
 from .traits import (
     SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
-from .types import IntegerOrIndexTensorType, IntegerTensorType
+from .types import (
+    IntegerOrIndexTensorType, 
+    IntegerTensorType, 
+    ScalarIntTensorType
+)
 
 
 @irdl_op_definition
@@ -158,6 +168,98 @@ class ScatterOp(IRDLOperation, ConditionallySpeculatableInterface):
 
 
 @irdl_op_definition
+class ConcatenateOp(IRDLOperation, ConditionallySpeculatableInterface):
+    """
+    Concatenates a variadic number of tensors in ``inputs`` along ``dimension``
+    dimension in the same order as the given arguments and produces a ``result``
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#concatenate
+
+    Example:
+    ```mlir
+    %result = stablehlo.concatenate %input0, %input1, dim = 0
+    : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+    ```
+    """
+
+    name = "stablehlo.concatenate"
+
+    inputs = var_operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+    dimension = prop_def(IntegerAttr.constr(type=eq(i64), value=AtLeast(0)))
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        SameOperandsAndResultElementType(),
+    )
+
+    assembly_format = (
+        "custom<VariadicOperandWithAttribute>($inputs) "
+        "`dim` `=` $dimension attr-dict `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (VariadicOperandWithAttribute,)
+
+    def is_speculatable(self) -> bool:
+        if not self.operands or not self.results:
+            return False
+
+        concat_dim = self.dimension.value.data
+        result_shape = cast(TensorType, self.result_types[0]).get_shape()
+        concat_dim_dynamic = result_shape[concat_dim] == DYNAMIC_INDEX
+        for operand_type in self.operand_types:
+            operand_shape = cast(TensorType, operand_type).get_shape()
+            for idx, dim in enumerate(operand_shape):
+                if idx == concat_dim and concat_dim_dynamic:
+                    continue
+                if dim == DYNAMIC_INDEX:
+                    return False
+
+        return True
+
+
+@irdl_op_definition
+class DynamicSliceOp(IRDLOperation):
+    """
+    Extracts a slice from the ``operand`` using dynamically-computed starting
+    indices and produces a ``result`` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#dynamic_slice
+
+    Example:
+    ```mlir
+    %result = stablehlo.dynamic_slice %operand, %start_indices0, %start_indices1,
+      sizes = [2, 2] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x2xi32>
+    ```
+    """
+
+    name = "stablehlo.dynamic_slice"
+    operand = operand_def(AnyTensorType)
+    start_indices = var_operand_def(ScalarIntTensorType)
+    slice_sizes = prop_def(DenseArrayBase.constr(i64))
+    result = result_def(AnyTensorType)
+
+    traits = traits_def(
+        Pure(),
+        AllMatchSameOperatorTrait(
+            ("operand", "result"),
+            lambda x: get_element_type_or_self(x.type),
+            "element type",
+        ),
+    )
+
+    assembly_format = (
+        "$operand `,` custom<VariadicOperandWithAttribute>($start_indices) "
+        "`sizes` `=` $slice_sizes attr-dict `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (VariadicOperandWithAttribute,)
+
+
+@irdl_op_definition
 class BroadcastInDimOp(IRDLOperation):
     """
     Expands the dimensions and/or rank of an input tensor by duplicating the
@@ -241,6 +343,70 @@ class BroadcastInDimOp(IRDLOperation):
                         "is not equal to 1 or size of result dimension "
                         f"{dim_index} ({result_dim_size})"
                     )
+
+
+@irdl_op_definition
+class ReshapeOp(IRDLOperation, ConditionallySpeculatableInterface):
+    """
+    Performs reshape of ``operand`` tensor to a ``result`` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#reshape
+
+    Example:
+    ```mlir
+    %result = stablehlo.reshape %operand : (tensor<2xf32>) -> tensor<1x2xf32>
+    ```
+    """
+
+    name = "stablehlo.reshape"
+    operand = operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+
+    assembly_format = """
+    operands attr-dict `:` functional-type(operands, results)
+    """
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        SameOperandsAndResultElementType(),
+    )
+
+    def is_speculatable(self) -> bool:
+        operand_type = cast(TensorType, self.operand.type)
+        return operand_type.has_static_shape()
+
+    def verify_(self) -> None:
+        """Verify that the operation has the same shape for all operands and results."""
+        o_type = cast(TensorType, self.operands[0].type)
+        r_type = self.result.type
+
+        # Reshape requires a statically shaped result type.
+        if not r_type.has_static_shape():
+            raise VerifyException("reshape output must have a static shape.")
+
+        # If the operand type is dynamically shaped there is nothing else to verify.
+        if not o_type.has_static_shape():
+            return
+
+        # If the operand type is statically shaped (not required) the number of
+        # elements must match that of the result type.
+        num_operand_elements = 1
+        for dim in o_type.get_shape():
+            num_operand_elements *= dim
+
+        num_result_elements = 1
+        for dim in r_type.get_shape():
+            num_result_elements *= dim
+
+        if num_result_elements != num_operand_elements:
+            raise VerifyException(
+                "number of output elements ("
+                f"{num_result_elements}"
+                ") doesn't match expected number of elements ("
+                f"{num_operand_elements}"
+                ")"
+            )
 
 
 @irdl_op_definition

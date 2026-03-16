@@ -19,7 +19,12 @@ from xdsl_jax.dialects.stablehlo.attributes import (
     GatherDimensionNumbers,
     ScatterDimensionNumbers,
 )
-from xdsl_jax.dialects.stablehlo.data_movement_ops import GatherOp, ScatterOp
+from xdsl_jax.dialects.stablehlo.data_movement_ops import (
+    ConcatenateOp, 
+    GatherOp,
+    ReshapeOp,
+    ScatterOp
+)
 from xdsl_jax.dialects.stablehlo.ops import ReturnOp
 
 _EMPTY_DIMS = ArrayAttr[IntegerAttr[I64]](())
@@ -82,6 +87,13 @@ def _create_scatter_op(
             "unique_indices": BoolAttr.from_bool(unique_indices),
         },
         regions=[Region(block)],
+
+
+def _create_reshape_op(operand_shape: list[int], result_shape: list[int]) -> ReshapeOp:
+    operand = create_ssa_value(TensorType(i32, operand_shape))
+    return ReshapeOp.create(
+        operands=[operand],
+        result_types=[TensorType(i32, result_shape)],
     )
 
 
@@ -94,7 +106,18 @@ def _create_scatter_op(
 )
 def test_gather_is_speculatable(indices_are_sorted: bool, expected: bool):
     op = _create_gather_op(operand_shape=[2], indices_are_sorted=indices_are_sorted)
+    assert op.is_speculatable() is expected
 
+
+@pytest.mark.parametrize(
+    ("operand_shape", "expected"),
+    [
+        pytest.param([2, 3], True, id="static-operand"),
+        pytest.param([DYNAMIC_INDEX, 3], False, id="dynamic-operand"),
+    ],
+)
+def test_reshape_is_speculatable(operand_shape: list[int], expected: bool):
+    op = _create_reshape_op(operand_shape, [6])
     assert op.is_speculatable() is expected
 
 
@@ -123,5 +146,45 @@ def test_scatter_is_speculatable(
         indices_are_sorted=indices_are_sorted,
         unique_indices=unique_indices,
     )
+    assert op.is_speculatable() is expected
 
+
+def _create_concatenate_op(
+    operand_shapes: list[list[int]], result_shape: list[int]
+) -> ConcatenateOp:
+    operands = [create_ssa_value(TensorType(i32, shape)) for shape in operand_shapes]
+    return ConcatenateOp.create(
+        operands=operands,
+        result_types=[TensorType(i32, result_shape)],
+        properties={"dimension": IntegerAttr(0, i64)},
+    )
+
+
+def test_concatenate_is_not_speculatable_without_operands_or_results():
+    op = ConcatenateOp.create(properties={"dimension": IntegerAttr(0, i64)})
+    assert not op.is_speculatable()
+
+
+@pytest.mark.parametrize(
+    ("operand_shapes", "result_shape", "expected"),
+    [
+        pytest.param([[3, 2], [1, 2]], [4, 2], True, id="all-static"),
+        pytest.param(
+            [[DYNAMIC_INDEX, 2], [DYNAMIC_INDEX, 2]],
+            [DYNAMIC_INDEX, 2],
+            True,
+            id="dynamic-concat-dimension",
+        ),
+        pytest.param(
+            [[3, DYNAMIC_INDEX], [1, 2]],
+            [4, 2],
+            False,
+            id="dynamic-non-concat-dimension",
+        ),
+    ],
+)
+def test_concatenate_is_speculatable(
+    operand_shapes: list[list[int]], result_shape: list[int], expected: bool
+):
+    op = _create_concatenate_op(operand_shapes, result_shape)
     assert op.is_speculatable() is expected

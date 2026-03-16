@@ -525,6 +525,29 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
     "stablehlo.return"(%scatter_add) : (tensor<i64>) -> ()
 }) : (tensor<2x3x4x2xi64>, tensor<2x2x3x2xi64>, tensor<2x2x3x2x2xi64>) -> tensor<2x3x4x2xi64>
 
+%reshape_input = "test.op"() : () -> tensor<2xf32>
+// CHECK: %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+// CHECK-GENERIC: %reshape = "stablehlo.reshape"(%reshape_input) : (tensor<2xf32>) -> tensor<1x2xf32>
+%reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+
+%reshape_dynamic_input = "test.op"() : () -> tensor<?x3xi32>
+// CHECK: %reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+// CHECK-GENERIC: %reshape_dynamic = "stablehlo.reshape"(%reshape_dynamic_input) : (tensor<?x3xi32>) -> tensor<6xi32>
+%reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+
+%input1 = "test.op"() : () -> tensor<3x2xi64>
+%input2 = "test.op"() : () -> tensor<1x2xi64>
+// CHECK: %concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+// CHECK-GENERIC: %concatenate = "stablehlo.concatenate"(%input1, %input2) <{dimension = 0 : i64}> : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+%concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+
+%dyn_operand = "test.op"() : () -> tensor<4x4xi32>
+%start0 = "test.op"() : () -> tensor<i64>
+%start1 = "test.op"() : () -> tensor<i64>
+// CHECK: %dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+// CHECK-GENERIC: %dynamic_slice = "stablehlo.dynamic_slice"(%dyn_operand, %start0, %start1) <{slice_sizes = array<i64: 2, 3>}> : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+%dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+
 // CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 // CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>

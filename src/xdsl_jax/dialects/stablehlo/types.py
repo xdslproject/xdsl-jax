@@ -9,6 +9,7 @@ from xdsl.dialects.builtin import (
     I32,
     AnyFloat,
     AnyTensorType,
+    ArrayAttr,
     ComplexType,
     Float32Type,
     Float64Type,
@@ -19,6 +20,7 @@ from xdsl.dialects.builtin import (
     TensorType,
 )
 from xdsl.ir import Attribute
+from xdsl.irdl import IRDLAttrConstraint, eq
 
 from .attributes import TokenType
 
@@ -62,3 +64,9 @@ IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
 TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
 IntegerOrIndexTensorType: TypeAlias = TensorType[IntegerType | IndexType]
+
+# ScalarIntTensorType is a 0D tensor of integer values
+ScalarIntTensorType: IRDLAttrConstraint = TensorType.constr(
+    element_type=IntType,
+    shape=eq(ArrayAttr(())),
+)
