@@ -393,9 +393,9 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 %dot_rhs = "test.op"() : () -> tensor<3x4xi32>
 // CHECK: %dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0]: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 // CHECK-GENERIC: %dot_no_algorithm = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC: lhs_contracting_dimensions = [1],
-// CHECK-GENERIC: rhs_contracting_dimensions = [0]
-// CHECK-GENERIC: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC-SAME: lhs_contracting_dimensions = [1],
+// CHECK-GENERIC-SAME: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC-SAME: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 %dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 
 // CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
@@ -408,9 +408,9 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-NEXT: allow_imprecise_accumulation = false
 // CHECK-NEXT: >: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 // CHECK-GENERIC: %dot = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC-NEXT: lhs_contracting_dimensions = [1],
-// CHECK-GENERIC-NEXT: rhs_contracting_dimensions = [0]
-// CHECK-GENERIC-NEXT: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC-SAME: lhs_contracting_dimensions = [1],
+// CHECK-GENERIC-SAME: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC-SAME: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
 // CHECK-GENERIC-NEXT: lhs_precision_type = f32,
 // CHECK-GENERIC-NEXT: rhs_precision_type = f32,
 // CHECK-GENERIC-NEXT: accumulation_type = f32,
@@ -433,11 +433,11 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-NEXT: allow_imprecise_accumulation = false
 // CHECK-NEXT: >: (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
 // CHECK-GENERIC: %dot_with_batching_and_algorithm = "stablehlo.dot_general"(%dot_batch_lhs, %dot_batch_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC-NEXT: lhs_batching_dimensions = [0],
-// CHECK-GENERIC-NEXT: rhs_batching_dimensions = [0],
-// CHECK-GENERIC-NEXT: lhs_contracting_dimensions = [2],
-// CHECK-GENERIC-NEXT: rhs_contracting_dimensions = [1]
-// CHECK-GENERIC-NEXT: >, algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC-SAME: lhs_batching_dimensions = [0],
+// CHECK-GENERIC-SAME: rhs_batching_dimensions = [0],
+// CHECK-GENERIC-SAME: lhs_contracting_dimensions = [2],
+// CHECK-GENERIC-SAME: rhs_contracting_dimensions = [1]
+// CHECK-GENERIC-SAME: >, algorithm = #stablehlo.dot_algorithm<
 // CHECK-GENERIC-NEXT: lhs_precision_type = f32,
 // CHECK-GENERIC-NEXT: rhs_precision_type = f32,
 // CHECK-GENERIC-NEXT: accumulation_type = f32,
