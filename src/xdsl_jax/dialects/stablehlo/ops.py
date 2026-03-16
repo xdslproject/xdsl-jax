@@ -21,7 +21,6 @@ from xdsl.dialects.builtin import (
 from xdsl.ir import Attribute, Block, Region, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
-    attr_def,
     irdl_op_definition,
     operand_def,
     opt_prop_def,
@@ -234,7 +233,7 @@ class CompareOp(IRDLOperation):
     lhs = operand_def(AnyTensorType)
     rhs = operand_def(AnyTensorType)
     result = result_def(PredTensorType)
-    comparison_direction = attr_def(ComparisonDirectionAttr)
+    comparison_direction = prop_def(ComparisonDirectionAttr)
     comparison_type = opt_prop_def(ComparisonTypeAttr)
 
     traits = traits_def(
@@ -254,7 +253,7 @@ class ConstantOp(IRDLOperation):
 
     name = "stablehlo.constant"
 
-    value = attr_def(DenseIntOrFPElementsAttr)
+    value = prop_def(DenseIntOrFPElementsAttr)
     output = result_def(AnyTensorType)
 
     traits = traits_def(Pure(), ConstantLike())
@@ -326,7 +325,7 @@ class MapOp(IRDLOperation):
     name = "stablehlo.map"
 
     inputs = var_operand_def(AnyTensorType)
-    dimensions = attr_def(DenseArrayBase.constr(i64))
+    dimensions = prop_def(DenseArrayBase.constr(i64))
     result = result_def(AnyTensorType)
     computation = var_region_def("single_block")
 
@@ -420,7 +419,7 @@ class TransposeOp(IRDLOperation):
 
     operand = operand_def(AnyTensorType)
     result = result_def(AnyTensorType)
-    permutation = attr_def(DenseArrayBase.constr(i64))
+    permutation = prop_def(DenseArrayBase.constr(i64))
 
     traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
 
@@ -497,9 +496,9 @@ class PadOp(IRDLOperation):
     operand = operand_def(AnyTensorType)
     padding_value = operand_def(SI32TensorType)
     result = result_def(AnyTensorType)
-    edge_padding_low = attr_def(DenseArrayBase.constr(i64))
-    edge_padding_high = attr_def(DenseArrayBase.constr(i64))
-    interior_padding = attr_def(DenseArrayBase.constr(i64))
+    edge_padding_low = prop_def(DenseArrayBase.constr(i64))
+    edge_padding_high = prop_def(DenseArrayBase.constr(i64))
+    interior_padding = prop_def(DenseArrayBase.constr(i64))
 
     traits = traits_def(NoMemoryEffect(), SameOperandsAndResultElementType())
 
@@ -665,8 +664,8 @@ class ReducePrecisionOp(IRDLOperation):
     operand = operand_def(FloatTensorType)
     result = result_def(FloatTensorType)
 
-    exponent_bits = attr_def(IntegerAttr.constr(type=eq(i32), value=AtLeast(1)))
-    mantissa_bits = attr_def(IntegerAttr.constr(type=eq(i32), value=AtLeast(0)))
+    exponent_bits = prop_def(IntegerAttr.constr(type=eq(i32), value=AtLeast(1)))
+    mantissa_bits = prop_def(IntegerAttr.constr(type=eq(i32), value=AtLeast(0)))
 
     traits = traits_def(
         NoMemoryEffect(),
