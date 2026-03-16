@@ -29,9 +29,10 @@ from xdsl.irdl.declarative_assembly_format import (
     PrintingState,
     TypeDirective,
     VariableDirective,
+    VariadicOperandVariable,
     irdl_custom_directive,
 )
-from xdsl.parser import Parser
+from xdsl.parser import Parser, UnresolvedOperand
 from xdsl.printer import Printer
 from xdsl.utils.hints import isa
 
@@ -554,3 +555,29 @@ class PrecisionConfigAndAlgorithm(CustomDirective):
         if algorithm is not None:
             printer.print_string(", algorithm = ")
             algorithm.print_parameters(printer)
+
+
+@irdl_custom_directive
+class VariadicOperandWithAttribute(CustomDirective):
+    """
+    Custom directive for stablehlo.concatenate
+    """
+
+    inputs: VariadicOperandVariable
+
+    def parse(self, parser: Parser, state: ParsingState) -> bool:
+        operands: list[UnresolvedOperand] = []
+        operand: UnresolvedOperand | None = parser.parse_optional_unresolved_operand()
+        while operand is not None:
+            operands.append(operand)
+            parser.parse_punctuation(",")
+            operand = parser.parse_optional_unresolved_operand()
+
+        self.inputs.set(state, operands)
+        return bool(operands)
+
+    def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
+        operands = self.inputs.get(op)
+        state.print_whitespace(printer)
+        printer.print_list(operands, printer.print_ssa_value)
+        printer.print_string(",")

@@ -9,15 +9,26 @@ from xdsl.dialects.builtin import (
     I32,
     AnyFloat,
     AnyTensorType,
+    ArrayAttr,
     ComplexType,
     Float32Type,
     Float64Type,
+    IndexType,
+    IntAttrConstraint,
     IntegerType,
     MemRefType,
     Signedness,
     TensorType,
 )
 from xdsl.ir import Attribute
+from xdsl.irdl import (
+    AnyInt,
+    EqIntConstraint,
+    IRDLAttrConstraint,
+    RangeLengthConstraint,
+    RangeOf,
+    eq,
+)
 
 from .attributes import TokenType
 
@@ -60,3 +71,21 @@ PredOrIntTensorType: TypeAlias = TensorType[PredOrIntType]
 IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
 TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
 TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
+DimensionValueType: TypeAlias = IntType | IndexType
+# DimensionTensorType is a 1D tensor of dimension values
+DimensionTensorType: IRDLAttrConstraint = TensorType.constr(
+    element_type=DimensionValueType,
+    shape=ArrayAttr.constr(
+        RangeLengthConstraint(
+            constraint=RangeOf(IntAttrConstraint(AnyInt())),
+            length=EqIntConstraint(1),
+        )
+    ),
+)
+IntegerOrIndexTensorType: TypeAlias = TensorType[IntegerType | IndexType]
+
+# ScalarIntTensorType is a 0D tensor of integer values
+ScalarIntTensorType: IRDLAttrConstraint = TensorType.constr(
+    element_type=IntType,
+    shape=eq(ArrayAttr(())),
+)

@@ -399,53 +399,53 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 %dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 
 // CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
-// CHECK: lhs_precision_type = f32,
-// CHECK: rhs_precision_type = f32,
-// CHECK: accumulation_type = f32,
-// CHECK: lhs_component_count = 1,
-// CHECK: rhs_component_count = 1,
-// CHECK: num_primitive_operations = 1,
-// CHECK: allow_imprecise_accumulation = false
-// CHECK: >: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-NEXT: lhs_precision_type = f32,
+// CHECK-NEXT: rhs_precision_type = f32,
+// CHECK-NEXT: accumulation_type = f32,
+// CHECK-NEXT: lhs_component_count = 1,
+// CHECK-NEXT: rhs_component_count = 1,
+// CHECK-NEXT: num_primitive_operations = 1,
+// CHECK-NEXT: allow_imprecise_accumulation = false
+// CHECK-NEXT: >: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 // CHECK-GENERIC: %dot = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC: lhs_contracting_dimensions = [1],
-// CHECK-GENERIC: rhs_contracting_dimensions = [0]
-// CHECK-GENERIC: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
-// CHECK-GENERIC: lhs_precision_type = f32,
-// CHECK-GENERIC: rhs_precision_type = f32,
-// CHECK-GENERIC: accumulation_type = f32,
-// CHECK-GENERIC: lhs_component_count = 1,
-// CHECK-GENERIC: rhs_component_count = 1,
-// CHECK-GENERIC: num_primitive_operations = 1,
-// CHECK-GENERIC: allow_imprecise_accumulation = false
-// CHECK-GENERIC: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC-NEXT: lhs_contracting_dimensions = [1],
+// CHECK-GENERIC-NEXT: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC-NEXT: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC-NEXT: lhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: rhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: accumulation_type = f32,
+// CHECK-GENERIC-NEXT: lhs_component_count = 1,
+// CHECK-GENERIC-NEXT: rhs_component_count = 1,
+// CHECK-GENERIC-NEXT: num_primitive_operations = 1,
+// CHECK-GENERIC-NEXT: allow_imprecise_accumulation = false
+// CHECK-GENERIC-NEXT: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 
 %dot_batch_lhs = "test.op"() : () -> tensor<2x3x4xi32>
 %dot_batch_rhs = "test.op"() : () -> tensor<2x4x5xi32>
 // CHECK: %dot_with_batching_and_algorithm = stablehlo.dot_general %dot_batch_lhs, %dot_batch_rhs, batching_dims = [0] x [0], contracting_dims = [2] x [1], algorithm = <
-// CHECK: lhs_precision_type = f32,
-// CHECK: rhs_precision_type = f32,
-// CHECK: accumulation_type = f32,
-// CHECK: lhs_component_count = 1,
-// CHECK: rhs_component_count = 1,
-// CHECK: num_primitive_operations = 1,
-// CHECK: allow_imprecise_accumulation = false
-// CHECK: >: (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+// CHECK-NEXT: lhs_precision_type = f32,
+// CHECK-NEXT: rhs_precision_type = f32,
+// CHECK-NEXT: accumulation_type = f32,
+// CHECK-NEXT: lhs_component_count = 1,
+// CHECK-NEXT: rhs_component_count = 1,
+// CHECK-NEXT: num_primitive_operations = 1,
+// CHECK-NEXT: allow_imprecise_accumulation = false
+// CHECK-NEXT: >: (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
 // CHECK-GENERIC: %dot_with_batching_and_algorithm = "stablehlo.dot_general"(%dot_batch_lhs, %dot_batch_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC: lhs_batching_dimensions = [0],
-// CHECK-GENERIC: rhs_batching_dimensions = [0],
-// CHECK-GENERIC: lhs_contracting_dimensions = [2],
-// CHECK-GENERIC: rhs_contracting_dimensions = [1]
-// CHECK-GENERIC: >, algorithm = #stablehlo.dot_algorithm<
-// CHECK-GENERIC: lhs_precision_type = f32,
-// CHECK-GENERIC: rhs_precision_type = f32,
-// CHECK-GENERIC: accumulation_type = f32,
-// CHECK-GENERIC: lhs_component_count = 1,
-// CHECK-GENERIC: rhs_component_count = 1,
-// CHECK-GENERIC: num_primitive_operations = 1,
-// CHECK-GENERIC: allow_imprecise_accumulation = false
-// CHECK-GENERIC: >}> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+// CHECK-GENERIC-NEXT: lhs_batching_dimensions = [0],
+// CHECK-GENERIC-NEXT: rhs_batching_dimensions = [0],
+// CHECK-GENERIC-NEXT: lhs_contracting_dimensions = [2],
+// CHECK-GENERIC-NEXT: rhs_contracting_dimensions = [1]
+// CHECK-GENERIC-NEXT: >, algorithm = #stablehlo.dot_algorithm<
+// CHECK-GENERIC-NEXT: lhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: rhs_precision_type = f32,
+// CHECK-GENERIC-NEXT: accumulation_type = f32,
+// CHECK-GENERIC-NEXT: lhs_component_count = 1,
+// CHECK-GENERIC-NEXT: rhs_component_count = 1,
+// CHECK-GENERIC-NEXT: num_primitive_operations = 1,
+// CHECK-GENERIC-NEXT: allow_imprecise_accumulation = false
+// CHECK-GENERIC-NEXT: >}> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
 %dot_with_batching_and_algorithm = stablehlo.dot_general %dot_batch_lhs, %dot_batch_rhs, batching_dims = [0] x [0], contracting_dims = [2] x [1], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
 
 // CHECK: %custom_call_layouts = stablehlo.custom_call @bar(%constant) {
@@ -527,6 +527,95 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK: %select_mismatch = stablehlo.select %pred, %t0, %t0 : tensor<i1>, tensor<i32>
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+
+// CHECK: %[[operand:.*]] = "test.op"() : () -> tensor<1x3xi64>
+// CHECK: %[[out_dims:.*]] = "test.op"() : () -> tensor<3xi64>
+// CHECK: %dynamic_bcast = stablehlo.dynamic_broadcast_in_dim %[[operand]], %[[out_dims]], dims = [2, 1] : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+// CHECK-GENERIC: %[[operand:.*]] = "test.op"() : () -> tensor<1x3xi64>
+// CHECK-GENERIC: %[[out_dims:.*]] = "test.op"() : () -> tensor<3xi64>
+// CHECK-GENERIC: %dynamic_bcast = "stablehlo.dynamic_broadcast_in_dim"(%[[operand]], %[[out_dims]]) <{broadcast_dimensions = array<i64: 2, 1>}> : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+%operand = "test.op"() : () -> tensor<1x3xi64>
+%out_dims = "test.op"() : () -> tensor<3xi64>
+%dynamic_bcast = stablehlo.dynamic_broadcast_in_dim %operand, %out_dims, dims = [2, 1] : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+
+%gather_input = "test.op"() : () -> tensor<2x3x4x2xi32>
+%start_indices = "test.op"() : () -> tensor<2x2x3x2xi64>
+// CHECK: %gather = "stablehlo.gather"(%gather_input, %start_indices)
+// CHECK-SAME: dimension_numbers = #stablehlo.gather<
+// CHECK-NEXT:   offset_dims = [3, 4],
+// CHECK-NEXT:   collapsed_slice_dims = [1],
+// CHECK-NEXT:   operand_batching_dims = [0],
+// CHECK-NEXT:   start_indices_batching_dims = [1],
+// CHECK-NEXT:   start_index_map = [2, 1],
+// CHECK-NEXT:   index_vector_dim = 3
+// CHECK-NEXT: slice_sizes = array<i64: 1, 1, 2, 2>, indices_are_sorted = false
+%gather = "stablehlo.gather"(%gather_input, %start_indices) <{
+  dimension_numbers = #stablehlo.gather<
+    offset_dims = [3, 4],
+    collapsed_slice_dims = [1],
+    operand_batching_dims = [0],
+    start_indices_batching_dims = [1],
+    start_index_map = [2, 1],
+    index_vector_dim = 3>,
+  slice_sizes = array<i64: 1, 1, 2, 2>,
+  indices_are_sorted = false
+}> : (tensor<2x3x4x2xi32>, tensor<2x2x3x2xi64>) -> tensor<2x2x3x2x2xi32>
+
+
+
+%scatter_input = "test.op"() : () -> tensor<2x3x4x2xi64>
+%scatter_indices = "test.op"() : () -> tensor<2x2x3x2xi64>
+%scatter_updates = "test.op"() : () -> tensor<2x2x3x2x2xi64>
+// CHECK: %scatter = "stablehlo.scatter"(%scatter_input, %scatter_indices, %scatter_updates)
+// CHECK-SAME: scatter_dimension_numbers = #stablehlo.scatter<
+// CHECK-NEXT:   update_window_dims = [3, 4],
+// CHECK-NEXT:   inserted_window_dims = [1],
+// CHECK-NEXT:   input_batching_dims = [0],
+// CHECK-NEXT:   scatter_indices_batching_dims = [1],
+// CHECK-NEXT:   scatter_dims_to_operand_dims = [2, 1],
+// CHECK-NEXT:   index_vector_dim = 3
+// CHECK-NEXT: indices_are_sorted = false, unique_indices = false
+// CHECK-NEXT: ^bb[[BB:[0-9]+]](%arg_scatter : tensor<i64>, %arg_scatter_1 : tensor<i64>):
+// CHECK-NEXT:   %scatter_add = stablehlo.add %arg_scatter, %arg_scatter_1 : tensor<i64>
+// CHECK-NEXT:   stablehlo.return %scatter_add : tensor<i64>
+%scatter = "stablehlo.scatter"(%scatter_input, %scatter_indices, %scatter_updates) <{
+  scatter_dimension_numbers = #stablehlo.scatter<
+    update_window_dims = [3, 4],
+    inserted_window_dims = [1],
+    input_batching_dims = [0],
+    scatter_indices_batching_dims = [1],
+    scatter_dims_to_operand_dims = [2, 1],
+    index_vector_dim = 3>,
+  indices_are_sorted = false,
+  unique_indices = false
+}> ({
+  ^bb0(%arg_scatter_0: tensor<i64>, %arg_scatter_1: tensor<i64>):
+    %scatter_add = "stablehlo.add"(%arg_scatter_0, %arg_scatter_1) : (tensor<i64>, tensor<i64>) -> tensor<i64>
+    "stablehlo.return"(%scatter_add) : (tensor<i64>) -> ()
+}) : (tensor<2x3x4x2xi64>, tensor<2x2x3x2xi64>, tensor<2x2x3x2x2xi64>) -> tensor<2x3x4x2xi64>
+
+%reshape_input = "test.op"() : () -> tensor<2xf32>
+// CHECK: %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+// CHECK-GENERIC: %reshape = "stablehlo.reshape"(%reshape_input) : (tensor<2xf32>) -> tensor<1x2xf32>
+%reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+
+%reshape_dynamic_input = "test.op"() : () -> tensor<?x3xi32>
+// CHECK: %reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+// CHECK-GENERIC: %reshape_dynamic = "stablehlo.reshape"(%reshape_dynamic_input) : (tensor<?x3xi32>) -> tensor<6xi32>
+%reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+
+%input1 = "test.op"() : () -> tensor<3x2xi64>
+%input2 = "test.op"() : () -> tensor<1x2xi64>
+// CHECK: %concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+// CHECK-GENERIC: %concatenate = "stablehlo.concatenate"(%input1, %input2) <{dimension = 0 : i64}> : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+%concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+
+%dyn_operand = "test.op"() : () -> tensor<4x4xi32>
+%start0 = "test.op"() : () -> tensor<i64>
+%start1 = "test.op"() : () -> tensor<i64>
+// CHECK: %dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+// CHECK-GENERIC: %dynamic_slice = "stablehlo.dynamic_slice"(%dyn_operand, %start0, %start1) <{slice_sizes = array<i64: 2, 3>}> : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
+%dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
 
 // CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 // CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
