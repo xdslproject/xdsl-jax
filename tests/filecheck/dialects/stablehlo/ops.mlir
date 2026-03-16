@@ -469,6 +469,16 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 
+// CHECK: %[[operand:.*]] = "test.op"() : () -> tensor<1x3xi64>
+// CHECK: %[[out_dims:.*]] = "test.op"() : () -> tensor<3xi64>
+// CHECK: %dynamic_bcast = stablehlo.dynamic_broadcast_in_dim %[[operand]], %[[out_dims]], dims = [2, 1] : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+// CHECK-GENERIC: %[[operand:.*]] = "test.op"() : () -> tensor<1x3xi64>
+// CHECK-GENERIC: %[[out_dims:.*]] = "test.op"() : () -> tensor<3xi64>
+// CHECK-GENERIC: %dynamic_bcast = "stablehlo.dynamic_broadcast_in_dim"(%[[operand]], %[[out_dims]]) <{broadcast_dimensions = array<i64: 2, 1>}> : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+%operand = "test.op"() : () -> tensor<1x3xi64>
+%out_dims = "test.op"() : () -> tensor<3xi64>
+%dynamic_bcast = stablehlo.dynamic_broadcast_in_dim %operand, %out_dims, dims = [2, 1] : (tensor<1x3xi64>, tensor<3xi64>) -> tensor<2x3x2xi64>
+
 %gather_input = "test.op"() : () -> tensor<2x3x4x2xi32>
 %start_indices = "test.op"() : () -> tensor<2x2x3x2xi64>
 // CHECK: %gather = "stablehlo.gather"(%gather_input, %start_indices)

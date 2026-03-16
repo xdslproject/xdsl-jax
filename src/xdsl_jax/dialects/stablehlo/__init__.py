@@ -22,6 +22,7 @@ from .data_movement_ops import (
     ScatterOp,
     SliceOp,
 )
+from .dynamism_ops import DynamicBroadcastInDimOp
 from .elementwise_binary_ops import (
     AddOp,
     AndOp,
@@ -145,6 +146,8 @@ StableHLO = Dialect(
         ReshapeOp,
         ScatterOp,
         SliceOp,
+        # Dynamism operations
+        DynamicBroadcastInDimOp,
         # Reduction operations
         ReduceOp,
         # Extensibility operations
