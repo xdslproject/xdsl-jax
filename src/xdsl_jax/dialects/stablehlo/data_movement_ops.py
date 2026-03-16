@@ -2,39 +2,136 @@
 Data movement operations for the StableHLO dialect.
 """
 
+from typing import cast
+
 from xdsl.dialects.builtin import (
     DYNAMIC_INDEX,
     AnyTensorType,
     DenseArrayBase,
+    IntegerAttr,
     TensorType,
     i64,
 )
 from xdsl.interfaces import ConditionallySpeculatableInterface
 from xdsl.ir import cast
 from xdsl.irdl import (
+    AtLeast,
     IRDLOperation,
+    eq,
     irdl_op_definition,
     operand_def,
     prop_def,
     result_def,
     traits_def,
+    var_operand_def,
 )
-from xdsl.traits import (
-    ConditionallySpeculatable,
-    NoMemoryEffect,
-)
+from xdsl.traits import NoMemoryEffect, Pure
 from xdsl.utils.exceptions import VerifyException
+from xdsl.utils.type import get_element_type_or_self
 
 from xdsl_jax.xdsl_extras import (
     AllMatchSameOperatorTrait,
     SameOperandsAndResultElementType,
 )
 
-from .custom_directives import SliceRanges
+from .custom_directives import SliceRanges, VariadicOperandWithAttribute
 from .traits import (
     SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
+from .types import ScalarIntTensorType
+
+
+@irdl_op_definition
+class ConcatenateOp(IRDLOperation, ConditionallySpeculatableInterface):
+    """
+    Concatenates a variadic number of tensors in ``inputs`` along ``dimension``
+    dimension in the same order as the given arguments and produces a ``result``
+    tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#concatenate
+
+    Example:
+    ```mlir
+    %result = stablehlo.concatenate %input0, %input1, dim = 0
+    : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
+    ```
+    """
+
+    name = "stablehlo.concatenate"
+
+    inputs = var_operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+    dimension = prop_def(IntegerAttr.constr(type=eq(i64), value=AtLeast(0)))
+
+    traits = traits_def(
+        NoMemoryEffect(),
+        SameOperandsAndResultElementType(),
+    )
+
+    assembly_format = (
+        "custom<VariadicOperandWithAttribute>($inputs) "
+        "`dim` `=` $dimension attr-dict `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (VariadicOperandWithAttribute,)
+
+    def is_speculatable(self) -> bool:
+        if not self.operands or not self.results:
+            return False
+
+        concat_dim = self.dimension.value.data
+        result_shape = cast(TensorType, self.result_types[0]).get_shape()
+        concat_dim_dynamic = result_shape[concat_dim] == DYNAMIC_INDEX
+        for operand_type in self.operand_types:
+            operand_shape = cast(TensorType, operand_type).get_shape()
+            for idx, dim in enumerate(operand_shape):
+                if idx == concat_dim and concat_dim_dynamic:
+                    continue
+                if dim == DYNAMIC_INDEX:
+                    return False
+
+        return True
+
+
+@irdl_op_definition
+class DynamicSliceOp(IRDLOperation):
+    """
+    Extracts a slice from the ``operand`` using dynamically-computed starting
+    indices and produces a ``result`` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#dynamic_slice
+
+    Example:
+    ```mlir
+    %result = stablehlo.dynamic_slice %operand, %start_indices0, %start_indices1,
+      sizes = [2, 2] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x2xi32>
+    ```
+    """
+
+    name = "stablehlo.dynamic_slice"
+    operand = operand_def(AnyTensorType)
+    start_indices = var_operand_def(ScalarIntTensorType)
+    slice_sizes = prop_def(DenseArrayBase.constr(i64))
+    result = result_def(AnyTensorType)
+
+    traits = traits_def(
+        Pure(),
+        AllMatchSameOperatorTrait(
+            ("operand", "result"),
+            lambda x: get_element_type_or_self(x.type),
+            "element type",
+        ),
+    )
+
+    assembly_format = (
+        "$operand `,` custom<VariadicOperandWithAttribute>($start_indices) "
+        "`sizes` `=` $slice_sizes attr-dict `:` functional-type(operands, results)"
+    )
+
+    custom_directives = (VariadicOperandWithAttribute,)
 
 
 @irdl_op_definition
@@ -230,7 +327,6 @@ class SliceOp(IRDLOperation):
 
     traits = traits_def(
         NoMemoryEffect(),
-        ConditionallySpeculatable(),
         SpeculatableIfStaticDimInOutputIsStaticInInput(),
         AllMatchSameOperatorTrait(
             ("start_indices", "limit_indices", "strides"), len, "size"
