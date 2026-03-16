@@ -469,6 +469,16 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-GENERIC: %select_mismatch = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 
+%reshape_input = "test.op"() : () -> tensor<2xf32>
+// CHECK: %reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+// CHECK-GENERIC: %reshape = "stablehlo.reshape"(%reshape_input) : (tensor<2xf32>) -> tensor<1x2xf32>
+%reshape = stablehlo.reshape %reshape_input : (tensor<2xf32>) -> tensor<1x2xf32>
+
+%reshape_dynamic_input = "test.op"() : () -> tensor<?x3xi32>
+// CHECK: %reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+// CHECK-GENERIC: %reshape_dynamic = "stablehlo.reshape"(%reshape_dynamic_input) : (tensor<?x3xi32>) -> tensor<6xi32>
+%reshape_dynamic = stablehlo.reshape %reshape_dynamic_input : (tensor<?x3xi32>) -> tensor<6xi32>
+
 %input1 = "test.op"() : () -> tensor<3x2xi64>
 %input2 = "test.op"() : () -> tensor<1x2xi64>
 // CHECK: %concatenate = stablehlo.concatenate %input1, %input2, dim = 0 : (tensor<3x2xi64>, tensor<1x2xi64>) -> tensor<4x2xi64>
