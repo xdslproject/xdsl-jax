@@ -306,7 +306,7 @@ cond {
 //            [[7,8], [9,10], [11,12]]
 //           ]
 // CHECK: %[[TRANSPOSE_RESULT:.*]] = stablehlo.transpose %[[TRANSPOSE_OPERAND]], dims = [2, 1, 0] : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
-// CHECK-GENERIC: %[[TRANSPOSE_RESULT:.*]] = "stablehlo.transpose"(%[[TRANSPOSE_OPERAND]]) {permutation = array<i64: 2, 1, 0>} : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
+// CHECK-GENERIC: %[[TRANSPOSE_RESULT:.*]] = "stablehlo.transpose"(%[[TRANSPOSE_OPERAND]]) <{permutation = array<i64: 2, 1, 0>}> : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
 %transpose_result = stablehlo.transpose %transpose_operand, dims = [2, 1, 0] : (tensor<2x3x2xi32>) -> tensor<2x3x2xi32>
 // %result: [
 //           [[1,7], [3,9], [5,11]],
@@ -328,11 +328,11 @@ cond {
 //   low = [0, 1], 
 //   high = [2, 1], 
 //   interior = [1, 2] : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
-// CHECK-GENERIC: %[[PAD_RESULT:.*]] = "stablehlo.pad"(%[[PAD_OPERAND]], %[[PADDING_VALUE]]) {
+// CHECK-GENERIC: %[[PAD_RESULT:.*]] = "stablehlo.pad"(%[[PAD_OPERAND]], %[[PADDING_VALUE]]) <{
 //   edge_padding_low = array<i64: 0, 1>,
 //   edge_padding_high = array<i64: 2, 1>,
 //   interior_padding = array<i64: 1, 2>
-// } : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
+// }> : (tensor<2x3xi32>, tensor<i32>) -> tensor<5x9xi32>
 %pad_result = stablehlo.pad %pad_operand, %padding_value, 
   low = [0, 1], 
   high = [2, 1], 
@@ -372,7 +372,7 @@ cond {
 }) : (tensor<i32>) -> (tensor<2xi64>, tensor<2xi64>)
 
 // CHECK: %[[CONSTANT:.*]] = stablehlo.constant dense<{{.*}}> : tensor<2x2xf32>
-// CHECK-GENERIC: %[[CONSTANT:.*]] = "stablehlo.constant"() {value = dense<{{.*}}> : tensor<2x2xf32>} : () -> tensor<2x2xf32>
+// CHECK-GENERIC: %[[CONSTANT:.*]] = "stablehlo.constant"() <{value = dense<{{.*}}> : tensor<2x2xf32>}> : () -> tensor<2x2xf32>
 %constant = stablehlo.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
 
 // CHECK: %[[CLAMP:.*]] = stablehlo.clamp %[[T0]], %[[T0]], %[[T0]] : tensor<i32>
@@ -380,14 +380,14 @@ cond {
 %clamp = stablehlo.clamp %t0, %t0, %t0 : tensor<i32>
 
 // CHECK: %[[COMPARE:.*]] = stablehlo.compare EQ, %[[T0]], %[[T0]] : (tensor<i32>, tensor<i32>) -> tensor<i1>
-// CHECK-GENERIC: %[[COMPARE:.*]] = "stablehlo.compare"(%[[T0]], %[[T0]]) {comparison_direction = #stablehlo<comparison_direction EQ>} : (tensor<i32>, tensor<i32>) -> tensor<i1>
+// CHECK-GENERIC: %[[COMPARE:.*]] = "stablehlo.compare"(%[[T0]], %[[T0]]) <{comparison_direction = #stablehlo<comparison_direction EQ>}> : (tensor<i32>, tensor<i32>) -> tensor<i1>
 %compare = stablehlo.compare EQ, %t0, %t0 : (tensor<i32>, tensor<i32>) -> tensor<i1>
 
-// CHECK: %[[MAP:.*]] = "stablehlo.map"(%[[T5F32]], %[[T5F32]]) ({
+// CHECK: %[[MAP:.*]] = "stablehlo.map"(%[[T5F32]], %[[T5F32]]) <{dimensions = array<i64: 0>}> ({
 // CHECK-NEXT: ^bb0(%[[MAP_ARG0:[^ )]+]] : tensor<f32>, %[[MAP_ARG1:[^ )]+]] : tensor<f32>):
 // CHECK-NEXT:   %[[MAP_MUL:.*]] = stablehlo.multiply %[[MAP_ARG0]], %[[MAP_ARG1]] : tensor<f32>
 // CHECK-NEXT:   stablehlo.return %[[MAP_MUL]] : tensor<f32>
-// CHECK-NEXT: }) {dimensions = array<i64: 0>} : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK-NEXT: }) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
 %map = "stablehlo.map"(%t5f32, %t5f32) ({
   ^bb0(%arg0: tensor<f32>, %arg1: tensor<f32>):
     %result = stablehlo.multiply %arg0, %arg1 : tensor<f32>
@@ -398,7 +398,7 @@ cond {
 
 
 // CHECK: %[[REDUCE_PRECISION:.*]] = stablehlo.reduce_precision %[[TF64]], format = e5m10 : tensor<f64>
-// CHECK-GENERIC: %[[REDUCE_PRECISION:.*]] = "stablehlo.reduce_precision"(%[[TF64]]) {exponent_bits = 5 : i32, mantissa_bits = 10 : i32} : (tensor<f64>) -> tensor<f64>
+// CHECK-GENERIC: %[[REDUCE_PRECISION:.*]] = "stablehlo.reduce_precision"(%[[TF64]]) <{exponent_bits = 5 : i32, mantissa_bits = 10 : i32}> : (tensor<f64>) -> tensor<f64>
 %reduce_precision = stablehlo.reduce_precision %tf64, format = e5m10 : tensor<f64>
 // CHECK: %[[REDUCE_INPUT0:[^ ]+]] = "test.op"() : () -> tensor<2x3xi64>
 // CHECK-GENERIC: %[[REDUCE_INPUT0:[^ ]+]] = "test.op"() : () -> tensor<2x3xi64>
@@ -419,7 +419,7 @@ cond {
 // CHECK:   stablehlo.return %[[REDUCE_RET0:.*]], %[[REDUCE_RET1:.*]] : tensor<i64>, tensor<i64>
 // CHECK: }
 // CHECK-GENERIC: %[[REDUCE_MULTI:[^ ]+]] = "stablehlo.reduce"(%[[REDUCE_INPUT0]], %[[REDUCE_INPUT1]], %[[REDUCE_INIT0]], %[[REDUCE_INIT1]]) <{dimensions = array<i64: 1>}> ({
-// CHECK-GENERIC:   ^bb[[REDUCE_MULTI_BB:[0-9]+]](%[[REDUCE_GEN_ARG0:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG2:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG1:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG3:.*]]{{ ?}}: tensor<i64>):
+// CHECK-GENERIC:   ^bb[[REDUCE_MULTI_BB:[0-9]+]](%[[REDUCE_GEN_ARG0:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG1:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG2:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG3:.*]]{{ ?}}: tensor<i64>):
 // CHECK-GENERIC:     "stablehlo.return"(%[[REDUCE_GEN_RET0:.*]], %[[REDUCE_GEN_RET1:.*]]) : (tensor<i64>, tensor<i64>) -> ()
 // CHECK-GENERIC: }) : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
 %reduce_multi_0, %reduce_multi_1 = stablehlo.reduce (%reduce_input0 init: %reduce_init0), (%reduce_input1 init: %reduce_init1) across dimensions = [1] : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
