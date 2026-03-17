@@ -16,11 +16,11 @@
 
 // === Dot Dimension Numbers ===
 // CHECK-NEXT:    "test.op"() {dot = #stablehlo.dot<
-// CHECK-NEXT:      lhs_batching_dimensions = [0],
-// CHECK-NEXT:      rhs_batching_dimensions = [1],
-// CHECK-NEXT:      lhs_contracting_dimensions = [2],
-// CHECK-NEXT:      rhs_contracting_dimensions = [3]
-// CHECK-NEXT:    >} : () -> ()
+// CHECK-SAME:      lhs_batching_dimensions = [0],
+// CHECK-SAME:      rhs_batching_dimensions = [1],
+// CHECK-SAME:      lhs_contracting_dimensions = [2],
+// CHECK-SAME:      rhs_contracting_dimensions = [3]
+// CHECK-SAME:    >} : () -> ()
 "test.op"() {
     dot = #stablehlo.dot<
         lhs_batching_dimensions = [0],
@@ -30,13 +30,39 @@
     >
 } : () -> ()
 
-// CHECK-NEXT:    "test.op"() {dot = #stablehlo.dot<
-// CHECK-NEXT:      lhs_contracting_dimensions = [0],
-// CHECK-NEXT:      rhs_contracting_dimensions = [1]
-// CHECK-NEXT:    >} : () -> ()
+// CHECK-NEXT: "test.op"() {dot = #stablehlo.dot<>} : () -> ()
+"test.op"() {dot = #stablehlo.dot<>} : () -> ()
+
+// CHECK-NEXT: "test.op"() {dot = #stablehlo.dot<>} : () -> ()
 "test.op"() {
     dot = #stablehlo.dot<
-        lhs_contracting_dimensions = [0],
+        lhs_batching_dimensions = [],
+        rhs_batching_dimensions = [],
+        lhs_contracting_dimensions = [],
+        rhs_contracting_dimensions = []
+    >
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {dot = #stablehlo.dot<
+// CHECK-SAME:      rhs_batching_dimensions = [0],
+// CHECK-SAME:      rhs_contracting_dimensions = [1]
+// CHECK-SAME:    >} : () -> ()
+"test.op"() {
+    dot = #stablehlo.dot<
+        lhs_batching_dimensions = [],
+        rhs_batching_dimensions = [0],
+        lhs_contracting_dimensions = [],
+        rhs_contracting_dimensions = [1]
+    >
+} : () -> ()
+
+// CHECK-NEXT:    "test.op"() {dot = #stablehlo.dot<
+// CHECK-SAME:      lhs_batching_dimensions = [0],
+// CHECK-SAME:      rhs_contracting_dimensions = [1]
+// CHECK-SAME:    >} : () -> ()
+"test.op"() {
+    dot = #stablehlo.dot<
+        lhs_batching_dimensions = [0],
         rhs_contracting_dimensions = [1]
     >
 } : () -> ()
