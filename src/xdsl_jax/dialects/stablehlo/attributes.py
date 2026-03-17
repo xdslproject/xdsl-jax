@@ -4,16 +4,12 @@ This module provides attribute definitions based on the StableHLO specification
 """
 
 from abc import ABC
+from collections import defaultdict
 from collections.abc import Sequence
+from functools import partial
 from typing import TypeAlias, get_origin
 
-from xdsl.dialects.builtin import (
-    I64,
-    ArrayAttr,
-    BoolAttr,
-    IntegerAttr,
-    i64,
-)
+from xdsl.dialects.builtin import I64, ArrayAttr, BoolAttr, IntegerAttr, i64
 from xdsl.ir import (
     Attribute,
     EnumAttribute,
@@ -359,90 +355,71 @@ class DotAttr(ParametrizedAttribute):
     rhs_contracting_dimensions: ArrayAttr[IntegerAttr[I64]]
 
     @staticmethod
-    def _print_parameter(
-        name: str, value: ArrayAttr[IntegerAttr[I64]], printer: Printer
-    ):
-        printer.print_string(f"\n{name} = [")
-        printer.print_list(
-            value.data,
-            lambda dim: printer.print_int(dim.value.data),
-        )
-        printer.print_string("]")
+    def _parse_param(parser: AttrParser) -> tuple[str, ArrayAttr[IntegerAttr[I64]]]:
+        cur_pos = parser.pos
+        param_name = parser.parse_identifier()
 
-    @staticmethod
-    def _parse_parameter(
-        name: str, parser: AttrParser, optional: bool = False
-    ) -> ArrayAttr[IntegerAttr[I64]]:
-        if optional:
-            if parser.parse_optional_characters(name) is None:
-                return ArrayAttr(())
-        else:
-            parser.parse_characters(name)
+        if param_name not in ALL_DOTATTR_PARAMS:
+            parser.raise_error(
+                msg=f"Invalid parameter name '{param_name}' for stablehlo.dot.",
+                at_position=cur_pos,
+            )
+
         parser.parse_punctuation("=")
-        value = parser.parse_comma_separated_list(
+        param_val = parser.parse_comma_separated_list(
             AttrParser.Delimiter.SQUARE,
             lambda: IntegerAttr(parser.parse_integer(), i64),
         )
-        return ArrayAttr(value)
+        return (param_name, ArrayAttr(param_val))
+
+    @staticmethod
+    def _print_param_name(key: str, printer: Printer) -> None:
+        # Extra space at the end to pad the '='
+        printer.print_string(key)
+        printer.print_string(" ")
+
+    @staticmethod
+    def _print_param_value(
+        value: ArrayAttr[IntegerAttr[I64]], printer: Printer
+    ) -> None:
+        # Extra space at the beginning to pad the '='
+        printer.print_string(" ")
+        with printer.in_square_brackets():
+            printer.print_list(
+                value.data, lambda dim: printer.print_int(dim.value.data)
+            )
 
     def print_parameters(self, printer: Printer) -> None:
-        with printer.in_angle_brackets():
-            with printer.indented():
-                if (
-                    self.lhs_batching_dimensions.data
-                    and self.rhs_batching_dimensions.data
-                ):
-                    DotAttr._print_parameter(
-                        "lhs_batching_dimensions", self.lhs_batching_dimensions, printer
-                    )
-                    printer.print_string(",")
-                    DotAttr._print_parameter(
-                        "rhs_batching_dimensions", self.rhs_batching_dimensions, printer
-                    )
-                    printer.print_string(",")
+        printable_params = {
+            param_name: param_val
+            for param_name in ALL_DOTATTR_PARAMS
+            if (param_val := getattr(self, param_name, ArrayAttr(()))).data
+        }
 
-                DotAttr._print_parameter(
-                    "lhs_contracting_dimensions",
-                    self.lhs_contracting_dimensions,
-                    printer,
-                )
-                printer.print_string(",")
-                DotAttr._print_parameter(
-                    "rhs_contracting_dimensions",
-                    self.rhs_contracting_dimensions,
-                    printer,
-                )
-            printer.print_string("\n")
+        _print_key = partial(DotAttr._print_param_name, printer=printer)
+        _print_val = partial(DotAttr._print_param_value, printer=printer)
+        with printer.in_angle_brackets():
+            printer.print_dictionary(printable_params, _print_key, _print_val)
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
-        with parser.in_angle_brackets():
-            lhs_batching_dimensions = DotAttr._parse_parameter(
-                "lhs_batching_dimensions", parser, optional=True
-            )
-            if lhs_batching_dimensions.data:
-                parser.parse_punctuation(",")
-                rhs_batching_dimensions = DotAttr._parse_parameter(
-                    "rhs_batching_dimensions", parser
-                )
-                parser.parse_punctuation(",")
-            else:
-                rhs_batching_dimensions = ArrayAttr(())
+        parse_fn = partial(DotAttr._parse_param, parser=parser)
+        parsed_params = parser.parse_comma_separated_list(
+            delimiter=parser.Delimiter.ANGLE, parse=parse_fn
+        )
 
-            lhs_contracting_dimensions = DotAttr._parse_parameter(
-                "lhs_contracting_dimensions", parser
-            )
-            parser.parse_punctuation(",")
-            rhs_contracting_dimensions = DotAttr._parse_parameter(
-                "rhs_contracting_dimensions", parser
-            )
+        param_dict: dict[str, ArrayAttr[IntegerAttr[I64]]] = defaultdict(
+            lambda: ArrayAttr(())
+        )
+        for param_name, param_val in parsed_params:
+            param_dict[param_name] = param_val
 
-            return (
-                lhs_batching_dimensions,
-                rhs_batching_dimensions,
-                lhs_contracting_dimensions,
-                rhs_contracting_dimensions,
-            )
+        return tuple(param_dict[p] for p in ALL_DOTATTR_PARAMS)
+
+
+ALL_DOTATTR_PARAMS: tuple[str, ...] = tuple(
+    param[0] for param in DotAttr.get_irdl_definition().parameters
+)
 
 
 @irdl_attr_definition

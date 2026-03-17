@@ -25,7 +25,7 @@ from xdsl_jax.dialects.stablehlo.data_movement_ops import (
     ReshapeOp,
     ScatterOp,
 )
-from xdsl_jax.dialects.stablehlo.ops import ReturnOp
+from xdsl_jax.dialects.stablehlo.modularity_ops import ReturnOp
 
 _EMPTY_DIMS = ArrayAttr[IntegerAttr[I64]](())
 _ZERO = IntegerAttr(0, i64)
