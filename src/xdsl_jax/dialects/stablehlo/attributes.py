@@ -7,7 +7,7 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial
-from typing import TypeAlias, get_origin
+from typing import ClassVar, TypeAlias, get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, BoolAttr, IntegerAttr, i64
 from xdsl.ir import (
@@ -354,9 +354,21 @@ class DotAttr(ParametrizedAttribute):
     lhs_contracting_dimensions: ArrayAttr[IntegerAttr[I64]]
     rhs_contracting_dimensions: ArrayAttr[IntegerAttr[I64]]
 
+    ALL_PARAMS: ClassVar[tuple[str, ...]] = (
+        "lhs_batching_dimensions",
+        "rhs_batching_dimensions",
+        "lhs_contracting_dimensions",
+        "rhs_contracting_dimensions",
+    )
+
     @staticmethod
     def _parse_param(parser: AttrParser) -> tuple[str, ArrayAttr[IntegerAttr[I64]]]:
         param_name = parser.parse_identifier()
+        if param_name not in DotAttr.ALL_PARAMS:
+            parser.raise_error(
+                f"Invalid parameter name '{param_name}' for stablehlo.dot."
+            )
+
         parser.parse_punctuation("=")
         param_val = parser.parse_comma_separated_list(
             AttrParser.Delimiter.SQUARE,
@@ -382,15 +394,9 @@ class DotAttr(ParametrizedAttribute):
             )
 
     def print_parameters(self, printer: Printer) -> None:
-        all_params = (
-            "lhs_batching_dimensions",
-            "rhs_batching_dimensions",
-            "lhs_contracting_dimensions",
-            "rhs_contracting_dimensions",
-        )
         printable_params = {
             param_name: param_val
-            for param_name in all_params
+            for param_name in DotAttr.ALL_PARAMS
             if (param_val := getattr(self, param_name, ArrayAttr(()))).data
         }
 
@@ -401,13 +407,6 @@ class DotAttr(ParametrizedAttribute):
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
-        all_params = (
-            "lhs_batching_dimensions",
-            "rhs_batching_dimensions",
-            "lhs_contracting_dimensions",
-            "rhs_contracting_dimensions",
-        )
-
         parse_fn = partial(DotAttr._parse_param, parser=parser)
         parsed_params = parser.parse_comma_separated_list(
             delimiter=parser.Delimiter.ANGLE, parse=parse_fn
@@ -417,13 +416,9 @@ class DotAttr(ParametrizedAttribute):
             lambda: ArrayAttr(())
         )
         for param_name, param_val in parsed_params:
-            if param_name not in all_params:
-                parser.raise_error(
-                    f"Invalid parameter name '{param_name}' for stablehlo.dot."
-                )
             param_dict[param_name] = param_val
 
-        return tuple(param_dict[p] for p in all_params)
+        return tuple(param_dict[p] for p in DotAttr.ALL_PARAMS)
 
 
 @irdl_attr_definition
