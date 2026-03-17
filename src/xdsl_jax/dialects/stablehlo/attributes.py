@@ -363,10 +363,13 @@ class DotAttr(ParametrizedAttribute):
 
     @staticmethod
     def _parse_param(parser: AttrParser) -> tuple[str, ArrayAttr[IntegerAttr[I64]]]:
+        cur_pos = parser.pos
         param_name = parser.parse_identifier()
+
         if param_name not in DotAttr.ALL_PARAMS:
             parser.raise_error(
-                f"Invalid parameter name '{param_name}' for stablehlo.dot."
+                msg=f"Invalid parameter name '{param_name}' for stablehlo.dot.",
+                at_position=cur_pos,
             )
 
         parser.parse_punctuation("=")
