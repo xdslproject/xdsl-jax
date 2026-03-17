@@ -40,7 +40,7 @@ from xdsl.utils.type import get_element_type_or_self, have_compatible_shape
 
 from .attributes import DotAlgorithmAttr, DotAttr, Precision, PrecisionAttr
 from .custom_directives import DotDimensionNumbers, PrecisionConfigAndAlgorithm
-from .ops import ReturnOp
+from .modularity_ops import ReturnOp
 from .traits import RecursivelySpeculatableIfStaticDimInOutputIsStaticInInput
 
 

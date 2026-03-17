@@ -12,7 +12,7 @@ from xdsl.dialects.builtin import (
 from xdsl.utils.test_value import create_ssa_value
 
 from xdsl_jax.dialects.stablehlo.dynamism_ops import DynamicBroadcastInDimOp
-from xdsl_jax.dialects.stablehlo.ops import ConstantOp
+from xdsl_jax.dialects.stablehlo.miscellaneous_ops import ConstantOp
 
 _BROADCAST_DIMENSIONS = DenseArrayBase.from_list(i64, [0])
 

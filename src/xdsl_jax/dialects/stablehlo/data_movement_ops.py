@@ -14,6 +14,7 @@ from xdsl.dialects.builtin import (
     i64,
 )
 from xdsl.interfaces import ConditionallySpeculatableInterface
+from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
     AtLeast,
     IRDLOperation,
@@ -30,6 +31,7 @@ from xdsl.irdl import (
     var_result_def,
 )
 from xdsl.traits import (
+    ConditionallySpeculatable,
     NoMemoryEffect,
     Pure,
     RecursivelySpeculatable,
@@ -49,7 +51,12 @@ from .traits import (
     SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
 )
-from .types import IntegerOrIndexTensorType, IntegerTensorType, ScalarIntTensorType
+from .types import (
+    IntegerOrIndexTensorType,
+    IntegerTensorType,
+    ScalarIntTensorType,
+    SI32TensorType,
+)
 
 
 @irdl_op_definition
@@ -101,6 +108,200 @@ class GatherOp(IRDLOperation, ConditionallySpeculatableInterface):
             isinstance(t, TensorType) and t.has_static_shape()
             for t in self.operand_types
         )
+
+
+@irdl_op_definition
+class TransposeOp(IRDLOperation):
+    """
+    Permutes the dimensions of `operand` tensor using `permutation` and produces a
+    `result` tensor. More formally, `result[result_index] = operand[operand_index]`
+    where `result_index[d] = operand_index[permutation[d]]`.
+
+    See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#transpose)
+    """
+
+    name = "stablehlo.transpose"
+
+    operand = operand_def(AnyTensorType)
+    result = result_def(AnyTensorType)
+    permutation = prop_def(DenseArrayBase.constr(i64))
+
+    traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
+
+    assembly_format = (
+        "$operand `,` `dims` `=` $permutation "
+        "attr-dict `:` functional-type(operands, results)"
+    )
+
+    def __init__(
+        self, operand: SSAValue, permutation: DenseArrayBase, result_type: Attribute
+    ):
+        super().__init__(
+            operands=(operand,),
+            result_types=(result_type,),
+            attributes={"permutation": permutation},
+        )
+
+    def get_permutation(self) -> tuple[int, ...]:
+        return self.permutation.get_values()
+
+    def verify_(self) -> None:
+        # Operand and result types are checked before the custom `verify_`
+        o_type = cast(TensorType[Attribute], self.operand.type)
+        r_type = self.result.type
+
+        o_shape = o_type.get_shape()
+        r_shape = r_type.get_shape()
+
+        # `permutation` is a permutation of `range(rank(operand))`
+        permutation = self.get_permutation()
+        if sorted(permutation) != list(range(len(o_shape))):
+            raise VerifyException(
+                f"Permutation {permutation} of transpose must be a permutation of "
+                f"range({len(o_shape)})"
+            )
+
+        # `shape(result) = dim(operand, permutation...)`
+        for i, dim in enumerate(permutation):
+            if r_shape[i] != o_shape[dim]:
+                raise VerifyException(
+                    f"Permutation mismatch at dimension {i}, expected {o_shape[dim]}"
+                )
+
+
+@irdl_op_definition
+class PadOp(IRDLOperation):
+    """
+    Expands operand by padding around the tensor as well as between the
+    elements of the tensor with the given padding_value.
+
+    edge_padding_low and edge_padding_high specify the amount of padding
+    added at the low-end (next to index 0) and the high-end
+    (next to the highest index) of each dimension respectively.
+    The amount of padding can be negative, where the absolute value of negative
+    padding indicates the number of elements to remove from the specified dimension.
+
+    interior_padding specifies the amount of padding added between any
+    two elements in each dimension which may not be negative. Interior padding occurs
+    before edge padding such that negative edge padding will remove elements from
+    the interior-padded operand.
+
+    More formally, result[result_index] is defined as:
+
+    operand[operand_index] if
+    result_index = edge_padding_low + operand_index * (interior_padding + 1).
+    padding_value otherwise.
+
+    See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#pad)
+    """
+
+    name = "stablehlo.pad"
+
+    operand = operand_def(AnyTensorType)
+    padding_value = operand_def(SI32TensorType)
+    result = result_def(AnyTensorType)
+    edge_padding_low = prop_def(DenseArrayBase.constr(i64))
+    edge_padding_high = prop_def(DenseArrayBase.constr(i64))
+    interior_padding = prop_def(DenseArrayBase.constr(i64))
+
+    traits = traits_def(NoMemoryEffect(), SameOperandsAndResultElementType())
+
+    assembly_format = (
+        "$operand `,` $padding_value `,` "
+        "`low` `=` $edge_padding_low `,` "
+        "`high` `=` $edge_padding_high `,` "
+        "`interior` `=` $interior_padding "
+        "attr-dict `:` functional-type(operands, results)"
+    )
+
+    def __init__(
+        self,
+        operand: SSAValue,
+        padding_value: SSAValue,
+        edge_padding_low: DenseArrayBase,
+        edge_padding_high: DenseArrayBase,
+        interior_padding: DenseArrayBase,
+        result_type: Attribute,
+    ):
+        super().__init__(
+            operands=(operand, padding_value),
+            result_types=(result_type,),
+            attributes={
+                "edge_padding_low": edge_padding_low,
+                "edge_padding_high": edge_padding_high,
+                "interior_padding": interior_padding,
+            },
+        )
+
+    def get_edge_padding_low(self) -> tuple[int, ...]:
+        return self.edge_padding_low.get_values()
+
+    def get_edge_padding_high(self) -> tuple[int, ...]:
+        return self.edge_padding_high.get_values()
+
+    def get_interior_padding(self) -> tuple[int, ...]:
+        return self.interior_padding.get_values()
+
+    def verify_(self) -> None:
+        # Operand and result types are checked before the custom `verify_`
+        o_type = cast(TensorType[Attribute], self.operand.type)
+        pad_val_type = cast(TensorType[Attribute], self.padding_value.type)
+        r_type = self.result.type
+
+        o_shape = o_type.get_shape()
+        pad_val_shape = pad_val_type.get_shape()
+        r_shape = r_type.get_shape()
+
+        if pad_val_shape:
+            raise VerifyException(
+                f"Expect padding_value is an 0-dimensional tensor,"
+                f" found {pad_val_shape}"
+            )
+
+        o_rank = len(o_shape)
+        edge_padding_low = self.get_edge_padding_low()
+        edge_padding_high = self.get_edge_padding_high()
+        interior_padding = self.get_interior_padding()
+
+        hints = [
+            "result shape",
+            "edge_padding_low",
+            "edge_padding_high",
+            "interior_padding",
+        ]
+
+        # size(edge_padding_low) = size(edge_padding_high)
+        # = size(interior_padding) = rank(operand)
+        for shape, hint in zip(
+            [r_shape, edge_padding_low, edge_padding_high, interior_padding], hints
+        ):
+            if o_rank != len(shape):
+                raise VerifyException(
+                    "Pad operation rank mismatch while "
+                    f"the operand has {o_rank} dimension(s) and "
+                    f"{hint} has {len(shape)} dimension(s)"
+                )
+
+        # 0 <= interior_padding
+        for inner_padding in interior_padding:
+            if inner_padding < 0:
+                raise VerifyException(
+                    f"The interior_padding value must be equal or larger than 0,"
+                    f" found {inner_padding} "
+                )
+
+        # shape(result) = shape(operand) + edge_padding_low +
+        # max(shape(operand) - 1, 0) * interior_padding + edge_padding_high
+        for ith_dim, (r_dim, o_dim, pad_low, pad_high, inner_pad) in enumerate(
+            zip(r_shape, o_shape, edge_padding_low, edge_padding_high, interior_padding)
+        ):
+            if r_dim != o_dim + pad_low + max(o_dim - 1, 0) * inner_pad + pad_high:
+                raise VerifyException(
+                    f"Pad operation at {ith_dim} dimension  mismatch, while "
+                    f"the dimension before {o_dim} and the after is {r_dim} "
+                    f"with {pad_low}, {pad_high}, {inner_pad} "
+                    f"as low, high and inner padding values"
+                )
 
 
 @irdl_op_definition
