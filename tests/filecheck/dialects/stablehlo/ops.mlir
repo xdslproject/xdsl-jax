@@ -159,9 +159,9 @@
 // CHECK-GENERIC: %[[COMPLEX2:.*]] = "stablehlo.complex"(%[[T5F32]], %[[T5F32]]) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 %complex2 = stablehlo.complex %t5f32, %t5f32 : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 
-// CHECK: %[[COMPLEX_FALLBACK:.*]] = stablehlo.complex %[[TDF32]], %[[TDF32]] : (tensor<?xf32>, tensor<?xf32>) -> tensor<5xcomplex<f32>>
-// CHECK-GENERIC: %[[COMPLEX_FALLBACK:.*]] = "stablehlo.complex"(%[[TDF32]], %[[TDF32]]) : (tensor<?xf32>, tensor<?xf32>) -> tensor<5xcomplex<f32>>
-%complex_fallback = stablehlo.complex %tdf32, %tdf32 : (tensor<?xf32>, tensor<?xf32>) -> tensor<5xcomplex<f32>>
+// CHECK: %[[COMPLEX_FALLBACK:.*]] = stablehlo.complex %[[TF32]], %[[TF32]] : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+// CHECK-GENERIC: %[[COMPLEX_FALLBACK:.*]] = "stablehlo.complex"(%[[TF32]], %[[TF32]]) : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
+%complex_fallback = stablehlo.complex %tf32, %tf32 : (tensor<f32>, tensor<f32>) -> tensor<complex<f64>>
 
 // CHECK: %[[DIVIDE:.*]] = stablehlo.divide %[[TF32]], %[[TF32]] : tensor<f32>
 // CHECK-GENERIC: %[[DIVIDE:.*]] = "stablehlo.divide"(%[[TF32]], %[[TF32]]) : (tensor<f32>, tensor<f32>) -> tensor<f32>
@@ -688,9 +688,9 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-GENERIC: %[[DYNAMIC_SLICE:.*]] = "stablehlo.dynamic_slice"(%[[DYN_OPERAND]], %[[START0]], %[[START1]]) <{slice_sizes = array<i64: 2, 3>}> : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
 %dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
 
-// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %[[PRED]], %[[T0]], %[[T0]] : tensor<i1>, tensor<i32>
-// CHECK-GENERIC: %[[SELECT_FUNCTION_TYPE:.*]] = "stablehlo.select"(%[[PRED]], %[[T0]], %[[T0]]) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
-%select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %pred, %[[T0]], %[[T0]] : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+// CHECK-GENERIC: %[[SELECT_FUNCTION_TYPE:.*]] = "stablehlo.select"(%[[PRED]], %[[T0]], %[[T0]]) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+%select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
 
 // CHECK: %[[BROADCAST_INPUT:.*]] = "test.op"() : () -> tensor<1x3xi32>
 // CHECK-GENERIC: %[[BROADCAST_INPUT:.*]] = "test.op"() : () -> tensor<1x3xi32>
