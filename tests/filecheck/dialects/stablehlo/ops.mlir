@@ -16,6 +16,9 @@
 // CHECK: %[[T5F32:.*]] = "test.op"() : () -> tensor<5xf32>
 // CHECK-GENERIC: %[[T5F32:.*]] = "test.op"() : () -> tensor<5xf32>
 %t5f32 = "test.op"() : () -> tensor<5xf32>
+// CHECK: %[[TDF32:.*]] = "test.op"() : () -> tensor<?xf32>
+// CHECK-GENERIC: %[[TDF32:.*]] = "test.op"() : () -> tensor<?xf32>
+%tdf32 = "test.op"() : () -> tensor<?xf32>
 // CHECK: %[[TCOMPLEX:.*]] = "test.op"() : () -> tensor<complex<f32>>
 // CHECK-GENERIC: %[[TCOMPLEX:.*]] = "test.op"() : () -> tensor<complex<f32>>
 %tcomplex = "test.op"() : () -> tensor<complex<f32>>
@@ -156,9 +159,9 @@
 // CHECK-GENERIC: %[[COMPLEX2:.*]] = "stablehlo.complex"(%[[T5F32]], %[[T5F32]]) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 %complex2 = stablehlo.complex %t5f32, %t5f32 : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xcomplex<f32>>
 
-// CHECK: %[[COMPLEX_FALLBACK:.*]] = stablehlo.complex %[[TF64]], %[[TF64]] : tensor<complex<f64>>
-// CHECK-GENERIC: %[[COMPLEX_FALLBACK:.*]] = "stablehlo.complex"(%[[TF64]], %[[TF64]]) : (tensor<f64>, tensor<f64>) -> tensor<complex<f64>>
-%complex_fallback = stablehlo.complex %tf64, %tf64 : (tensor<f64>, tensor<f64>) -> tensor<complex<f64>>
+// CHECK: %[[COMPLEX_FALLBACK:.*]] = stablehlo.complex %[[TDF32]], %[[TDF32]] : (tensor<?xf32>, tensor<?xf32>) -> tensor<5xcomplex<f32>>
+// CHECK-GENERIC: %[[COMPLEX_FALLBACK:.*]] = "stablehlo.complex"(%[[TDF32]], %[[TDF32]]) : (tensor<?xf32>, tensor<?xf32>) -> tensor<5xcomplex<f32>>
+%complex_fallback = stablehlo.complex %tdf32, %tdf32 : (tensor<?xf32>, tensor<?xf32>) -> tensor<5xcomplex<f32>>
 
 // CHECK: %[[DIVIDE:.*]] = stablehlo.divide %[[TF32]], %[[TF32]] : tensor<f32>
 // CHECK-GENERIC: %[[DIVIDE:.*]] = "stablehlo.divide"(%[[TF32]], %[[TF32]]) : (tensor<f32>, tensor<f32>) -> tensor<f32>
