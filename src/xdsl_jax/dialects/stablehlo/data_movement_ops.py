@@ -114,7 +114,10 @@ class GatherOp(IRDLOperation, ConditionallySpeculatableInterface):
 class TransposeOp(IRDLOperation):
     """
     Permutes the dimensions of `operand` tensor using `permutation` and produces a
-    `result` tensor.
+    `result` tensor. More formally, `result[result_index] = operand[operand_index]`
+    where `result_index[d] = operand_index[permutation[d]]`.
+
+    See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#transpose)
     """
 
     name = "stablehlo.transpose"
@@ -143,12 +146,14 @@ class TransposeOp(IRDLOperation):
         return self.permutation.get_values()
 
     def verify_(self) -> None:
+        # Operand and result types are checked before the custom `verify_`
         o_type = cast(TensorType[Attribute], self.operand.type)
         r_type = self.result.type
 
         o_shape = o_type.get_shape()
         r_shape = r_type.get_shape()
 
+        # `permutation` is a permutation of `range(rank(operand))`
         permutation = self.get_permutation()
         if sorted(permutation) != list(range(len(o_shape))):
             raise VerifyException(
@@ -156,6 +161,7 @@ class TransposeOp(IRDLOperation):
                 f"range({len(o_shape)})"
             )
 
+        # `shape(result) = dim(operand, permutation...)`
         for i, dim in enumerate(permutation):
             if r_shape[i] != o_shape[dim]:
                 raise VerifyException(
@@ -168,6 +174,25 @@ class PadOp(IRDLOperation):
     """
     Expands operand by padding around the tensor as well as between the
     elements of the tensor with the given padding_value.
+
+    edge_padding_low and edge_padding_high specify the amount of padding
+    added at the low-end (next to index 0) and the high-end
+    (next to the highest index) of each dimension respectively.
+    The amount of padding can be negative, where the absolute value of negative
+    padding indicates the number of elements to remove from the specified dimension.
+
+    interior_padding specifies the amount of padding added between any
+    two elements in each dimension which may not be negative. Interior padding occurs
+    before edge padding such that negative edge padding will remove elements from
+    the interior-padded operand.
+
+    More formally, result[result_index] is defined as:
+
+    operand[operand_index] if
+    result_index = edge_padding_low + operand_index * (interior_padding + 1).
+    padding_value otherwise.
+
+    See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#pad)
     """
 
     name = "stablehlo.pad"
@@ -218,6 +243,7 @@ class PadOp(IRDLOperation):
         return self.interior_padding.get_values()
 
     def verify_(self) -> None:
+        # Operand and result types are checked before the custom `verify_`
         o_type = cast(TensorType[Attribute], self.operand.type)
         pad_val_type = cast(TensorType[Attribute], self.padding_value.type)
         r_type = self.result.type
@@ -244,6 +270,8 @@ class PadOp(IRDLOperation):
             "interior_padding",
         ]
 
+        # size(edge_padding_low) = size(edge_padding_high)
+        # = size(interior_padding) = rank(operand)
         for shape, hint in zip(
             [r_shape, edge_padding_low, edge_padding_high, interior_padding], hints
         ):
@@ -254,6 +282,7 @@ class PadOp(IRDLOperation):
                     f"{hint} has {len(shape)} dimension(s)"
                 )
 
+        # 0 <= interior_padding
         for inner_padding in interior_padding:
             if inner_padding < 0:
                 raise VerifyException(
@@ -261,6 +290,8 @@ class PadOp(IRDLOperation):
                     f" found {inner_padding} "
                 )
 
+        # shape(result) = shape(operand) + edge_padding_low +
+        # max(shape(operand) - 1, 0) * interior_padding + edge_padding_high
         for ith_dim, (r_dim, o_dim, pad_low, pad_high, inner_pad) in enumerate(
             zip(r_shape, o_shape, edge_padding_low, edge_padding_high, interior_padding)
         ):

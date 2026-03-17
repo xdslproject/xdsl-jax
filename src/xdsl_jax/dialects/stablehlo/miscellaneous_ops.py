@@ -55,6 +55,13 @@ class IotaOp(IRDLOperation):
     """
     Fills an `output` tensor with values in increasing order starting from zero
     along the `iota_dimension` dimension.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#iota
+
+    Example:
+    ```mlir
+    %output = stablehlo.iota dim = 0 : tensor<4x5xi32>
     """
 
     name = "stablehlo.iota"

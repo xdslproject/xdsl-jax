@@ -12,10 +12,9 @@ from xdsl.dialects.builtin import (
     i32,
     i64,
 )
-from xdsl.ir import Attribute, Block
+from xdsl.ir import Attribute, Block, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
-    ParsePropInAttrDict,
     irdl_op_definition,
     operand_def,
     opt_prop_def,
@@ -40,8 +39,6 @@ from xdsl_jax.xdsl_extras.traits import Elementwise, SameOperandsAndResultShape
 from .attributes import (
     ComparisonDirectionAttr,
     ComparisonTypeAttr,
-    ResultAccuracyMode,
-    ResultAccuracyModeAttr,
 )
 from .custom_directives import ExponentMantissa, SameOperandsAndResultType, SelectOpType
 from .modularity_ops import ReturnOp
@@ -55,7 +52,10 @@ from .types import FloatTensorType, PredTensorType
 
 @irdl_op_definition
 class ClampOp(IRDLOperation):
-    """Element-wise clamp with min and max bounds."""
+    """Element-wise clamp with min and max bounds.
+
+    See: https://github.com/openxla/stablehlo/blob/main/docs/spec.md#clamp
+    """
 
     name = "stablehlo.clamp"
 
@@ -82,7 +82,21 @@ class BitcastConvertOp(IRDLOperation):
     Performs a bitcast operation on operand tensor and produces a result tensor
     where the bits of the entire operand tensor are reinterpreted using the type of the
     result tensor.
-    """
+
+    More formally, given `E = element_type(operand)`, `E' = element_type(result)`,
+    and `R = rank(operand)`:
+
+    * If `num_bits(E') < num_bits(E)`, `bits(result[i0, ..., iR-1, :]) = bits(operand[i0, ..., iR-1])`.
+    * If `num_bits(E') > num_bits(E)`, `bits(result[i0, ..., iR-2]) = bits(operand[i0, ..., iR-2, :])`.
+    * If `num_bits(E') = num_bits(E)`, `bits(result[i0, ..., iR-1]) = bits(operand[i0, ..., iR-1])`.
+
+    `bits` returns in-memory representation of a given value,
+    and its behavior is implementation-defined because the exact representation of
+    tensors is implementation-defined,
+    and the exact representation of element types is implementation-defined as well.
+
+    [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#bitcast_convert)
+    """  # noqa: E501
 
     name = "stablehlo.bitcast_convert"
     input = operand_def(AnyTensorType)
@@ -91,6 +105,9 @@ class BitcastConvertOp(IRDLOperation):
     assembly_format = "operands attr-dict `:` functional-type(operands, results)"
 
     traits = traits_def(NoMemoryEffect(), ConditionallySpeculatable())
+
+    def __init__(self, input: SSAValue, result: Attribute):
+        super().__init__(operands=(input,), result_types=(result,))
 
 
 @irdl_op_definition
@@ -122,6 +139,20 @@ class MapOp(IRDLOperation):
     """
     Applies a map function `computation` to `inputs` along the `dimensions` and
     produces a `result` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#map
+
+    Example:
+    ```mlir
+    %result = "stablehlo.map"(%input0, %input1) ({
+      ^bb0(%arg0: tensor<i64>, %arg1: tensor<i64>):
+        %0 = stablehlo.multiply %arg0, %arg1 : tensor<i64>
+        stablehlo.return %0 : tensor<i64>
+    }) {
+      dimensions = array<i64: 0, 1>
+    } : (tensor<2x2xi64>, tensor<2x2xi64>) -> tensor<2x2xi64>
+    ```
     """
 
     name = "stablehlo.map"
@@ -138,6 +169,13 @@ class MapOp(IRDLOperation):
     )
 
     def _verify_computation_block(self, block: Block) -> None:
+        """Verify that computation block has the correct arguments and return type.
+        it checks the following:
+        - The number of operands and arguments match.
+        - The arguments are 0-rank tensors
+        - The element types of the arguments match the operand element types.
+        - The return value is a single 0-rank tensor.
+        """
         block_args = block.args
         if len(self.inputs) != len(block_args):
             raise VerifyException(
@@ -176,6 +214,8 @@ class MapOp(IRDLOperation):
             )
 
     def _verify_dimensions(self, dimensions: tuple[int, ...]) -> None:
+        """Verify the dimensions are monotonically increasing and
+        the operand dimensions are a subset of the map dimensions."""
         for idx, dim in enumerate(dimensions):
             if dim != idx:
                 raise VerifyException(
@@ -203,6 +243,14 @@ class SelectOp(IRDLOperation):
     """
     Produces a `result` tensor where each element is selected from `on_true` or
     `on_false` tensor based on the value of the corresponding element of `pred`.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#select
+
+    Example:
+    ```mlir
+    %result = stablehlo.select %pred, %on_true, %on_false : tensor<2xi1>, tensor<2xi32>
+    ```
     """
 
     name = "stablehlo.select"
@@ -230,6 +278,14 @@ class ReducePrecisionOp(IRDLOperation):
     Performs element-wise conversion of `operand` to another floating-point type
     that uses `exponent_bits` and `mantissa_bits` and back to the original
     floating-point type and produces an `output` tensor.
+
+    See:
+    https://github.com/openxla/stablehlo/blob/main/docs/spec.md#reduce_precision
+
+    Example:
+    ```mlir
+    %output = stablehlo.reduce_precision %operand, format = e5m10 : tensor<6xf64>
+    ```
     """
 
     name = "stablehlo.reduce_precision"
@@ -254,9 +310,3 @@ class ReducePrecisionOp(IRDLOperation):
         CompatibleOperandsAndResultType(),
         SpeculatableIfStaticDimInOutputIsStaticInInput(),
     )
-
-    result_accuracy = opt_prop_def(
-        ResultAccuracyModeAttr, ResultAccuracyModeAttr(ResultAccuracyMode.DEFAULT)
-    )
-
-    irdl_options = (ParsePropInAttrDict(),)

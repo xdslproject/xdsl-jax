@@ -35,7 +35,7 @@ from .attributes import TokenType
 from .custom_directives import PairwiseOpType, SameOperandsAndResultType
 from .modularity_ops import ReturnOp
 from .traits import have_compatible_type_sequences
-from .types import PredTensorType, SI32TensorType, TensorOrTokenType
+from .types import AnyTensorType, PredTensorType, SI32TensorType, TensorOrTokenType
 
 _ZERO_RANK_I1_TENSOR_TYPE = TensorType(i1, ())
 
@@ -45,6 +45,10 @@ class AfterAllOp(IRDLOperation):
     """
     Ensures that the operations producing the inputs are executed before any operations
     that depend on result.
+    Execution of this operation does nothing, it only exists to establish data
+    dependencies from result to inputs.
+
+    [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#after_all)
     """
 
     name = "stablehlo.after_all"
@@ -68,7 +72,13 @@ class AfterAllOp(IRDLOperation):
 class CaseOp(IRDLOperation):
     """
     Produces the output from executing exactly one function from `branches`
-    depending on the value of `index`.
+    depending on the value of `index`. More formally, `result = selected_branch()`
+    where:
+
+    * `selected_branch = branches[index]` if `0 <= index < size(branches)`.
+    * `selected_branch = branches[-1]` otherwise.
+
+    See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#case)
     """
 
     name = "stablehlo.case"
@@ -86,7 +96,7 @@ class CaseOp(IRDLOperation):
         self,
         index: SSAValue,
         branches: Sequence[Region],
-        result_types: Sequence[Attribute],
+        result_types: Sequence[AnyTensorType | TokenType],
     ):
         super().__init__(
             operands=(index,), result_types=(result_types,), regions=(branches,)
