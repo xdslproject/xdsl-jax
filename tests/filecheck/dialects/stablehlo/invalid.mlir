@@ -61,6 +61,12 @@
 
 // -----
 
+%operand = "test.op"() : () -> tensor<2xf32>
+// CHECK: Operation does not verify: 'stablehlo.complex' requires the same shape for all operands and results
+%result = stablehlo.complex %operand, %operand : (tensor<2xf32>, tensor<2xf32>) -> tensor<3xcomplex<f32>>
+
+// -----
+
 // CHECK: unknown field 'unknown_field'
 "test.op"() {gather = #stablehlo.gather<
   offset_dims = [0],
@@ -721,6 +727,30 @@ cond {
 %on_false = "test.op"() : () -> tensor<i32>
 // CHECK: expected functional type or list of two types
 %bad_select_type = stablehlo.select %pred, %on_true, %on_false : tensor<i1>, tensor<i32>, tensor<i32>
+
+// -----
+
+%pred = "test.op"() : () -> tensor<i1>
+%on_true = "test.op"() : () -> tensor<i32>
+%on_false = "test.op"() : () -> tensor<i32>
+// CHECK: Operation does not verify: 'stablehlo.select' op inferred type(s) 'tensor<i32>' are incompatible with return type(s) of operation 'tensor<3xi32>'
+%bad_select_result = stablehlo.select %pred, %on_true, %on_false : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+
+// -----
+
+%pred = "test.op"() : () -> tensor<i1>
+%on_true = "test.op"() : () -> tensor<2xi32>
+%on_false = "test.op"() : () -> tensor<3xi32>
+// CHECK: Operation does not verify: requires compatible types for non-predicate operands
+%bad_select_operand_types = stablehlo.select %pred, %on_true, %on_false : (tensor<i1>, tensor<2xi32>, tensor<3xi32>) -> tensor<2xi32>
+
+// -----
+
+%pred = "test.op"() : () -> tensor<2xi1>
+%on_true = "test.op"() : () -> tensor<3xi32>
+%on_false = "test.op"() : () -> tensor<3xi32>
+// CHECK: Operation does not verify: requires the same shape for all operands
+%bad_select_pred_shape = stablehlo.select %pred, %on_true, %on_false : tensor<2xi1>, tensor<3xi32>
 
 // -----
 
