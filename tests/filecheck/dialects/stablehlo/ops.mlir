@@ -618,9 +618,9 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-GENERIC: %dynamic_slice = "stablehlo.dynamic_slice"(%dyn_operand, %start0, %start1) <{slice_sizes = array<i64: 2, 3>}> : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
 %dynamic_slice = stablehlo.dynamic_slice %dyn_operand, %start0, %start1, sizes = [2, 3] : (tensor<4x4xi32>, tensor<i64>, tensor<i64>) -> tensor<2x3xi32>
 
-// CHECK: %select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
-// CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %t0, %t0) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
-%select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<3xi32>
+// CHECK: %select_function_type = stablehlo.select %pred, %tdf32, %t5f32 : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK-GENERIC: %select_function_type = "stablehlo.select"(%pred, %tdf32, %t5f32) : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
+%select_function_type = stablehlo.select %pred, %tdf32, %t5f32 : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
 
 %broadcast_input = "test.op"() : () -> tensor<1x3xi32>
 // CHECK: %broadcast = stablehlo.broadcast_in_dim %broadcast_input, dims = [2, 1] : (tensor<1x3xi32>) -> tensor<2x3x2xi32>
