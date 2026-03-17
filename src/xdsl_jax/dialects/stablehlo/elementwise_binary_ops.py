@@ -170,7 +170,6 @@ class ComplexOp(ElementwiseBinaryOperation[Float32Or64TensorType]):
 
     def verify_(self) -> None:
         lhs_type = cast(TensorType[Attribute], self.lhs.type)
-        result_type = cast(TensorType[Attribute], self.result.type)
         lhs_element_type = cast(Float32Or64Type, lhs_type.element_type)
         expected_result_type = TensorType(
             ComplexType(lhs_element_type),
@@ -178,6 +177,7 @@ class ComplexOp(ElementwiseBinaryOperation[Float32Or64TensorType]):
             lhs_type.encoding,
         )
 
+        result_type = self.result.type
         if not have_compatible_type_sequences((expected_result_type,), (result_type,)):
             raise VerifyException(
                 f"'{self.name}' op inferred type(s) '{expected_result_type}' are "
