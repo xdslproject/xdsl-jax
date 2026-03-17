@@ -67,7 +67,6 @@ class IotaOp(IRDLOperation):
     name = "stablehlo.iota"
 
     iota_dimension = prop_def(IntegerAttr.constr(type=eq(i64), value=AtLeast(0)))
-
     output = result_def(IntOrFloatOrComplexTensorType)
 
     traits = traits_def(Pure())
