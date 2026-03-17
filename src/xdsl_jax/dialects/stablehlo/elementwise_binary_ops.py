@@ -3,9 +3,9 @@ Binary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, cast
 
-from xdsl.dialects.builtin import AnyTensorType
+from xdsl.dialects.builtin import AnyTensorType, ComplexType, TensorType
 from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
@@ -15,6 +15,7 @@ from xdsl.irdl import (
     traits_def,
 )
 from xdsl.traits import Commutative, NoMemoryEffect
+from xdsl.utils.exceptions import VerifyException
 
 from xdsl_jax.xdsl_extras import (
     Elementwise,
@@ -23,10 +24,11 @@ from xdsl_jax.xdsl_extras import (
 )
 
 from .custom_directives import ComplexOpType, SameOperandsAndResultType
-from .traits import CompatibleOperandsAndResultType
+from .traits import CompatibleOperandsAndResultType, have_compatible_type_sequences
 from .types import (
     ComplexTensorType,
     Float32Or64TensorType,
+    Float32Or64Type,
     FloatOrComplexTensorType,
     IntegerTensorType,
     IntOrFloatOrComplexTensorType,
@@ -165,6 +167,22 @@ class ComplexOp(ElementwiseBinaryOperation[Float32Or64TensorType]):
     traits = traits_def(
         SameOperandsElementType(),
     )
+
+    def verify_(self) -> None:
+        lhs_type = cast(TensorType[Attribute], self.lhs.type)
+        result_type = cast(TensorType[Attribute], self.result.type)
+        lhs_element_type = cast(Float32Or64Type, lhs_type.element_type)
+        expected_result_type = TensorType(
+            ComplexType(lhs_element_type),
+            lhs_type.get_shape(),
+            lhs_type.encoding,
+        )
+
+        if not have_compatible_type_sequences((expected_result_type,), (result_type,)):
+            raise VerifyException(
+                f"'{self.name}' op inferred type(s) '{expected_result_type}' are "
+                f"incompatible with return type(s) of operation '{result_type}'"
+            )
 
 
 @irdl_op_definition
