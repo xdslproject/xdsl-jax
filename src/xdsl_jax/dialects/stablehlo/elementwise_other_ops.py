@@ -5,6 +5,7 @@ Other elementwise operations for the StableHLO dialect.
 from typing import cast
 
 from xdsl.dialects.builtin import (
+    DYNAMIC_INDEX,
     AnyTensorType,
     DenseArrayBase,
     IntegerAttr,
@@ -33,6 +34,7 @@ from xdsl.traits import (
     SingleBlockImplicitTerminator,
 )
 from xdsl.utils.exceptions import VerifyException
+from xdsl.utils.type import have_compatible_shape
 
 from xdsl_jax.xdsl_extras.traits import Elementwise, SameOperandsAndResultShape
 
@@ -46,6 +48,7 @@ from .traits import (
     CompatibleOperandsAndResultType,
     SpeculatableIfAllInputsStatic,
     SpeculatableIfStaticDimInOutputIsStaticInInput,
+    have_compatible_type_sequences,
 )
 from .types import FloatTensorType, PredTensorType
 
@@ -270,6 +273,40 @@ class SelectOp(IRDLOperation):
         NoMemoryEffect(),
         SpeculatableIfAllInputsStatic(),
     )
+
+    def verify_(self) -> None:
+        pred_type = cast(TensorType[Attribute], self.pred.type)
+        on_true_type = cast(TensorType[Attribute], self.on_true.type)
+        on_false_type = cast(TensorType[Attribute], self.on_false.type)
+
+        if not have_compatible_type_sequences((on_true_type,), (on_false_type,)):
+            raise VerifyException(
+                "requires compatible types for non-predicate operands"
+            )
+
+        if pred_type.get_num_dims() != 0 and not have_compatible_shape(
+            pred_type, on_true_type
+        ):
+            raise VerifyException("requires the same shape for all operands")
+
+        inferred_shape = tuple(
+            false_dim if true_dim == DYNAMIC_INDEX else true_dim
+            for true_dim, false_dim in zip(
+                on_true_type.get_shape(), on_false_type.get_shape()
+            )
+        )
+        inferred_result_type = TensorType(
+            on_true_type.element_type,
+            inferred_shape,
+            on_true_type.encoding,
+        )
+        result_type = self.result.type
+
+        if not have_compatible_type_sequences((inferred_result_type,), (result_type,)):
+            raise VerifyException(
+                f"'{self.name}' op inferred type(s) '{inferred_result_type}' are "
+                f"incompatible with return type(s) of operation '{result_type}'"
+            )
 
 
 @irdl_op_definition

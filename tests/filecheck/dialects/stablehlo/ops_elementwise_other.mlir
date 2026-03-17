@@ -10,6 +10,9 @@
 // CHECK: %[[T5F32:.*]] = "test.op"() : () -> tensor<5xf32>
 // CHECK-GENERIC: %[[T5F32:.*]] = "test.op"() : () -> tensor<5xf32>
 %t5f32 = "test.op"() : () -> tensor<5xf32>
+// CHECK: %[[TDF32:.*]] = "test.op"() : () -> tensor<?xf32>
+// CHECK-GENERIC: %[[TDF32:.*]] = "test.op"() : () -> tensor<?xf32>
+%tdf32 = "test.op"() : () -> tensor<?xf32>
 
 // CHECK: %[[CLAMP:.*]] = stablehlo.clamp %[[T0]], %[[T0]], %[[T0]] : tensor<i32>
 // CHECK-GENERIC: %[[CLAMP:.*]] = "stablehlo.clamp"(%[[T0]], %[[T0]], %[[T0]]) : (tensor<i32>, tensor<i32>, tensor<i32>) -> tensor<i32>
@@ -51,6 +54,6 @@
 // CHECK-GENERIC: %[[SELECT_MISMATCH:.*]] = "stablehlo.select"(%[[PRED]], %[[T0]], %[[T0]]) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %[[PRED]], %[[T0]], %[[T0]] : tensor<i1>, tensor<i32>
-// CHECK-GENERIC: %[[SELECT_FUNCTION_TYPE:.*]] = "stablehlo.select"(%[[PRED]], %[[T0]], %[[T0]]) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
-%select_function_type = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
+// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %pred, %[[TDF32]], %[[T5F32]] : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK-GENERIC: %[[SELECT_FUNCTION_TYPE:.*]] = "stablehlo.select"(%[[PRED]], %[[TDF32]], %[[T5F32]]) : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
+%select_function_type = stablehlo.select %pred, %tdf32, %t5f32 : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
