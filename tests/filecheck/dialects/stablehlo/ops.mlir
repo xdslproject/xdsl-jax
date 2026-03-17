@@ -1,6 +1,12 @@
 // RUN: XDSL_ROUNDTRIP
 // RUN: XDSL_GENERIC_ROUNDTRIP
 // RUN: JAX_ROUNDTRIP
+// RUN: JAX_GENERIC_ROUNDTRIP
+// RUN: XDSL_JAX_ROUNDTRIP
+// RUN: XDSL_JAX_GENERIC_ROUNDTRIP
+
+// CHECK-JAX: module {
+// CHECK-JAX-GENERIC: "builtin.module"() ({
 
 %pred = "test.op"() : () -> tensor<i1>
 %t0 = "test.op"() : () -> tensor<i32>
