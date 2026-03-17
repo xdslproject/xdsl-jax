@@ -1,3 +1,11 @@
+"""
+[StableHLO](https://github.com/openxla/stablehlo/blob/main/docs/spec.md)
+is an operation set for high-level operations (HLO) in machine learning (ML) models.
+StableHLO works as a portability layer between different ML frameworks and ML compilers:
+ML frameworks that produce StableHLO programs are compatible with ML compilers that
+consume StableHLO programs.
+"""
+
 from xdsl.ir import Dialect
 
 from .attributes import (
@@ -12,15 +20,17 @@ from .attributes import (
     ScatterDimensionNumbers,
     TokenType,
 )
-from .control_flow_ops import IfOp, OptimizationBarrierOp, WhileOp
+from .control_flow_ops import AfterAllOp, CaseOp, IfOp, OptimizationBarrierOp, WhileOp
 from .data_movement_ops import (
     BroadcastInDimOp,
     ConcatenateOp,
     DynamicSliceOp,
     GatherOp,
+    PadOp,
     ReshapeOp,
     ScatterOp,
     SliceOp,
+    TransposeOp,
 )
 from .dynamism_ops import DynamicBroadcastInDimOp
 from .elementwise_binary_ops import (
@@ -40,6 +50,14 @@ from .elementwise_binary_ops import (
     ShiftRightLogicalOp,
     SubtractOp,
     XorOp,
+)
+from .elementwise_other_ops import (
+    BitcastConvertOp,
+    ClampOp,
+    CompareOp,
+    MapOp,
+    ReducePrecisionOp,
+    SelectOp,
 )
 from .elementwise_unary_ops import (
     AbsOp,
@@ -70,20 +88,9 @@ from .elementwise_unary_ops import (
     TanOp,
 )
 from .extensibility_ops import CustomCallOp
-from .ops import (
-    AfterAllOp,
-    BitcastConvertOp,
-    CaseOp,
-    ClampOp,
-    CompareOp,
-    ConstantOp,
-    IotaOp,
-    MapOp,
-    PadOp,
-    ReducePrecisionOp,
+from .miscellaneous_ops import ConstantOp, IotaOp
+from .modularity_ops import (
     ReturnOp,
-    SelectOp,
-    TransposeOp,
 )
 from .reduction_ops import DotGeneralOp, ReduceOp
 
@@ -92,6 +99,7 @@ StableHLO = Dialect(
     [
         # Elementwise unary operations
         AbsOp,
+        BitcastConvertOp,
         CbrtOp,
         CeilOp,
         ConvertOp,
@@ -134,7 +142,15 @@ StableHLO = Dialect(
         ShiftRightLogicalOp,
         SubtractOp,
         XorOp,
+        # Elementwise other operations
+        ClampOp,
+        CompareOp,
+        MapOp,
+        ReducePrecisionOp,
+        SelectOp,
         # Control flow operations
+        AfterAllOp,
+        CaseOp,
         IfOp,
         OptimizationBarrierOp,
         WhileOp,
@@ -143,9 +159,11 @@ StableHLO = Dialect(
         ConcatenateOp,
         DynamicSliceOp,
         GatherOp,
+        PadOp,
         ReshapeOp,
         ScatterOp,
         SliceOp,
+        TransposeOp,
         # Dynamism operations
         DynamicBroadcastInDimOp,
         # Reduction operations
@@ -153,20 +171,10 @@ StableHLO = Dialect(
         ReduceOp,
         # Extensibility operations
         CustomCallOp,
-        # Other operations
-        AfterAllOp,
-        BitcastConvertOp,
-        CaseOp,
-        ClampOp,
-        CompareOp,
+        # Miscellaneous operations
         ConstantOp,
         IotaOp,
-        MapOp,
-        PadOp,
-        ReducePrecisionOp,
         ReturnOp,
-        SelectOp,
-        TransposeOp,
     ],
     [
         ComparisonDirectionAttr,

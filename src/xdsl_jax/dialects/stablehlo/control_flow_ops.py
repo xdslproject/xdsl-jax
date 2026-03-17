@@ -4,18 +4,21 @@ Control flow operations for the StableHLO dialect.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import cast
 
 from xdsl.dialects.builtin import TensorType, i1
 from xdsl.dialects.utils.format import parse_assignment, print_assignment
-from xdsl.ir import Attribute
+from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
     IRDLOperation,
     irdl_op_definition,
     operand_def,
     region_def,
+    result_def,
     traits_def,
     var_operand_def,
+    var_region_def,
     var_result_def,
 )
 from xdsl.parser import Parser
@@ -28,12 +31,76 @@ from xdsl.traits import (
 )
 from xdsl.utils.exceptions import VerifyException
 
-from .custom_directives import PairwiseOpType
-from .ops import ReturnOp
+from .attributes import TokenType
+from .custom_directives import PairwiseOpType, SameOperandsAndResultType
+from .modularity_ops import ReturnOp
 from .traits import have_compatible_type_sequences
-from .types import PredTensorType, TensorOrTokenType
+from .types import AnyTensorType, PredTensorType, SI32TensorType, TensorOrTokenType
 
 _ZERO_RANK_I1_TENSOR_TYPE = TensorType(i1, ())
+
+
+@irdl_op_definition
+class AfterAllOp(IRDLOperation):
+    """
+    Ensures that the operations producing the inputs are executed before any operations
+    that depend on result.
+    Execution of this operation does nothing, it only exists to establish data
+    dependencies from result to inputs.
+
+    [See StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#after_all)
+    """
+
+    name = "stablehlo.after_all"
+    inputs = var_operand_def(TokenType)
+    result = result_def(TokenType)
+
+    traits = traits_def(Pure())
+
+    assembly_format = (
+        "$inputs attr-dict"
+        " `:` custom<SameOperandsAndResultType>"
+        "(type($inputs), type($result))"
+    )
+    custom_directives = (SameOperandsAndResultType,)
+
+    def __init__(self, inputs: Sequence[SSAValue]):
+        super().__init__(operands=[inputs], result_types=(TokenType(),))
+
+
+@irdl_op_definition
+class CaseOp(IRDLOperation):
+    """
+    Produces the output from executing exactly one function from `branches`
+    depending on the value of `index`. More formally, `result = selected_branch()`
+    where:
+
+    * `selected_branch = branches[index]` if `0 <= index < size(branches)`.
+    * `selected_branch = branches[-1]` otherwise.
+
+    See [StableHLO specification](https://github.com/openxla/stablehlo/blob/main/docs/spec.md#case)
+    """
+
+    name = "stablehlo.case"
+    index = operand_def(SI32TensorType)
+    branches = var_region_def("single_block")
+    _results = var_result_def(TensorOrTokenType)
+
+    traits = traits_def(
+        RecursiveMemoryEffect(),
+        RecursivelySpeculatable(),
+        SingleBlockImplicitTerminator(ReturnOp),
+    )
+
+    def __init__(
+        self,
+        index: SSAValue,
+        branches: Sequence[Region],
+        result_types: Sequence[AnyTensorType | TokenType],
+    ):
+        super().__init__(
+            operands=(index,), result_types=(result_types,), regions=(branches,)
+        )
 
 
 @irdl_op_definition
