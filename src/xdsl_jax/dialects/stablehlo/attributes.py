@@ -7,7 +7,7 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial
-from typing import ClassVar, TypeAlias, get_origin
+from typing import TypeAlias, get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, BoolAttr, IntegerAttr, i64
 from xdsl.ir import (
@@ -354,19 +354,12 @@ class DotAttr(ParametrizedAttribute):
     lhs_contracting_dimensions: ArrayAttr[IntegerAttr[I64]]
     rhs_contracting_dimensions: ArrayAttr[IntegerAttr[I64]]
 
-    ALL_PARAMS: ClassVar[tuple[str, ...]] = (
-        "lhs_batching_dimensions",
-        "rhs_batching_dimensions",
-        "lhs_contracting_dimensions",
-        "rhs_contracting_dimensions",
-    )
-
     @staticmethod
     def _parse_param(parser: AttrParser) -> tuple[str, ArrayAttr[IntegerAttr[I64]]]:
         cur_pos = parser.pos
         param_name = parser.parse_identifier()
 
-        if param_name not in DotAttr.ALL_PARAMS:
+        if param_name not in ALL_DOTATTR_PARAMS:
             parser.raise_error(
                 msg=f"Invalid parameter name '{param_name}' for stablehlo.dot.",
                 at_position=cur_pos,
@@ -399,7 +392,7 @@ class DotAttr(ParametrizedAttribute):
     def print_parameters(self, printer: Printer) -> None:
         printable_params = {
             param_name: param_val
-            for param_name in DotAttr.ALL_PARAMS
+            for param_name in ALL_DOTATTR_PARAMS
             if (param_val := getattr(self, param_name, ArrayAttr(()))).data
         }
 
@@ -421,7 +414,12 @@ class DotAttr(ParametrizedAttribute):
         for param_name, param_val in parsed_params:
             param_dict[param_name] = param_val
 
-        return tuple(param_dict[p] for p in DotAttr.ALL_PARAMS)
+        return tuple(param_dict[p] for p in ALL_DOTATTR_PARAMS)
+
+
+ALL_DOTATTR_PARAMS: tuple[str, ...] = tuple(
+    param[0] for param in DotAttr.get_irdl_definition().parameters
+)
 
 
 @irdl_attr_definition
