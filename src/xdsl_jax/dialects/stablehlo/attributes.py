@@ -21,7 +21,7 @@ from xdsl.ir import (
 from xdsl.irdl import irdl_attr_definition
 from xdsl.parser import AttrParser
 from xdsl.printer import Printer
-from xdsl.utils.exceptions import ParseError, VerifyException
+from xdsl.utils.exceptions import VerifyException
 
 # Type aliases for dimension values
 Dims: TypeAlias = ArrayAttr[IntegerAttr[I64]]
@@ -418,9 +418,8 @@ class DotAttr(ParametrizedAttribute):
         )
         for param_name, param_val in parsed_params:
             if param_name not in all_params:
-                raise ParseError(
-                    parser._current_token.span,
-                    f"Invalid parameter name '{param_name}' for stablehlo.dot.",
+                parser.raise_error(
+                    f"Invalid parameter name '{param_name}' for stablehlo.dot."
                 )
             param_dict[param_name] = param_val
 
