@@ -47,7 +47,7 @@ class ConstantOp(IRDLOperation):
     custom_directives = (ConstantOpValue,)
 
     def __init__(self, value: DenseIntOrFPElementsAttr):
-        super().__init__(attributes={"value": value}, result_types=(value.type,))
+        super().__init__(properties={"value": value}, result_types=(value.type,))
 
 
 @irdl_op_definition

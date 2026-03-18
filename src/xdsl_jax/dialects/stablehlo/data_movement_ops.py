@@ -139,7 +139,7 @@ class TransposeOp(IRDLOperation):
         super().__init__(
             operands=(operand,),
             result_types=(result_type,),
-            attributes={"permutation": permutation},
+            properties={"permutation": permutation},
         )
 
     def get_permutation(self) -> tuple[int, ...]:
@@ -226,7 +226,7 @@ class PadOp(IRDLOperation):
         super().__init__(
             operands=(operand, padding_value),
             result_types=(result_type,),
-            attributes={
+            properties={
                 "edge_padding_low": edge_padding_low,
                 "edge_padding_high": edge_padding_high,
                 "interior_padding": interior_padding,
