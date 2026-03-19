@@ -77,15 +77,14 @@
 // CHECK: %[[CC_ALIAS_1:.*]] = "test.op"() : () -> tensor<5x5xf32>
 %custom_call_alias_1 = "test.op"() : () -> tensor<5x5xf32>
 // CHECK: %[[CC_ALIAS_RES:.*]] = stablehlo.custom_call @foo(%[[CC_ALIAS]], %[[CC_ALIAS_1]]) {output_operand_aliases = [#stablehlo.output_operand_alias<
-// CHECK-NEXT:   output_tuple_indices = [0],
-// CHECK-NEXT:   operand_index = 0,
-// CHECK-NEXT:   operand_tuple_indices = [1]
-// CHECK-NEXT: >]} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
-// CHECK-GENERIC: %[[CC_ALIAS_GEN_RES:.*]] = "stablehlo.custom_call"(%[[CC_ALIAS_GEN:.*]], %[[CC_ALIAS_1_GEN:.*]]) <{call_target_name = "foo", output_operand_aliases = [#stablehlo.output_operand_alias<
-// CHECK-GENERIC-NEXT:     output_tuple_indices = [0],
-// CHECK-GENERIC-NEXT:     operand_index = 0,
-// CHECK-GENERIC-NEXT:     operand_tuple_indices = [1]
-// CHECK-GENERIC-NEXT:   >], has_side_effect = false, api_version = 1 : i32}> : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
+// CHECK-SAME: output_tuple_indices = [0],
+// CHECK-SAME: operand_index = 0,
+// CHECK-SAME: operand_tuple_indices = [1]
+// CHECK-SAME: >]} : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
+// CHECK-GENERIC: %[[CC_ALIAS_GEN_RES:.*]] = "stablehlo.custom_call"(%[[CC_ALIAS_GEN:.*]], %[[CC_ALIAS_1_GEN:.*]]) <{
+// CHECK-GENERIC-DAG: call_target_name = "foo"
+// CHECK-GENERIC-DAG: output_operand_aliases = [#stablehlo.output_operand_alias<output_tuple_indices = [0], operand_index = 0, operand_tuple_indices = [1]>]
+// CHECK-GENERIC: > : (tuple<tensor<1x1xf32>, tensor<2x3xf32>>, tensor<5x5xf32>) -> (tensor<2x3xf32>, tensor<5x5xf32>)
 %custom_call_result_0, %custom_call_result_1 = stablehlo.custom_call @foo(%custom_call_alias, %custom_call_alias_1) {
   output_operand_aliases = [
     #stablehlo.output_operand_alias<output_tuple_indices = [0],

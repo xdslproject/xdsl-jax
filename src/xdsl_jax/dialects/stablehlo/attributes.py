@@ -496,18 +496,12 @@ class OutputOperandAlias(ParametrizedAttribute):
     def print_parameters(self, printer: Printer) -> None:
         """Print the OutputOperandAlias attribute."""
         with printer.in_angle_brackets():
-            with printer.indented():
-                printer.print_string("\noutput_tuple_indices = ")
-                print_dims(printer, self.output_tuple_indices)
-                printer.print_string(",")
-
-                printer.print_string("\noperand_index = ")
-                printer.print_int(self.operand_index.value.data)
-                printer.print_string(",")
-
-                printer.print_string("\noperand_tuple_indices = ")
-                print_dims(printer, self.operand_tuple_indices)
-            printer.print_string("\n")
+            printer.print_string("output_tuple_indices = ")
+            print_dims(printer, self.output_tuple_indices)
+            printer.print_string(", operand_index = ")
+            printer.print_int(self.operand_index.value.data)
+            printer.print_string(", operand_tuple_indices = ")
+            print_dims(printer, self.operand_tuple_indices)
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:

@@ -115,10 +115,10 @@
 
 // === Output Operand Alias ===
 // CHECK-NEXT:    "test.op"() {alias = #stablehlo.output_operand_alias<
-// CHECK-NEXT:      output_tuple_indices = [0],
-// CHECK-NEXT:      operand_index = 1,
-// CHECK-NEXT:      operand_tuple_indices = [2]
-// CHECK-NEXT:    >} : () -> ()
+// CHECK-SAME:      output_tuple_indices = [0],
+// CHECK-SAME:      operand_index = 1,
+// CHECK-SAME:      operand_tuple_indices = [2]
+// CHECK-SAME:    >} : () -> ()
 "test.op"() {
   alias = #stablehlo.output_operand_alias<
     output_tuple_indices = [0],
@@ -128,10 +128,10 @@
 } : () -> ()
 
 // CHECK-NEXT:    "test.op"() {alias_empty = #stablehlo.output_operand_alias<
-// CHECK-NEXT:      output_tuple_indices = [],
-// CHECK-NEXT:      operand_index = 0,
-// CHECK-NEXT:      operand_tuple_indices = []
-// CHECK-NEXT:    >} : () -> ()
+// CHECK-SAME:      output_tuple_indices = [],
+// CHECK-SAME:      operand_index = 0,
+// CHECK-SAME:      operand_tuple_indices = []
+// CHECK-SAME:    >} : () -> ()
 "test.op"() {
   alias_empty = #stablehlo.output_operand_alias<
     output_tuple_indices = [],
