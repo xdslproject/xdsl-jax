@@ -27,7 +27,7 @@
 %compare = stablehlo.compare EQ, %t0, %t0 : (tensor<i32>, tensor<i32>) -> tensor<i1>
 
 // CHECK: %[[MAP:.*]] = "stablehlo.map"(%[[T5F32]], %[[T5F32]]) <{dimensions = array<i64: 0>}> ({
-// CHECK-NEXT: ^bb0(%[[MAP_ARG0:[^ )]+]] : tensor<f32>, %[[MAP_ARG1:[^ )]+]] : tensor<f32>):
+// CHECK-NEXT: ^bb0(%[[MAP_ARG0:[^ )]+]]{{ ?}}: tensor<f32>, %[[MAP_ARG1:[^ )]+]]{{ ?}}: tensor<f32>):
 // CHECK-NEXT:   %[[MAP_MUL:.*]] = stablehlo.multiply %[[MAP_ARG0]], %[[MAP_ARG1]] : tensor<f32>
 // CHECK-NEXT:   stablehlo.return %[[MAP_MUL]] : tensor<f32>
 // CHECK-NEXT: }) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
