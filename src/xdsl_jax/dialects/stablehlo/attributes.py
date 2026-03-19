@@ -278,7 +278,7 @@ class DotAlgorithmAttr(ParametrizedAttribute):
 
     @staticmethod
     def _print_field(printer: Printer, field_name: str, field: Attribute) -> None:
-        printer.print_string(f"\n{field_name} = ")
+        printer.print_string(f"{field_name} = ")
         if isinstance(field, IntegerAttr):
             field.print_without_type(printer)
             return
@@ -286,15 +286,13 @@ class DotAlgorithmAttr(ParametrizedAttribute):
 
     def print_parameters(self, printer: Printer) -> None:
         with printer.in_angle_brackets():
-            with printer.indented():
-                printer.print_list(
-                    self.get_irdl_definition().parameters,
-                    lambda item: self._print_field(
-                        printer, item[0], getattr(self, item[0])
-                    ),
-                    delimiter=",",
-                )
-            printer.print_string("\n")
+            printer.print_list(
+                self.get_irdl_definition().parameters,
+                lambda item: self._print_field(
+                    printer, item[0], getattr(self, item[0])
+                ),
+                delimiter=", ",
+            )
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:

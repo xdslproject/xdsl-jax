@@ -239,14 +239,14 @@
 } : () -> ()
 
 // CHECK-NEXT:    "test.op"() {dot_algorithm = #stablehlo.dot_algorithm<
-// CHECK-NEXT:      lhs_precision_type = f32,
-// CHECK-NEXT:      rhs_precision_type = f32,
-// CHECK-NEXT:      accumulation_type = f32,
-// CHECK-NEXT:      lhs_component_count = 1,
-// CHECK-NEXT:      rhs_component_count = 1,
-// CHECK-NEXT:      num_primitive_operations = 1,
-// CHECK-NEXT:      allow_imprecise_accumulation = false
-// CHECK-NEXT:    >} : () -> ()
+// CHECK-SAME:      lhs_precision_type = f32,
+// CHECK-SAME:      rhs_precision_type = f32,
+// CHECK-SAME:      accumulation_type = f32,
+// CHECK-SAME:      lhs_component_count = 1,
+// CHECK-SAME:      rhs_component_count = 1,
+// CHECK-SAME:      num_primitive_operations = 1,
+// CHECK-SAME:      allow_imprecise_accumulation = false
+// CHECK-SAME:    >} : () -> ()
 "test.op"() {
   dot_algorithm = #stablehlo.dot_algorithm<
     lhs_precision_type = f32,
