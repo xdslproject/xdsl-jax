@@ -84,7 +84,7 @@ class DimensionStructAttr(ParametrizedAttribute, ABC):
     @staticmethod
     def _print_field(printer: Printer, name: str, field: Dims | Index) -> None:
         """Print a single field entry in the format 'name = value'."""
-        printer.print_string(f"\n{name} = ")
+        printer.print_string(f"{name} = ")
         if isinstance(field, ArrayAttr):
             print_dims(printer, field)
         else:
@@ -114,17 +114,15 @@ class DimensionStructAttr(ParametrizedAttribute, ABC):
     def print_parameters(self, printer: Printer) -> None:
         """Print struct fields in structured format, omitting defaults."""
         with printer.in_angle_brackets():
-            with printer.indented():
-                printer.print_list(
-                    (
-                        (name, getattr(self, name))
-                        for name, _ in self.get_irdl_definition().parameters
-                        if self._should_print_field(getattr(self, name))
-                    ),
-                    lambda item: self._print_field(printer, item[0], item[1]),
-                    delimiter=",",
-                )
-            printer.print_string("\n")
+            printer.print_list(
+                (
+                    (name, getattr(self, name))
+                    for name, _ in self.get_irdl_definition().parameters
+                    if self._should_print_field(getattr(self, name))
+                ),
+                lambda item: self._print_field(printer, item[0], item[1]),
+                delimiter=", ",
+            )
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
@@ -278,7 +276,7 @@ class DotAlgorithmAttr(ParametrizedAttribute):
 
     @staticmethod
     def _print_field(printer: Printer, field_name: str, field: Attribute) -> None:
-        printer.print_string(f"\n{field_name} = ")
+        printer.print_string(f"{field_name} = ")
         if isinstance(field, IntegerAttr):
             field.print_without_type(printer)
             return
@@ -286,15 +284,13 @@ class DotAlgorithmAttr(ParametrizedAttribute):
 
     def print_parameters(self, printer: Printer) -> None:
         with printer.in_angle_brackets():
-            with printer.indented():
-                printer.print_list(
-                    self.get_irdl_definition().parameters,
-                    lambda item: self._print_field(
-                        printer, item[0], getattr(self, item[0])
-                    ),
-                    delimiter=",",
-                )
-            printer.print_string("\n")
+            printer.print_list(
+                self.get_irdl_definition().parameters,
+                lambda item: self._print_field(
+                    printer, item[0], getattr(self, item[0])
+                ),
+                delimiter=", ",
+            )
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
@@ -500,18 +496,12 @@ class OutputOperandAlias(ParametrizedAttribute):
     def print_parameters(self, printer: Printer) -> None:
         """Print the OutputOperandAlias attribute."""
         with printer.in_angle_brackets():
-            with printer.indented():
-                printer.print_string("\noutput_tuple_indices = ")
-                print_dims(printer, self.output_tuple_indices)
-                printer.print_string(",")
-
-                printer.print_string("\noperand_index = ")
-                printer.print_int(self.operand_index.value.data)
-                printer.print_string(",")
-
-                printer.print_string("\noperand_tuple_indices = ")
-                print_dims(printer, self.operand_tuple_indices)
-            printer.print_string("\n")
+            printer.print_string("output_tuple_indices = ")
+            print_dims(printer, self.output_tuple_indices)
+            printer.print_string(", operand_index = ")
+            printer.print_int(self.operand_index.value.data)
+            printer.print_string(", operand_tuple_indices = ")
+            print_dims(printer, self.operand_tuple_indices)
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
