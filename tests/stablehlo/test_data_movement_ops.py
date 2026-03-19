@@ -22,8 +22,10 @@ from xdsl_jax.dialects.stablehlo.attributes import (
 from xdsl_jax.dialects.stablehlo.data_movement_ops import (
     ConcatenateOp,
     GatherOp,
+    PadOp,
     ReshapeOp,
     ScatterOp,
+    TransposeOp,
 )
 from xdsl_jax.dialects.stablehlo.modularity_ops import ReturnOp
 
@@ -96,6 +98,29 @@ def _create_reshape_op(operand_shape: list[int], result_shape: list[int]) -> Res
         operands=[operand],
         result_types=[TensorType(i32, result_shape)],
     )
+
+
+def test_pad_constructor():
+    op = PadOp(
+        operand=create_ssa_value(TensorType(i32, [2])),
+        padding_value=create_ssa_value(TensorType(i32, [])),
+        edge_padding_low=DenseArrayBase.from_list(i64, [1]),
+        edge_padding_high=DenseArrayBase.from_list(i64, [1]),
+        interior_padding=DenseArrayBase.from_list(i64, [0]),
+        result_type=TensorType(i32, [4]),
+    )
+    assert op.get_edge_padding_low() == (1,)
+    assert op.get_edge_padding_high() == (1,)
+    assert op.get_interior_padding() == (0,)
+
+
+def test_transpose_constructor():
+    op = TransposeOp(
+        operand=create_ssa_value(TensorType(i32, [2, 3])),
+        permutation=DenseArrayBase.from_list(i64, [1, 0]),
+        result_type=TensorType(i32, [3, 2]),
+    )
+    assert op.get_permutation() == (1, 0)
 
 
 @pytest.mark.parametrize(

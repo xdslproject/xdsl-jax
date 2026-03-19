@@ -461,6 +461,7 @@ class DotDimensionNumbers(CustomDirective):
         self._print_lhs_rhs_dims(
             printer, dims.lhs_contracting_dimensions, dims.rhs_contracting_dimensions
         )
+        state.should_emit_space = True
 
 
 @irdl_custom_directive
@@ -555,6 +556,7 @@ class PrecisionConfigAndAlgorithm(CustomDirective):
         if algorithm is not None:
             printer.print_string(", algorithm = ")
             algorithm.print_parameters(printer)
+        state.should_emit_space = True
 
 
 @irdl_custom_directive

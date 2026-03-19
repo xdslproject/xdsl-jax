@@ -121,7 +121,7 @@ class DimensionStructAttr(ParametrizedAttribute, ABC):
                     if self._should_print_field(getattr(self, name))
                 ),
                 lambda item: self._print_field(printer, item[0], item[1]),
-                delimiter=",",
+                delimiter=", ",
             )
 
     @classmethod
@@ -289,7 +289,7 @@ class DotAlgorithmAttr(ParametrizedAttribute):
                 lambda item: self._print_field(
                     printer, item[0], getattr(self, item[0])
                 ),
-                delimiter=",",
+                delimiter=", ",
             )
 
     @classmethod
@@ -498,13 +498,9 @@ class OutputOperandAlias(ParametrizedAttribute):
         with printer.in_angle_brackets():
             printer.print_string("output_tuple_indices = ")
             print_dims(printer, self.output_tuple_indices)
-            printer.print_string(", ")
-
-            printer.print_string("operand_index = ")
+            printer.print_string(", operand_index = ")
             printer.print_int(self.operand_index.value.data)
-            printer.print_string(", ")
-
-            printer.print_string("operand_tuple_indices = ")
+            printer.print_string(", operand_tuple_indices = ")
             print_dims(printer, self.operand_tuple_indices)
 
     @classmethod

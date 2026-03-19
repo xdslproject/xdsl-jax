@@ -31,7 +31,7 @@
 %compare = stablehlo.compare EQ, %t0, %t0 : (tensor<i32>, tensor<i32>) -> tensor<i1>
 
 // CHECK: %[[MAP:.*]] = "stablehlo.map"(%[[T5F32]], %[[T5F32]]) <{dimensions = array<i64: 0>}> ({
-// CHECK-NEXT: ^bb0(%[[MAP_ARG0:[^ )]+]] : tensor<f32>, %[[MAP_ARG1:[^ )]+]] : tensor<f32>):
+// CHECK-NEXT: ^bb0(%[[MAP_ARG0:[^ )]+]]{{ ?}}: tensor<f32>, %[[MAP_ARG1:[^ )]+]]{{ ?}}: tensor<f32>):
 // CHECK-NEXT:   %[[MAP_MUL:.*]] = stablehlo.multiply %[[MAP_ARG0]], %[[MAP_ARG1]] : tensor<f32>
 // CHECK-NEXT:   stablehlo.return %[[MAP_MUL]] : tensor<f32>
 // CHECK-NEXT: }) : (tensor<5xf32>, tensor<5xf32>) -> tensor<5xf32>
@@ -58,6 +58,6 @@
 // CHECK-GENERIC: %[[SELECT_MISMATCH:.*]] = "stablehlo.select"(%[[PRED]], %[[T0]], %[[T0]]) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %pred, %[[TDF32]], %[[T5F32]] : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %[[PRED]], %[[TDF32]], %[[T5F32]] : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
 // CHECK-GENERIC: %[[SELECT_FUNCTION_TYPE:.*]] = "stablehlo.select"(%[[PRED]], %[[TDF32]], %[[T5F32]]) : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
 %select_function_type = stablehlo.select %pred, %tdf32, %t5f32 : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
