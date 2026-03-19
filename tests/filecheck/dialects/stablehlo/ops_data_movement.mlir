@@ -1,5 +1,9 @@
 // RUN: XDSL_ROUNDTRIP
 // RUN: XDSL_GENERIC_ROUNDTRIP
+// RUN: JAX_ROUNDTRIP
+// RUN: JAX_GENERIC_ROUNDTRIP
+// RUN: XDSL_JAX_ROUNDTRIP
+// RUN: XDSL_JAX_GENERIC_ROUNDTRIP
 
 // CHECK: %[[T0:.*]] = "test.op"() : () -> tensor<i32>
 // CHECK-GENERIC: %[[T0:.*]] = "test.op"() : () -> tensor<i32>

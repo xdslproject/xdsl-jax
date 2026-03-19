@@ -1,5 +1,9 @@
 // RUN: XDSL_ROUNDTRIP
 // RUN: XDSL_GENERIC_ROUNDTRIP
+// RUN: JAX_ROUNDTRIP
+// RUN: JAX_GENERIC_ROUNDTRIP
+// RUN: XDSL_JAX_ROUNDTRIP
+// RUN: XDSL_JAX_GENERIC_ROUNDTRIP
 
 // CHECK: %[[OPERAND:.*]] = "test.op"() : () -> tensor<1x3xi64>
 // CHECK: %[[OUT_DIMS:.*]] = "test.op"() : () -> tensor<3xi64>

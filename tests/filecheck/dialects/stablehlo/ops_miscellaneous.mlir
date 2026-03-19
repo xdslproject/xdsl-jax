@@ -1,5 +1,9 @@
 // RUN: XDSL_ROUNDTRIP
 // RUN: XDSL_GENERIC_ROUNDTRIP
+// RUN: JAX_ROUNDTRIP
+// RUN: JAX_GENERIC_ROUNDTRIP
+// RUN: XDSL_JAX_ROUNDTRIP
+// RUN: XDSL_JAX_GENERIC_ROUNDTRIP
 
 // CHECK: %[[CONSTANT:.*]] = stablehlo.constant dense<{{.*}}> : tensor<2x2xf32>
 // CHECK-GENERIC: %[[CONSTANT:.*]] = "stablehlo.constant"() <{value = dense<{{.*}}> : tensor<2x2xf32>}> : () -> tensor<2x2xf32>
