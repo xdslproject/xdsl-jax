@@ -84,7 +84,7 @@ class DimensionStructAttr(ParametrizedAttribute, ABC):
     @staticmethod
     def _print_field(printer: Printer, name: str, field: Dims | Index) -> None:
         """Print a single field entry in the format 'name = value'."""
-        printer.print_string(f"\n{name} = ")
+        printer.print_string(f"{name} = ")
         if isinstance(field, ArrayAttr):
             print_dims(printer, field)
         else:
@@ -114,17 +114,15 @@ class DimensionStructAttr(ParametrizedAttribute, ABC):
     def print_parameters(self, printer: Printer) -> None:
         """Print struct fields in structured format, omitting defaults."""
         with printer.in_angle_brackets():
-            with printer.indented():
-                printer.print_list(
-                    (
-                        (name, getattr(self, name))
-                        for name, _ in self.get_irdl_definition().parameters
-                        if self._should_print_field(getattr(self, name))
-                    ),
-                    lambda item: self._print_field(printer, item[0], item[1]),
-                    delimiter=",",
-                )
-            printer.print_string("\n")
+            printer.print_list(
+                (
+                    (name, getattr(self, name))
+                    for name, _ in self.get_irdl_definition().parameters
+                    if self._should_print_field(getattr(self, name))
+                ),
+                lambda item: self._print_field(printer, item[0], item[1]),
+                delimiter=", ",
+            )
 
     @classmethod
     def parse_parameters(cls, parser: AttrParser) -> Sequence[Attribute]:
