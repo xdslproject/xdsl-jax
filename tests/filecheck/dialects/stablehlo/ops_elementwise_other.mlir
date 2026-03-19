@@ -54,6 +54,6 @@
 // CHECK-GENERIC: %[[SELECT_MISMATCH:.*]] = "stablehlo.select"(%[[PRED]], %[[T0]], %[[T0]]) : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 %select_mismatch = stablehlo.select %pred, %t0, %t0 : (tensor<i1>, tensor<i32>, tensor<i32>) -> tensor<i32>
 
-// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %pred, %[[TDF32]], %[[T5F32]] : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
+// CHECK: %[[SELECT_FUNCTION_TYPE:.*]] = stablehlo.select %[[PRED]], %[[TDF32]], %[[T5F32]] : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
 // CHECK-GENERIC: %[[SELECT_FUNCTION_TYPE:.*]] = "stablehlo.select"(%[[PRED]], %[[TDF32]], %[[T5F32]]) : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>
 %select_function_type = stablehlo.select %pred, %tdf32, %t5f32 : (tensor<i1>, tensor<?xf32>, tensor<5xf32>) -> tensor<5xf32>

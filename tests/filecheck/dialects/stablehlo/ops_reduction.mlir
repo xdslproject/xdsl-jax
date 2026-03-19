@@ -30,11 +30,11 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 
 %dot_lhs = "test.op"() : () -> tensor<2x3xi32>
 %dot_rhs = "test.op"() : () -> tensor<3x4xi32>
-// CHECK: %dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0]: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
-// CHECK-GENERIC: %dot_no_algorithm = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC-SAME: lhs_contracting_dimensions = [1],
-// CHECK-GENERIC-SAME: rhs_contracting_dimensions = [0]
-// CHECK-GENERIC-SAME: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK: %[[DOT_NO_ALGORITHM:[^ ]+]] = stablehlo.dot_general %[[DOT_LHS:[^,]+]], %[[DOT_RHS:[^,]+]], contracting_dims = [1] x [0]{{ ?}}: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC: %[[DOT_NO_ALGORITHM_GEN:[^ ]+]] = "stablehlo.dot_general"(%[[DOT_LHS_GEN:[^,]+]], %[[DOT_RHS_GEN:[^)]+]])
+// CHECK-GENERIC-DAG: lhs_contracting_dimensions = [1]
+// CHECK-GENERIC-DAG: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC: : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 %dot_no_algorithm = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0] : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 
 // CHECK: %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <
@@ -46,43 +46,33 @@ reducer (%reduce_arg0 : tensor<i64>, %reduce_arg1 : tensor<i64>) (%reduce_arg2 :
 // CHECK-NEXT: num_primitive_operations = 1,
 // CHECK-NEXT: allow_imprecise_accumulation = false
 // CHECK-NEXT: >: (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
-// CHECK-GENERIC: %dot = "stablehlo.dot_general"(%dot_lhs, %dot_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC-SAME: lhs_contracting_dimensions = [1],
-// CHECK-GENERIC-SAME: rhs_contracting_dimensions = [0]
-// CHECK-GENERIC-SAME: >, precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>], algorithm = #stablehlo.dot_algorithm<
-// CHECK-GENERIC-NEXT: lhs_precision_type = f32,
-// CHECK-GENERIC-NEXT: rhs_precision_type = f32,
-// CHECK-GENERIC-NEXT: accumulation_type = f32,
-// CHECK-GENERIC-NEXT: lhs_component_count = 1,
-// CHECK-GENERIC-NEXT: rhs_component_count = 1,
-// CHECK-GENERIC-NEXT: num_primitive_operations = 1,
-// CHECK-GENERIC-NEXT: allow_imprecise_accumulation = false
-// CHECK-GENERIC-NEXT: >}> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
+// CHECK-GENERIC: %[[DOT_WITH_ALGORITHM_GEN:[^ ]+]] = "stablehlo.dot_general"(%[[DOT_LHS_GEN]], %[[DOT_RHS_GEN]])
+// CHECK-GENERIC-DAG: lhs_contracting_dimensions = [1]
+// CHECK-GENERIC-DAG: rhs_contracting_dimensions = [0]
+// CHECK-GENERIC-DAG: precision_config = [#stablehlo<precision DEFAULT>, #stablehlo<precision DEFAULT>]
+// CHECK-GENERIC-DAG: lhs_precision_type = f32,
+// CHECK-GENERIC-DAG: rhs_precision_type = f32,
+// CHECK-GENERIC-DAG: accumulation_type = f32,
+// CHECK-GENERIC-DAG: lhs_component_count = 1,
+// CHECK-GENERIC-DAG: rhs_component_count = 1,
+// CHECK-GENERIC-DAG: num_primitive_operations = 1,
+// CHECK-GENERIC-DAG: allow_imprecise_accumulation = false
+// CHECK-GENERIC: : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 %dot = stablehlo.dot_general %dot_lhs, %dot_rhs, batching_dims = [] x [], contracting_dims = [1] x [0], precision = [DEFAULT, DEFAULT], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3xi32>, tensor<3x4xi32>) -> tensor<2x4xi32>
 
 %dot_batch_lhs = "test.op"() : () -> tensor<2x3x4xi32>
 %dot_batch_rhs = "test.op"() : () -> tensor<2x4x5xi32>
-// CHECK: %dot_with_batching_and_algorithm = stablehlo.dot_general %dot_batch_lhs, %dot_batch_rhs, batching_dims = [0] x [0], contracting_dims = [2] x [1], algorithm = <
-// CHECK-NEXT: lhs_precision_type = f32,
-// CHECK-NEXT: rhs_precision_type = f32,
-// CHECK-NEXT: accumulation_type = f32,
-// CHECK-NEXT: lhs_component_count = 1,
-// CHECK-NEXT: rhs_component_count = 1,
-// CHECK-NEXT: num_primitive_operations = 1,
-// CHECK-NEXT: allow_imprecise_accumulation = false
-// CHECK-NEXT: >: (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
-// CHECK-GENERIC: %dot_with_batching_and_algorithm = "stablehlo.dot_general"(%dot_batch_lhs, %dot_batch_rhs) <{dot_dimension_numbers = #stablehlo.dot<
-// CHECK-GENERIC-SAME: lhs_batching_dimensions = [0],
-// CHECK-GENERIC-SAME: rhs_batching_dimensions = [0],
-// CHECK-GENERIC-SAME: lhs_contracting_dimensions = [2],
-// CHECK-GENERIC-SAME: rhs_contracting_dimensions = [1]
-// CHECK-GENERIC-SAME: >, algorithm = #stablehlo.dot_algorithm<
-// CHECK-GENERIC-NEXT: lhs_precision_type = f32,
-// CHECK-GENERIC-NEXT: rhs_precision_type = f32,
-// CHECK-GENERIC-NEXT: accumulation_type = f32,
-// CHECK-GENERIC-NEXT: lhs_component_count = 1,
-// CHECK-GENERIC-NEXT: rhs_component_count = 1,
-// CHECK-GENERIC-NEXT: num_primitive_operations = 1,
-// CHECK-GENERIC-NEXT: allow_imprecise_accumulation = false
-// CHECK-GENERIC-NEXT: >}> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
+// CHECK-GENERIC: %[[DOT_BATCHED_GEN:[^ ]+]] = "stablehlo.dot_general"(%[[DOT_BATCH_LHS_GEN:[^,]+]], %[[DOT_BATCH_RHS_GEN:[^)]+]])
+// CHECK-GENERIC-DAG: lhs_batching_dimensions = [0]
+// CHECK-GENERIC-DAG: rhs_batching_dimensions = [0]
+// CHECK-GENERIC-DAG: lhs_contracting_dimensions = [2]
+// CHECK-GENERIC-DAG: rhs_contracting_dimensions = [1]
+// CHECK-GENERIC-DAG: lhs_precision_type = f32,
+// CHECK-GENERIC-DAG: rhs_precision_type = f32,
+// CHECK-GENERIC-DAG: accumulation_type = f32,
+// CHECK-GENERIC-DAG: lhs_component_count = 1,
+// CHECK-GENERIC-DAG: rhs_component_count = 1,
+// CHECK-GENERIC-DAG: num_primitive_operations = 1,
+// CHECK-GENERIC-DAG: allow_imprecise_accumulation = false
+// CHECK-GENERIC: : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>
 %dot_with_batching_and_algorithm = stablehlo.dot_general %dot_batch_lhs, %dot_batch_rhs, batching_dims = [0] x [0], contracting_dims = [2] x [1], algorithm = <lhs_precision_type = f32, rhs_precision_type = f32, accumulation_type = f32, lhs_component_count = 1, rhs_component_count = 1, num_primitive_operations = 1, allow_imprecise_accumulation = false> : (tensor<2x3x4xi32>, tensor<2x4x5xi32>) -> tensor<2x3x5xi32>

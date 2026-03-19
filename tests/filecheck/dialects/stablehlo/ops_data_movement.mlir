@@ -56,7 +56,11 @@
 %slice_input = "test.op"() : () -> tensor<3x8xi64>
 // CHECK: %[[SLICE_RES:.*]] = stablehlo.slice %[[SLICE_INPUT]] [1:3, 4:8:2] : (tensor<3x8xi64>) -> tensor<2x2xi64>
 // CHECK-GENERIC: %[[SLICE_INPUT_GEN:.*]] = "test.op"() : () -> tensor<3x8xi64>
-// CHECK-GENERIC: %[[SLICE_RES_GEN:.*]] = "stablehlo.slice"(%[[SLICE_INPUT_GEN]]) <{start_indices = array<i64: 1, 4>, limit_indices = array<i64: 3, 8>, strides = array<i64: 1, 2>}> : (tensor<3x8xi64>) -> tensor<2x2xi64>
+// CHECK-GENERIC: %[[SLICE_RES_GEN:.*]] = "stablehlo.slice"(%[[SLICE_INPUT_GEN]]) <{
+// CHECK-GENERIC-DAG: start_indices = array<i64: 1, 4>
+// CHECK-GENERIC-DAG: limit_indices = array<i64: 3, 8>
+// CHECK-GENERIC-DAG: strides = array<i64: 1, 2>
+// CHECK-GENERIC: }> : (tensor<3x8xi64>) -> tensor<2x2xi64>
 %slice = stablehlo.slice %slice_input [1:3, 4:8:2] : (tensor<3x8xi64>) -> tensor<2x2xi64>
 
 // CHECK: %[[DYN_OPERAND:.*]] = "test.op"() : () -> tensor<4x4xi32>
