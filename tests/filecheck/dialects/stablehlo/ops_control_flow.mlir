@@ -39,10 +39,10 @@
 // CHECK:   stablehlo.return %[[WHILE_ARG0]], %[[WHILE_ARG1]] : tensor<i64>, tensor<i64>
 // CHECK: }
 // CHECK-GENERIC: %[[WHILE_GEN_RES:.*]] = "stablehlo.while"(%[[WHILE_GEN_INIT_I:.*]], %[[WHILE_GEN_INIT_SUM:.*]]) ({
-// CHECK-GENERIC: ^{{.*}}(%[[WHILE_GEN_COND0:.*]]{{ ?}}: tensor<i64>, %[[WHILE_GEN_COND1:.*]]{{ ?}}: tensor<i64>):
+// CHECK-GENERIC: ^{{.*}}(%[[WHILE_GEN_COND0:.*]]: tensor<i64>, %[[WHILE_GEN_COND1:.*]]: tensor<i64>):
 // CHECK-GENERIC:   "stablehlo.return"(%[[PRED]]) : (tensor<i1>) -> ()
 // CHECK-GENERIC: }, {
-// CHECK-GENERIC: ^{{.*}}(%[[WHILE_GEN_BODY0:.*]]{{ ?}}: tensor<i64>, %[[WHILE_GEN_BODY1:.*]]{{ ?}}: tensor<i64>):
+// CHECK-GENERIC: ^{{.*}}(%[[WHILE_GEN_BODY0:.*]]: tensor<i64>, %[[WHILE_GEN_BODY1:.*]]: tensor<i64>):
 // CHECK-GENERIC:   "stablehlo.return"(%[[WHILE_GEN_RET0:.*]], %[[WHILE_GEN_RET1:.*]]) : (tensor<i64>, tensor<i64>) -> ()
 // CHECK-GENERIC: }) {tag = "loop"} : (tensor<i64>, tensor<i64>) -> (tensor<i64>, tensor<i64>)
 %while_r0, %while_r1 = stablehlo.while(%while_arg0 = %init_i, %while_arg1 = %init_sum) : tensor<i64>, tensor<i64> attributes {tag = "loop"}

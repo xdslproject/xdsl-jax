@@ -419,7 +419,7 @@ def _print_reduce_reducer(
     Specified as:
     `reducer (arg : type, arg : type) for each pair`
     """
-    printer.print_string("\nreducer ")
+    printer.print_string("\nreducer")
     block = body.blocks[0]
 
     def print_reducer_pair(pair: tuple[BlockArgument, BlockArgument]) -> None:
