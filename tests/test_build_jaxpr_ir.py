@@ -25,7 +25,7 @@ def test_id():
         str(module_op)
         == """\
 builtin.module {
-  func.func public @main(%0 : tensor<5xf32>) -> tensor<5xf32> {
+  func.func public @main(%0: tensor<5xf32>) -> tensor<5xf32> {
     func.return %0 : tensor<5xf32>
   }
 }"""

@@ -20,11 +20,11 @@
 
 // CHECK: %[[REDUCE_MULTI:[^ ]+]] = stablehlo.reduce(%[[REDUCE_INPUT0:[^ )]+]] init: %[[REDUCE_INIT0:[^ )]+]]), (%[[REDUCE_INPUT1:[^ )]+]] init: %[[REDUCE_INIT1:[^ )]+]])
 // CHECK-SAME: across dimensions = [1] : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
-// CHECK-NEXT: reducer{{ ?}}(%[[REDUCE_ARG0:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_ARG2:.*]]{{ ?}}: tensor<i64>) (%[[REDUCE_ARG1:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_ARG3:.*]]{{ ?}}: tensor<i64>) {
+// CHECK-NEXT: reducer(%[[REDUCE_ARG0:.*]]: tensor<i64>, %[[REDUCE_ARG2:.*]]: tensor<i64>) (%[[REDUCE_ARG1:.*]]: tensor<i64>, %[[REDUCE_ARG3:.*]]: tensor<i64>) {
 // CHECK:   stablehlo.return %[[REDUCE_RET0:.*]], %[[REDUCE_RET1:.*]] : tensor<i64>, tensor<i64>
 // CHECK: }
 // CHECK-GENERIC: %[[REDUCE_MULTI:[^ ]+]] = "stablehlo.reduce"(%[[REDUCE_INPUT0]], %[[REDUCE_INPUT1]], %[[REDUCE_INIT0]], %[[REDUCE_INIT1]]) <{dimensions = array<i64: 1>}> ({
-// CHECK-GENERIC:   ^bb[[REDUCE_MULTI_BB:[0-9]+]](%[[REDUCE_GEN_ARG0:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG1:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG2:.*]]{{ ?}}: tensor<i64>, %[[REDUCE_GEN_ARG3:.*]]{{ ?}}: tensor<i64>):
+// CHECK-GENERIC:   ^bb[[REDUCE_MULTI_BB:[0-9]+]](%[[REDUCE_GEN_ARG0:.*]]: tensor<i64>, %[[REDUCE_GEN_ARG1:.*]]: tensor<i64>, %[[REDUCE_GEN_ARG2:.*]]: tensor<i64>, %[[REDUCE_GEN_ARG3:.*]]: tensor<i64>):
 // CHECK-GENERIC:     "stablehlo.return"(%[[REDUCE_GEN_RET0:.*]], %[[REDUCE_GEN_RET1:.*]]) : (tensor<i64>, tensor<i64>) -> ()
 // CHECK-GENERIC: }) : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
 %reduce_multi_0, %reduce_multi_1 = stablehlo.reduce (%reduce_input0 init: %reduce_init0), (%reduce_input1 init: %reduce_init1) across dimensions = [1] : (tensor<2x3xi64>, tensor<2x3xi64>, tensor<i64>, tensor<i64>) -> (tensor<2xi64>, tensor<2xi64>)
