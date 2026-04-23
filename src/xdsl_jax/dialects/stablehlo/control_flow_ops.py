@@ -7,7 +7,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import cast
 
-from xdsl.dialects.builtin import TensorType, i1
+from xdsl.dialects.builtin import AnyTensorType, TensorType, i1
 from xdsl.dialects.utils.format import parse_assignment, print_assignment
 from xdsl.ir import Attribute, Region, SSAValue
 from xdsl.irdl import (
@@ -35,7 +35,7 @@ from .attributes import TokenType
 from .custom_directives import PairwiseOpType, SameOperandsAndResultType
 from .modularity_ops import ReturnOp
 from .traits import have_compatible_type_sequences
-from .types import AnyTensorType, PredTensorType, SI32TensorType, TensorOrTokenType
+from .types import PredTensorType, SI32TensorType, TensorOrTokenType
 
 _ZERO_RANK_I1_TENSOR_TYPE = TensorType(i1, ())
 
