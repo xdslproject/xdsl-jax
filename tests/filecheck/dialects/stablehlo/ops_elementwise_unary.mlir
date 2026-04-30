@@ -35,6 +35,10 @@
 // CHECK-GENERIC: %[[CONVERT:.*]] = "stablehlo.convert"(%[[T0]]) : (tensor<i32>) -> tensor<f32>
 %convert = stablehlo.convert %t0 : (tensor<i32>) -> tensor<f32>
 
+// CHECK: %[[CONVERT:.*]] = stablehlo.convert %[[T0]] : (tensor<i32>) -> tensor<i1>
+// CHECK-GENERIC: %[[CONVERT:.*]] = "stablehlo.convert"(%[[T0]]) : (tensor<i32>) -> tensor<i1>
+%convert_i1 = stablehlo.convert %t0 : (tensor<i32>) -> tensor<i1>
+
 // CHECK: %[[COSINE:.*]] = stablehlo.cosine %[[TF32]] : tensor<f32>
 // CHECK-GENERIC: %[[COSINE:.*]] = "stablehlo.cosine"(%[[TF32]]) : (tensor<f32>) -> tensor<f32>
 %cosine = stablehlo.cosine %tf32 : tensor<f32>
