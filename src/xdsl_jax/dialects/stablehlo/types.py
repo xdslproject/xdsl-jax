@@ -33,7 +33,7 @@ from xdsl.irdl import (
 from .attributes import TokenType
 
 SIntType: TypeAlias = IntegerType[
-    Literal[2, 4, 8, 16, 32, 64],
+    Literal[1, 2, 4, 8, 16, 32, 64],
     Literal[Signedness.SIGNLESS],
 ]
 # NOTE: IntegerType is defined in the StableHLO spec as:
@@ -41,7 +41,7 @@ SIntType: TypeAlias = IntegerType[
 # but the MLIR implementation is using signless integers instead of signed,
 # and there is a TODO to fix it.
 IntType: TypeAlias = IntegerType[
-    Literal[2, 4, 8, 16, 32, 64],
+    Literal[1, 2, 4, 8, 16, 32, 64],
     Literal[Signedness.UNSIGNED, Signedness.SIGNLESS],
 ]
 Float32Or64Type: TypeAlias = Float32Type | Float64Type
