@@ -3,8 +3,9 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic, TypeVar
+from typing import Generic
 
+from typing_extensions import TypeVar
 from xdsl.dialects.builtin import AnyTensorType
 from xdsl.ir import Attribute, SSAValue
 from xdsl.irdl import (
