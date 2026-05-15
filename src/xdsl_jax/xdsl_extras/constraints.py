@@ -3,8 +3,8 @@ available upstream in xDSL."""
 
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
-from typing import TypeVar
 
+from typing_extensions import TypeVar
 from xdsl.dialects.builtin import TupleType
 from xdsl.ir import Attribute
 from xdsl.irdl import (

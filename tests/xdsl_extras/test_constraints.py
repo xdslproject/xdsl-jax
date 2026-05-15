@@ -1,8 +1,7 @@
 """Test the constraints defined within the xdsl_extras module."""
 
-from typing import TypeVar
-
 import pytest
+from typing_extensions import TypeVar
 from xdsl.dialects.builtin import MemRefType, TensorType, TupleType, i1, i32
 from xdsl.irdl import BaseAttr, TypeVarConstraint
 from xdsl.irdl.constraints import AnyOf, ConstraintContext
@@ -76,13 +75,13 @@ class TestNestedTupleOfConstraint:
         _T = TypeVar("_T")
 
         constraint = NestedTupleOfConstraint(
-            AnyOf([TypeVarConstraint(_T, BaseAttr(TensorType)), BaseAttr(TokenType)])
+            AnyOf.get(TypeVarConstraint(_T, BaseAttr(TensorType)), BaseAttr(TokenType))
         )
 
         with pytest.raises(KeyError, match="Mapping value missing for type var"):
             constraint.mapping_type_vars({})
 
         expected = NestedTupleOfConstraint(
-            AnyOf([BaseAttr(MemRefType), BaseAttr(TokenType)])
+            AnyOf.get(BaseAttr(MemRefType), BaseAttr(TokenType))
         )
         assert constraint.mapping_type_vars({_T: BaseAttr(MemRefType)}) == expected
