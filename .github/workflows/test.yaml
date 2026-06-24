@@ -20,7 +20,7 @@ jobs:
       COLLECT_COVERAGE: ${{ matrix.python-version == '3.13' }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 2
       - uses: astral-sh/setup-uv@v8.2.0
@@ -63,7 +63,7 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: astral-sh/setup-uv@v8.2.0
         with:
