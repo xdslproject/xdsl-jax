@@ -28,7 +28,7 @@ source = "vcs"
 [dependency-groups]
 dev = [
     "filecheck==1.0.6",
-    "lit<19.0.0",
+    "lit<23.1.2",
     "pre-commit-hooks>=5.0.0",
     "pre-commit>=4.0.1",
     "pytest>=8.3.4",
