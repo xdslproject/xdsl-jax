@@ -3,7 +3,10 @@ name = "xdsl-jax"
 description = "Extend JAX with xDSL."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["jax>=0.6.2", "xdsl~=0.71.0"]
+dependencies = [
+    "jax>=0.6.2",
+    "xdsl~=0.71.0",
+]
 classifiers = ["Programming Language :: Python :: 3 :: Only", "Typing :: Typed"]
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
 authors = [{ name = "Sasha Lopoukhine", email = "sasha@lopoukhine.com" }]
@@ -107,3 +110,6 @@ exclude_lines = [
     'pragma: no cover',
 ]
 format = "markdown"
+
+[tool.uv.sources]
+xdsl = { git = "https://github.com/xdslproject/xdsl.git", rev = "0112a62df5e5f6eee5da9e4aa316dd8035af820e" }

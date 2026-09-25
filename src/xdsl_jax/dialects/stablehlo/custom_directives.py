@@ -32,7 +32,7 @@ from xdsl.irdl.declarative_assembly_format import (
     VariadicOperandVariable,
     irdl_custom_directive,
 )
-from xdsl.parser import Parser
+from xdsl.parser import Parser, UnresolvedOperand
 from xdsl.printer import Printer
 from xdsl.utils.hints import isa
 
@@ -565,19 +565,15 @@ class VariadicOperandWithAttribute(CustomDirective):
 
     inputs: VariadicOperandVariable
 
-    def parse_optional(self, parser: Parser, state: ParsingState) -> None:
-        operands = parser.parse_optional_undelimited_comma_separated_list(
-            lambda: parser.parse_optional_unresolved_operand(),
-            lambda: parser.parse_unresolved_operand(),
-        )
-        if operands is not None:
-            self.inputs.set(state, operands)
-
     def parse(self, parser: Parser, state: ParsingState) -> None:
-        pos = parser.pos
-        self.parse_optional(parser, state)
-        if pos == parser.pos:
-            parser.raise_error("Expected operand list")
+        operands: list[UnresolvedOperand] = []
+        operand: UnresolvedOperand | None = parser.parse_optional_unresolved_operand()
+        while operand is not None:
+            operands.append(operand)
+            parser.parse_punctuation(",")
+            operand = parser.parse_optional_unresolved_operand()
+
+        self.inputs.set(state, operands)
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         operands = self.inputs.get(op)
