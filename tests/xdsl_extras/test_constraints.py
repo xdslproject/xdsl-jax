@@ -4,7 +4,7 @@ import pytest
 from typing_extensions import TypeVar
 from xdsl.dialects.builtin import MemRefType, TensorType, TupleType, i1, i32
 from xdsl.irdl import BaseAttr, TypeVarConstraint
-from xdsl.irdl.constraints import AnyOf, ConstraintContext
+from xdsl.irdl.constraints import AnyOf, VerificationContext
 from xdsl.utils.exceptions import VerifyException
 
 from xdsl_jax.dialects.stablehlo.attributes import TokenType
@@ -31,12 +31,12 @@ class TestNestedTupleOfConstraint:
         tensor2 = TensorType(i1, [1])
         inner = TupleType((tensor1,))
         outer = TupleType((tensor2, inner))
-        self.single_constraint.verify(outer, ConstraintContext())
+        self.single_constraint.verify(outer, VerificationContext())
 
     def test_single_constraint_rejects_non_tuple_input(self):
         """Test that non-tuple inputs are rejected."""
         with pytest.raises(VerifyException, match="expected TupleType"):
-            self.single_constraint.verify(TensorType(i32, [2]), ConstraintContext())
+            self.single_constraint.verify(TensorType(i32, [2]), VerificationContext())
 
     def test_single_constraint_rejects_disallowed_type(self):
         """Test that a tuple with non-TensorType elements raises a VerifyException."""
@@ -47,7 +47,7 @@ class TestNestedTupleOfConstraint:
             VerifyException,
             match="tuple leaf 1 failed constraint:",
         ):
-            self.single_constraint.verify(invalid_tup, ConstraintContext())
+            self.single_constraint.verify(invalid_tup, VerificationContext())
 
     def test_nested_tuple_of_constraint_accepts_nested(self):
         """Test that nested tuples are accepted."""
@@ -56,7 +56,7 @@ class TestNestedTupleOfConstraint:
         token = TokenType()
         inner = TupleType((token, tensor2))
         outer = TupleType((tensor1, inner))
-        self.multiple_constraint.verify(outer, ConstraintContext())
+        self.multiple_constraint.verify(outer, VerificationContext())
 
     def test_nested_tuple_of_constraint_rejects_disallowed_type(self):
         """Test that a tuple with a disallowed type raises a VerifyException."""
@@ -67,7 +67,7 @@ class TestNestedTupleOfConstraint:
             VerifyException,
             match="tuple leaf 1 failed constraint: memref<2xi32>",
         ):
-            self.multiple_constraint.verify(tup, ConstraintContext())
+            self.multiple_constraint.verify(tup, VerificationContext())
 
     def test_nested_tuple_of_constraint_mapping_type_vars(self):
         """Test that mapping_type_vars correctly replaces type variables in nested
