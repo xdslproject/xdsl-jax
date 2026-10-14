@@ -9,9 +9,9 @@ from xdsl.dialects.builtin import TupleType
 from xdsl.ir import Attribute
 from xdsl.irdl import (
     AttrConstraint,
-    ConstraintContext,
     IntConstraint,
     IRDLAttrConstraint,
+    VerificationContext,
     irdl_to_attr_constraint,
 )
 from xdsl.utils.exceptions import VerifyException
@@ -37,7 +37,7 @@ class NestedTupleOfConstraint(AttrConstraint[TupleType]):
         else:
             yield a
 
-    def verify(self, attr: Attribute, constraint_context: ConstraintContext) -> None:
+    def verify(self, attr: Attribute, constraint_context: VerificationContext) -> None:
         """Verify that the attribute is a tuple whose flattened leaves match the
         constraint.
         """

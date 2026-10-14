@@ -10,12 +10,11 @@ from functools import partial
 from typing import TypeAlias, get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, BoolAttr, IntegerAttr, i64
+from xdsl.dialects.utils import EnumAttribute, StrEnum
 from xdsl.ir import (
     Attribute,
-    EnumAttribute,
     ParametrizedAttribute,
     SpacedOpaqueSyntaxAttribute,
-    StrEnum,
     TypeAttribute,
 )
 from xdsl.irdl import irdl_attr_definition

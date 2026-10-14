@@ -67,13 +67,15 @@ class SameOperandsAndResultType(CustomDirective):
     operand_types: TypeDirective
     result_type: TypeDirective
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         # Try to parse a function type first
         functional_type = FunctionalTypeDirective(
             self.operand_types.inner, self.result_type.inner
         )
-        if functional_type.parse(parser, state):
-            return True
+        pos = parser.pos
+        functional_type.parse_optional(parser, state)
+        if parser.pos != pos:
+            return
 
         # Single type: applies to all operands and result
         single_type = parser.parse_type()
@@ -85,7 +87,7 @@ class SameOperandsAndResultType(CustomDirective):
             n_operands = len(state.operand_types)
         self.operand_types.set(state, (single_type,) * n_operands)
         self.result_type.set(state, (single_type,))
-        return True
+        return
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         operand_types = self.operand_types.get(op)
@@ -122,13 +124,15 @@ class ComplexOpType(CustomDirective):
     operand_types: TypeDirective
     result_types: TypeDirective
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         # Handle function type fallback: (lhs_type, rhs_type) -> result_type
         functional_type = FunctionalTypeDirective(
             self.operand_types.inner, self.result_types.inner
         )
-        if functional_type.parse(parser, state):
-            return True
+        pos = parser.pos
+        functional_type.parse_optional(parser, state)
+        if pos != parser.pos:
+            return None
 
         # Single type: operand type is inferred from complex result type
         parsed_type = parser.parse_type()
@@ -138,7 +142,6 @@ class ComplexOpType(CustomDirective):
         real_type = _create_real_type(parsed_type)
         self.operand_types.set(state, (real_type, real_type))
         self.result_types.set(state, (parsed_type,))
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         operand_types = self.operand_types.get(op)
@@ -167,11 +170,10 @@ class ConstantOpValue(CustomDirective):
     value: AttributeVariable
     result_type: TypeDirective
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         attr = cast(DenseIntOrFPElementsAttr, parser.parse_attribute())
         self.value.set(state, attr)
         self.result_type.set(state, (attr.type,))
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         attr = cast(DenseIntOrFPElementsAttr, self.value.get(op))
@@ -191,10 +193,9 @@ class CustomCallTarget(CustomDirective):
 
     call_target_name: AttributeVariable
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         target = parser.parse_symbol_name()
         self.call_target_name.set(state, target)
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         target = cast(StringAttr, self.call_target_name.get(op))
@@ -217,13 +218,12 @@ class PairwiseOpType(CustomDirective):
     operand_types: TypeDirective
     result_types: TypeDirective
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         types = parser.parse_comma_separated_list(
             parser.Delimiter.NONE, parser.parse_type
         )
         self.operand_types.set(state, types)
         self.result_types.set(state, types)
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         operand_types = self.operand_types.get(op)
@@ -245,12 +245,14 @@ class SelectOpType(CustomDirective):
     operand_types: TypeDirective
     result_types: TypeDirective
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         functional_type = FunctionalTypeDirective(
             self.operand_types.inner, self.result_types.inner
         )
-        if functional_type.parse(parser, state):
-            return True
+        pos = parser.pos
+        functional_type.parse_optional(parser, state)
+        if pos != parser.pos:
+            return
 
         types = parser.parse_comma_separated_list(
             parser.Delimiter.NONE, parser.parse_type
@@ -260,7 +262,7 @@ class SelectOpType(CustomDirective):
             pred_type, op_result_type = types
             self.operand_types.set(state, (pred_type, op_result_type, op_result_type))
             self.result_types.set(state, (op_result_type,))
-            return True
+            return
 
         parser.raise_error("expected functional type or list of two types")
 
@@ -292,7 +294,7 @@ class ExponentMantissa(CustomDirective):
     exponent: AttributeVariable
     mantissa: AttributeVariable
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         exp_man = parser.parse_identifier()
         if not (match := re.fullmatch(r"e([0-9]+)m([0-9]+)", exp_man)):
             parser.raise_error(
@@ -302,7 +304,6 @@ class ExponentMantissa(CustomDirective):
         exponent, mantissa = map(int, match.groups())
         self.exponent.set(state, IntegerAttr(exponent, i32))
         self.mantissa.set(state, IntegerAttr(mantissa, i32))
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         exponent_attr = cast(IntegerAttr, self.exponent.get(op))
@@ -327,7 +328,7 @@ class SliceRanges(CustomDirective):
     limit_indices: AttributeVariable
     strides: AttributeVariable
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         def parse_range() -> tuple[int, int, int]:
             start = parser.parse_integer()
             parser.parse_punctuation(":")
@@ -343,7 +344,6 @@ class SliceRanges(CustomDirective):
         self.start_indices.set(state, DenseArrayBase.from_list(i64, start))
         self.limit_indices.set(state, DenseArrayBase.from_list(i64, limit))
         self.strides.set(state, DenseArrayBase.from_list(i64, stride))
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         start_indices = cast(
@@ -425,7 +425,7 @@ class DotDimensionNumbers(CustomDirective):
                 rhs_dims.data, lambda dim: printer.print_int(dim.value.data)
             )
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         """Parse `batching_dims = [..] x [..], contracting_dims = [..] x [..]`."""
         # Optional `batching_dims = [..] x [..]`.
         lhs_batching, rhs_batching = ArrayAttr(()), ArrayAttr(())
@@ -446,7 +446,6 @@ class DotDimensionNumbers(CustomDirective):
                 cast(ArrayAttr[IntegerAttr[I64]], rhs_contracting),
             ),
         )
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         dims = cast(DotAttr, self.dimension_numbers.get(op))
@@ -524,27 +523,26 @@ class PrecisionConfigAndAlgorithm(CustomDirective):
             cast(BoolAttr, allow_imprecise_accumulation),
         )
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         if parser.parse_optional_punctuation(",") is None:
-            return True
+            return
 
         # `algorithm = ...` can appear by itself.
         if parser.parse_optional_keyword("algorithm") is not None:
             parser.parse_punctuation("=")
             self.algorithm.set(state, self._parse_algorithm_payload(parser))
-            return True
+            return
 
         # Otherwise parse `precision = [...]` first.
         self.precision_config.set(state, self._parse_precision_config(parser))
 
         # A trailing algorithm clause is optional.
         if parser.parse_optional_punctuation(",") is None:
-            return True
+            return
 
         parser.parse_keyword("algorithm")
         parser.parse_punctuation("=")
         self.algorithm.set(state, self._parse_algorithm_payload(parser))
-        return True
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         precision_config = cast(
@@ -567,7 +565,7 @@ class VariadicOperandWithAttribute(CustomDirective):
 
     inputs: VariadicOperandVariable
 
-    def parse(self, parser: Parser, state: ParsingState) -> bool:
+    def parse(self, parser: Parser, state: ParsingState) -> None:
         operands: list[UnresolvedOperand] = []
         operand: UnresolvedOperand | None = parser.parse_optional_unresolved_operand()
         while operand is not None:
@@ -576,7 +574,6 @@ class VariadicOperandWithAttribute(CustomDirective):
             operand = parser.parse_optional_unresolved_operand()
 
         self.inputs.set(state, operands)
-        return bool(operands)
 
     def print(self, printer: Printer, state: PrintingState, op: IRDLOperation) -> None:
         operands = self.inputs.get(op)
