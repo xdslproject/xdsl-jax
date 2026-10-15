@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
 
 permissions:
   contents: write
@@ -24,5 +27,8 @@ jobs:
         run: uv python install $(cat .python-version)
       - name: Install the project
         run: uv sync --group docs
-      - name: Build and deploy the documentation website
+      - name: Build the documentation website
+        run: uv run mkdocs build
+      - name: Deploy the documentation website
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
         run: uv run mkdocs gh-deploy --force
