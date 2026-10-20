@@ -5,7 +5,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "jax>=0.6.2",
-    "xdsl~=0.73.0",
+    "xdsl~=0.74.0",
 ]
 classifiers = ["Programming Language :: Python :: 3 :: Only", "Typing :: Typed"]
 license = { text = "Apache License v2.0 with LLVM Exceptions" }
