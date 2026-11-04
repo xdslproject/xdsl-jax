@@ -3,7 +3,6 @@ Unary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic
 
 from typing_extensions import TypeVar
 from xdsl.dialects.builtin import AnyTensorType
@@ -42,7 +41,9 @@ T_OPERAND = TypeVar("T_OPERAND", bound=AnyTensorType)
 T_RESULT = TypeVar("T_RESULT", bound=AnyTensorType)
 
 
-class ElementwiseUnaryOperation(IRDLOperation, abc.ABC, Generic[T_OPERAND, T_RESULT]):
+class ElementwiseUnaryOperation[T_OPERAND: AnyTensorType, T_RESULT: AnyTensorType](
+    IRDLOperation, abc.ABC
+):
     """
     Templated base class for elementwise unary operations.
 

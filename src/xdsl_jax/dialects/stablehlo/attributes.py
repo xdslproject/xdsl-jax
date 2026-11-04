@@ -7,7 +7,7 @@ from abc import ABC
 from collections import defaultdict
 from collections.abc import Sequence
 from functools import partial
-from typing import TypeAlias, get_origin
+from typing import get_origin
 
 from xdsl.dialects.builtin import I64, ArrayAttr, BoolAttr, IntegerAttr, i64
 from xdsl.dialects.utils import EnumAttribute, StrEnum
@@ -23,8 +23,8 @@ from xdsl.printer import Printer
 from xdsl.utils.exceptions import VerifyException
 
 # Type aliases for dimension values
-Dims: TypeAlias = ArrayAttr[IntegerAttr[I64]]
-Index: TypeAlias = IntegerAttr[I64]
+type Dims = ArrayAttr[IntegerAttr[I64]]
+type Index = IntegerAttr[I64]
 
 
 # region: Utility functions for dimension array parsing/printing

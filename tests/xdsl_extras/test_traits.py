@@ -1,7 +1,5 @@
 """Test the traits defined within the xdsl_extras module."""
 
-from typing import TypeAlias
-
 import pytest
 from xdsl.dialects.builtin import TensorType, f32, i32, i64
 from xdsl.ir import Attribute
@@ -27,7 +25,7 @@ from xdsl_jax.xdsl_extras.traits import (
     SameOperandsElementType,
 )
 
-AnyTensorType: TypeAlias = TensorType[Attribute]
+type AnyTensorType = TensorType[Attribute]
 
 
 # Test the SameOperandsAndResultShape trait
