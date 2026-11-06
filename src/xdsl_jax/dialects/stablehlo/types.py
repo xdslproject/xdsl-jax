@@ -2,7 +2,7 @@
 Type aliases for the StableHLO dialect.
 """
 
-from typing import Literal, TypeAlias
+from typing import Literal
 
 from xdsl.dialects.builtin import (
     I1,
@@ -32,7 +32,7 @@ from xdsl.irdl import (
 
 from .attributes import TokenType
 
-SIntType: TypeAlias = IntegerType[
+type SIntType = IntegerType[
     Literal[1, 2, 4, 8, 16, 32, 64],
     Literal[Signedness.SIGNLESS],
 ]
@@ -40,38 +40,38 @@ SIntType: TypeAlias = IntegerType[
 # IntegerType ::= SignedIntegerType | UnsignedIntegerType,
 # but the MLIR implementation is using signless integers instead of signed,
 # and there is a TODO to fix it.
-IntType: TypeAlias = IntegerType[
+type IntType = IntegerType[
     Literal[1, 2, 4, 8, 16, 32, 64],
     Literal[Signedness.UNSIGNED, Signedness.SIGNLESS],
 ]
-Float32Or64Type: TypeAlias = Float32Type | Float64Type
-HLO_ComplexType: TypeAlias = ComplexType[Float32Or64Type]
-ComplexTensorType: TypeAlias = TensorType[HLO_ComplexType]
-IntegerTensorType: TypeAlias = TensorType[IntType]
+type Float32Or64Type = Float32Type | Float64Type
+type HLO_ComplexType = ComplexType[Float32Or64Type]
+type ComplexTensorType = TensorType[HLO_ComplexType]
+type IntegerTensorType = TensorType[IntType]
 # TODO: Change to SI32 once StableHLO adopts signful integer semantics
 # See: https://github.com/openxla/stablehlo/issues/22
 # https://github.com/openxla/stablehlo/issues/2489
-SI32TensorType: TypeAlias = TensorType[I32]
-FloatOrComplexType: TypeAlias = AnyFloat | HLO_ComplexType
-SIntOrFloatOrComplexType: TypeAlias = SIntType | FloatOrComplexType
-SIntOrFloatType: TypeAlias = SIntType | AnyFloat
-IntOrFloatOrComplexType: TypeAlias = IntType | AnyFloat | HLO_ComplexType
-BufferType: TypeAlias = MemRefType[Attribute]
-FloatOrComplexTensorType: TypeAlias = TensorType[FloatOrComplexType]
-Float32Or64TensorType: TypeAlias = TensorType[Float32Or64Type]
-FloatTensorType: TypeAlias = TensorType[AnyFloat]
-PredTensorType: TypeAlias = TensorType[I1]
-SIntOrFloatOrComplexTensorType: TypeAlias = TensorType[SIntOrFloatOrComplexType]
-SIntOrFloatTensorType: TypeAlias = TensorType[SIntOrFloatType]
-PredOrIntType: TypeAlias = IntegerType[
+type SI32TensorType = TensorType[I32]
+type FloatOrComplexType = AnyFloat | HLO_ComplexType
+type SIntOrFloatOrComplexType = SIntType | FloatOrComplexType
+type SIntOrFloatType = SIntType | AnyFloat
+type IntOrFloatOrComplexType = IntType | AnyFloat | HLO_ComplexType
+type BufferType = MemRefType[Attribute]
+type FloatOrComplexTensorType = TensorType[FloatOrComplexType]
+type Float32Or64TensorType = TensorType[Float32Or64Type]
+type FloatTensorType = TensorType[AnyFloat]
+type PredTensorType = TensorType[I1]
+type SIntOrFloatOrComplexTensorType = TensorType[SIntOrFloatOrComplexType]
+type SIntOrFloatTensorType = TensorType[SIntOrFloatType]
+type PredOrIntType = IntegerType[
     Literal[1, 2, 4, 8, 16, 32, 64],
     Literal[Signedness.UNSIGNED, Signedness.SIGNLESS],
 ]
-PredOrIntTensorType: TypeAlias = TensorType[PredOrIntType]
-IntOrFloatOrComplexTensorType: TypeAlias = TensorType[IntOrFloatOrComplexType]
-TensorOrTokenType: TypeAlias = AnyTensorType | TokenType
-TensorOrTokenOrBufferType: TypeAlias = AnyTensorType | TokenType | BufferType
-DimensionValueType: TypeAlias = IntType | IndexType
+type PredOrIntTensorType = TensorType[PredOrIntType]
+type IntOrFloatOrComplexTensorType = TensorType[IntOrFloatOrComplexType]
+type TensorOrTokenType = AnyTensorType | TokenType
+type TensorOrTokenOrBufferType = AnyTensorType | TokenType | BufferType
+type DimensionValueType = IntType | IndexType
 # DimensionTensorType is a 1D tensor of dimension values
 DimensionTensorType: IRDLAttrConstraint = TensorType.constr(
     element_type=DimensionValueType,
@@ -82,7 +82,7 @@ DimensionTensorType: IRDLAttrConstraint = TensorType.constr(
         )
     ),
 )
-IntegerOrIndexTensorType: TypeAlias = TensorType[IntegerType | IndexType]
+type IntegerOrIndexTensorType = TensorType[IntegerType | IndexType]
 
 # ScalarIntTensorType is a 0D tensor of integer values
 ScalarIntTensorType: IRDLAttrConstraint = TensorType.constr(
