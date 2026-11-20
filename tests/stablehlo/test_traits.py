@@ -1,7 +1,5 @@
 """Tests for StableHLO-specific traits."""
 
-from typing import TypeAlias
-
 import pytest
 from xdsl.dialects.builtin import DYNAMIC_INDEX, TensorType, f32, i32
 from xdsl.ir import Attribute
@@ -19,7 +17,7 @@ from xdsl_jax.dialects.stablehlo.traits import (
     CompatibleOperandsAndResultType,
 )
 
-AnyTensorType: TypeAlias = TensorType[Attribute]
+type AnyTensorType = TensorType[Attribute]
 
 
 @irdl_op_definition

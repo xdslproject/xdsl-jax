@@ -3,7 +3,7 @@ Binary elementwise operations for the StableHLO dialect.
 """
 
 import abc
-from typing import Generic, cast
+from typing import cast
 
 from typing_extensions import TypeVar
 from xdsl.dialects.builtin import AnyTensorType, ComplexType, TensorType
@@ -42,7 +42,7 @@ T = TypeVar("T", bound=AnyTensorType)
 # region Abstract Base Classes
 
 
-class ElementwiseBinaryOperation(IRDLOperation, abc.ABC, Generic[T]):
+class ElementwiseBinaryOperation[T: AnyTensorType](IRDLOperation, abc.ABC):
     """
     Templated base class for elementwise binary operations.
 
